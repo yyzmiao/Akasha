@@ -5,8 +5,8 @@
 </p>
 
 <p align="center">
-  <strong>An open-source, clean, and privacy-first personal planner, calendar, and todo app.</strong><br>
-  <em>一个开源、简洁且注重隐私的个人日程计划、日历与待办管理工具。</em>
+  <strong>An open-source, clean personal planner, calendar, and todo app.</strong><br>
+  <em>一个开源、简洁的个人日程计划、日历与待办管理工具。</em>
 </p>
 
 <p align="center">
@@ -34,7 +34,7 @@ In our daily routines, we often find ourselves juggling multiple separate apps: 
 **Akasha brings these daily essentials together into one clean, unified tool:**  
 It combines an **adaptive dynamic monthly calendar, infinite multi-level todo lists, habit streak tracking, fixed schedules, and daily journaling**. The interface is intuitive, uncluttered, and tailored for daily task planning and time management.
 
-Built with a steadfast **Local-First** and privacy-first approach, all your data is stored strictly inside your browser's IndexedDB. No registration required, zero cloud tracking, sub-millisecond responsiveness, 100% offline-ready, and fully installable as a standalone desktop or mobile application (PWA).
+Built with a **Local-First** architecture, all your data is stored directly in your browser's IndexedDB. No registration required, no cloud dependencies, instant response times, 100% offline-ready, and fully installable as a standalone desktop or mobile application (PWA).
 
 ---
 
@@ -199,11 +199,11 @@ Akasha/
 
 ---
 
-## 🔒 Privacy & Local-First
+## 💾 Local Storage & Data Management
 
-* **100% Local Storage**: All areas, projects, schedules, habits, check-ins, and journal entries are stored strictly in your browser's IndexedDB.
-* **Zero Cloud Tracking**: No user registration required. Nothing is ever sent to any remote server without your explicit command.
-* **Data Sovereignty**: Export and import standard `.json` backup files at any moment to migrate between devices seamlessly.
+* **Browser Local Storage**: All areas, projects, schedules, habits, check-ins, and journal entries are stored strictly in your browser's IndexedDB.
+* **Zero Cloud Dependencies**: No user registration required; operates completely independent of any remote backend.
+* **Data Backup & Migration**: Export and import standard `.json` backup files at any time to migrate between devices seamlessly.
 
 ---
 
