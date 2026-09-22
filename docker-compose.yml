@@ -1,0 +1,7 @@
+services:
+  akasha:
+    build: .
+    container_name: akasha
+    restart: always
+    ports:
+      - "8080:80"

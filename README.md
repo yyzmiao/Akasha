@@ -118,12 +118,33 @@ npm run build
 npm run preview
 ```
 
+### Docker 容器化部署 (Docker Deployment)
+
+项目内置轻量多阶段 `Dockerfile` 与 `docker-compose.yml`，可一键完成静态资源编译与生产环境 Nginx 伺服：
+
+```bash
+# 启动容器服务 (默认映射宿主机 8080 端口)
+docker compose up -d --build
+```
+
+如需配置生产反向代理、SSL 证书与安全访问控制 (HTTP Basic Auth)，可参考 `deploy/nginx-proxy.conf`：
+
+```bash
+# 生成密码凭证文件 (可选)
+htpasswd -b -c deploy/.htpasswd username your_secure_password
+```
+
+> **注意**：若开启 Basic Auth，请务必放行 PWA 清单 (`/manifest.json`)、Service Worker (`/sw.js`) 及图标资源，确保 Android/iOS 桌面独立应用模式与离线缓存正常运转。
+
 ---
 
 ## 📂 目录结构 (Project Structure)
 
 ```text
 Akasha/
+├── deploy/                # 生产部署与反向代理模板
+│   ├── .htpasswd.example  # Basic Auth 凭据模版
+│   └── nginx-proxy.conf   # 生产 Nginx 反向代理配置模版
 ├── public/                # 静态资源与 PWA 清单
 │   └── manifest.json      # 应用清单配置
 ├── src/
@@ -147,6 +168,8 @@ Akasha/
 │   ├── App.vue                 # 根组件与顶层状态流
 │   ├── main.ts                 # 应用入口挂载
 │   └── style.css               # 全局样式与 Tailwind 基础配置
+├── Dockerfile             # 多阶段构建生产镜像配置
+├── docker-compose.yml     # 一键编排容器配置
 ├── index.html             # 单页应用 HTML 模板
 ├── package.json           # 项目元数据与依赖配置
 ├── tsconfig.json          # TypeScript 编译配置
