@@ -143,15 +143,110 @@ docker compose up -d --build
 ```
 
 #### Step 2: Configure Nginx reverse proxy & Basic Auth (Optional)
-Refer to the included production template [`deploy/nginx-proxy.conf`](deploy/nginx-proxy.conf) to bind your custom domain and SSL certificate.
 
-To protect your instance with password authentication (HTTP Basic Auth):
+Refer to the included production template [`deploy/nginx-proxy.conf`](deploy/nginx-proxy.conf) and credential template [`deploy/.htpasswd.example`](deploy/.htpasswd.example).
+
+<details>
+<summary><strong>👉 Click to expand: Complete Server Nginx Reverse Proxy & HTTP Basic Auth Guide</strong></summary>
+
+<br>
+
+Akasha is a local-first application. When hosting on a public cloud server, combining **Nginx reverse proxy** with **HTTP Basic Auth** provides a rock-solid, lightweight layer of web access security without needing a heavy user backend.
+
+##### 1. Install `htpasswd` Utility
+Depending on your server distribution:
 ```bash
-# Generate credential file (optional)
-htpasswd -b -c deploy/.htpasswd username your_secure_password
+# Ubuntu / Debian
+sudo apt update && sudo apt install -y apache2-utils
+
+# CentOS / RHEL / AlmaLinux
+sudo yum install -y httpd-tools
 ```
 
-> **Tip**: If enabling Basic Auth, the configuration template automatically permits unauthenticated access to PWA manifests (`/manifest.json`), Service Worker (`/sw.js`), and icons, ensuring full standalone WebAPK / mobile homescreen installation remains smooth and seamless.
+##### 2. Generate Credentials File
+Create the password file in your Nginx configuration directory (e.g. `/etc/nginx/conf.d/`):
+```bash
+# Create file and add your initial user (-c creates a new file, -b passes password inline)
+htpasswd -b -c /etc/nginx/conf.d/.htpasswd your_username your_secure_password
+
+# Add subsequent users or update existing passwords (omit -c to avoid overwriting)
+htpasswd -b /etc/nginx/conf.d/.htpasswd new_user their_password
+
+# Inspect the file (passwords are stored as salted secure hashes)
+cat /etc/nginx/conf.d/.htpasswd
+```
+
+##### 3. Configure Nginx Reverse Proxy & PWA Whitelist
+Create or update your server block (e.g. `/etc/nginx/conf.d/akasha.conf`), forwarding traffic to the container port (`8080` by default), while configuring HTTP Basic Auth and PWA exemptions:
+
+```nginx
+server {
+    listen 80;
+    listen 443 ssl;
+    server_name your-domain.com;
+
+    ssl_certificate /etc/nginx/certs/fullchain.pem;
+    ssl_certificate_key /etc/nginx/certs/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+
+    charset utf-8;
+    server_tokens off;
+    gzip on;
+    gzip_types text/plain text/css application/javascript application/json application/xml image/svg+xml;
+
+    # Enforce HTTP Basic Auth globally
+    auth_basic "Akasha Restricted Access";
+    auth_basic_user_file /etc/nginx/conf.d/.htpasswd;
+
+    # Critical PWA Exemption: Allow manifest retrieval for mobile installation
+    location = /manifest.json {
+        auth_basic off;
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host $host;
+        add_header Access-Control-Allow-Origin *;
+    }
+
+    # Critical PWA Exemption: Allow Service Worker registration
+    location = /sw.js {
+        auth_basic off;
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host $host;
+    }
+
+    # Critical PWA Exemption: Allow desktop & home screen icons
+    location ~* ^/(icon-.*\.png|apple-touch-icon.*\.png|favicon\..*)$ {
+        auth_basic off;
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host $host;
+        add_header Access-Control-Allow-Origin *;
+    }
+
+    # Main Web Application Reverse Proxy (Protected by Basic Auth)
+    location / {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+> **Pro Tip**: When installing a PWA on Android (via Chrome WebAPK) or iOS (via Safari Add to Home Screen), background workers fetch `/manifest.json` and `/sw.js` without interactive auth prompt capabilities. The `auth_basic off;` rules above are critical: they allow browsers to detect the PWA metadata cleanly while keeping the entire web app interface securely locked.
+
+##### 4. Test & Reload Nginx
+```bash
+# Verify syntax
+nginx -t
+
+# Reload configuration seamlessly
+nginx -s reload
+```
+
+Navigate to `https://your-domain.com`. The browser will trigger a native credential prompt — enter your username and password to log in.
+
+</details>
 
 ---
 

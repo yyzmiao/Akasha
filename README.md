@@ -143,15 +143,110 @@ docker compose up -d --build
 ```
 
 #### 第二步：配置 Nginx 域名反代与访问密码 (可选)
-可直接参考项目内置的生产反代模板 [`deploy/nginx-proxy.conf`](deploy/nginx-proxy.conf)，配置域名绑定与 SSL 证书。
 
-如需配置网页访问密码认证 (HTTP Basic Auth)：
+可直接参考项目内置的生产反代模板 [`deploy/nginx-proxy.conf`](deploy/nginx-proxy.conf) 与凭证模板 [`deploy/.htpasswd.example`](deploy/.htpasswd.example)。
+
+<details>
+<summary><strong>👉 点击展开查看：服务器 Nginx 反向代理与网页账号密码防护全教程</strong></summary>
+
+<br>
+
+Akasha 作为纯前端本地优先应用，若部署在公网服务器上，建议使用 **Nginx 反向代理** 结合 **HTTP Basic Auth**，无需繁琐的后端用户系统即可原生实现网页层面的密码防护。
+
+##### 1. 安装密码生成工具 `htpasswd`
+根据服务器操作系统安装工具：
 ```bash
-# 生成密码凭证文件 (可选)
-htpasswd -b -c deploy/.htpasswd username your_secure_password
+# Ubuntu / Debian
+sudo apt update && sudo apt install -y apache2-utils
+
+# CentOS / RHEL / AlmaLinux
+sudo yum install -y httpd-tools
 ```
 
-> **提示**：若开启 Basic Auth 访问认证，模板已自动对 PWA 清单 (`/manifest.json`)、Service Worker (`/sw.js`) 及图标资源放行，确保 Android Chrome / iOS Safari 仍可正常免密获取清单并一键安装为独立桌面全屏应用。
+##### 2. 生成账号与密码文件
+在 Nginx 配置目录（例如 `/etc/nginx/conf.d/`）下创建凭据文件：
+```bash
+# 创建新文件并添加第一个管理员账号 (-c 为创建新文件，-b 为命令行传密)
+htpasswd -b -c /etc/nginx/conf.d/.htpasswd your_username your_secure_password
+
+# 后续添加其他账号或修改已有密码（注意不要加 -c，否则会覆盖原文件）
+htpasswd -b /etc/nginx/conf.d/.htpasswd new_user their_password
+
+# 查看生成的文件内容（密码将以安全的加密哈希存储）
+cat /etc/nginx/conf.d/.htpasswd
+```
+
+##### 3. 配置 Nginx 站点与 PWA 免密白名单
+创建或编辑站点配置文件（如 `/etc/nginx/conf.d/akasha.conf`），将请求反向代理到容器端口（默认 `8080`），并配置密码防护与关键资源放行：
+
+```nginx
+server {
+    listen 80;
+    listen 443 ssl;
+    server_name your-domain.com;
+
+    ssl_certificate /etc/nginx/certs/fullchain.pem;
+    ssl_certificate_key /etc/nginx/certs/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+
+    charset utf-8;
+    server_tokens off;
+    gzip on;
+    gzip_types text/plain text/css application/javascript application/json application/xml image/svg+xml;
+
+    # 开启网页访问账号密码保护
+    auth_basic "Akasha Restricted Access";
+    auth_basic_user_file /etc/nginx/conf.d/.htpasswd;
+
+    # 关键放行：PWA 清单 (供手机浏览器免密检测并安装独立应用)
+    location = /manifest.json {
+        auth_basic off;
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host $host;
+        add_header Access-Control-Allow-Origin *;
+    }
+
+    # 关键放行：Service Worker (供离线缓存注册)
+    location = /sw.js {
+        auth_basic off;
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host $host;
+    }
+
+    # 关键放行：高清桌面图标
+    location ~* ^/(icon-.*\.png|apple-touch-icon.*\.png|favicon\..*)$ {
+        auth_basic off;
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host $host;
+        add_header Access-Control-Allow-Origin *;
+    }
+
+    # 主应用反代 (受账号密码保护)
+    location / {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+> **避坑提示**：由于安卓 Chrome（WebAPK）与 iOS Safari 添加主屏幕时，是在底层静默拉取 `/manifest.json` 与 `/sw.js`，无法弹出 Basic Auth 输入框。上述配置针对 Manifest、Service Worker 与图标的 `auth_basic off;` 放行极为关键，既保证了主应用的密码安全，又彻底解决了手机浏览器无法安装或图标模糊的问题。
+
+##### 4. 测试并热重载 Nginx
+```bash
+# 测试配置文件语法
+nginx -t
+
+# 语法通过后热重载生效
+nginx -s reload
+```
+
+访问 `https://your-domain.com` 时浏览器将自动弹出登录框，输入设置的用户名和密码即可登入。
+
+</details>
 
 ---
 
