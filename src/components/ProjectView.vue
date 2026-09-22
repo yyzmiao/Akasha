@@ -11,10 +11,10 @@
         </h2>
       </div>
 
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2 w-full sm:w-auto">
         <button
           @click="openNewProjectModal()"
-          class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-medium shadow-sm transition-all"
+          class="flex-1 sm:flex-none justify-center flex items-center gap-1.5 px-3.5 py-2 sm:py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-medium shadow-sm transition-all"
         >
           <Plus class="w-4 h-4" />
           <span>新建项目</span>
@@ -22,7 +22,7 @@
 
         <button
           @click="showAddAreaModal = true"
-          class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 text-xs font-medium transition-all"
+          class="flex-1 sm:flex-none justify-center flex items-center gap-1.5 px-3.5 py-2 sm:py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 text-xs font-medium transition-all"
         >
           <FolderPlus class="w-3.5 h-3.5" />
           <span>新建领域</span>
@@ -30,7 +30,7 @@
       </div>
     </div>
 
-    <div v-if="areas.length === 0" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-12 text-center space-y-3 shadow-sm">
+    <div v-if="areas.length === 0" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-8 sm:p-12 text-center space-y-3 shadow-sm">
       <div class="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center mx-auto">
         <FolderPlus class="w-6 h-6" />
       </div>
@@ -49,11 +49,11 @@
       </div>
     </div>
 
-    <div v-else class="space-y-6">
+    <div v-else class="space-y-4 sm:space-y-6">
       <div
         v-for="area in sortedAreas"
         :key="area.id"
-        class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 space-y-4 shadow-sm"
+        class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 sm:p-5 space-y-3 sm:space-y-4 shadow-sm"
       >
         <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
           <div class="flex items-center gap-2">
@@ -151,11 +151,15 @@
 
     <div
       v-if="activeProject"
-      class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/50 backdrop-blur-sm overflow-y-auto"
+      class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/50 backdrop-blur-sm overflow-y-auto"
+      @click.self="activeProject = null"
     >
-      <div class="w-full max-w-4xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-        <div class="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-950/40 shrink-0">
-          <div class="flex items-center gap-3 flex-1 min-w-0">
+      <div class="w-full max-w-4xl bg-white dark:bg-slate-900 border-t sm:border border-slate-200 dark:border-slate-800 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[90vh] pb-safe animate-in slide-in-from-bottom-6 sm:slide-in-from-bottom-2 duration-200">
+        <!-- Drag indicator on mobile -->
+        <div class="sm:hidden w-10 h-1 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto mt-2 -mb-1"></div>
+
+        <div class="p-3.5 sm:p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 sm:gap-4 bg-slate-50/50 dark:bg-slate-950/40 shrink-0">
+          <div class="flex items-center gap-2.5 sm:gap-3 flex-1 min-w-0">
             <span
               class="w-3.5 h-3.5 rounded-full shrink-0"
               :style="{ backgroundColor: activeProject.color || '#3b82f6' }"
@@ -172,7 +176,7 @@
             </div>
           </div>
 
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-1 sm:gap-2">
             <button
               @click="handleDeleteProject(activeProject.id)"
               class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30"
@@ -189,7 +193,7 @@
           </div>
         </div>
 
-        <div class="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">
+        <div class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 sm:space-y-6">
           <div class="space-y-3">
             <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
               <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
@@ -216,7 +220,7 @@
                 class="w-full px-2.5 py-1.5 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none"
                 @keyup.enter="handleCreateProjectHabit"
               />
-              <div class="flex items-center gap-2">
+              <div class="flex flex-wrap items-center gap-2">
                 <select
                   v-model="newHabitFrequency"
                   class="px-2 py-1 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs"
@@ -274,7 +278,7 @@
 
                 <button
                   @click.stop="$emit('delete-habit', h.id)"
-                  class="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-rose-600"
+                  class="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 sm:p-1 text-slate-400 hover:text-rose-600 transition-opacity"
                 >
                   <Trash2 class="w-3.5 h-3.5" />
                 </button>
@@ -389,7 +393,7 @@
 
                 <button
                   @click="$emit('delete-schedule', s.id)"
-                  class="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-rose-600"
+                  class="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 sm:p-1 text-slate-400 hover:text-rose-600 transition-opacity"
                 >
                   <Trash2 class="w-3.5 h-3.5" />
                 </button>
@@ -443,21 +447,28 @@
       </div>
     </div>
 
-    <div v-if="showNewProjectModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div class="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 space-y-4 shadow-xl">
+    <!-- New Project Modal -->
+    <div
+      v-if="showNewProjectModal"
+      class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-sm"
+      @click.self="showNewProjectModal = false"
+    >
+      <div class="w-full sm:max-w-md bg-white dark:bg-slate-900 border-t sm:border border-slate-200 dark:border-slate-800 rounded-t-2xl sm:rounded-xl p-5 space-y-4 shadow-xl pb-safe animate-in slide-in-from-bottom-6 sm:slide-in-from-bottom-2 duration-200">
+        <div class="sm:hidden w-10 h-1 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto -mt-2 mb-2"></div>
+
         <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
           <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">新建项目</h3>
-          <button @click="showNewProjectModal = false" class="text-slate-400 hover:text-slate-600">
+          <button @click="showNewProjectModal = false" class="p-1 rounded-md text-slate-400 hover:text-slate-600">
             <X class="w-4 h-4" />
           </button>
         </div>
 
-        <div class="space-y-3 text-xs sm:text-sm">
+        <div class="space-y-3.5 text-xs sm:text-sm">
           <div>
             <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">所属领域</label>
             <select
               v-model="modalAreaId"
-              class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950"
+              class="w-full px-2.5 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950"
             >
               <option v-for="a in areas" :key="a.id" :value="a.id">{{ a.title }}</option>
             </select>
@@ -469,20 +480,20 @@
               v-model="modalProjectTitle"
               type="text"
               placeholder="项目名称..."
-              class="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950"
+              class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950"
               @keyup.enter="handleSaveNewProject"
             />
           </div>
 
           <div>
             <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">主题颜色</label>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2.5 flex-wrap">
               <button
                 v-for="c in colorOptions"
                 :key="c"
                 type="button"
                 @click="modalProjectColor = c"
-                class="w-6 h-6 rounded-full border-2 transition-transform"
+                class="w-7 h-7 sm:w-6 sm:h-6 rounded-full border-2 transition-transform active:scale-95"
                 :class="modalProjectColor === c ? 'scale-110 border-slate-900 dark:border-white' : 'border-transparent'"
                 :style="{ backgroundColor: c }"
               ></button>
@@ -490,16 +501,16 @@
           </div>
         </div>
 
-        <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
           <button
             @click="showNewProjectModal = false"
-            class="px-3 py-1.5 rounded-lg text-xs text-slate-500 hover:text-slate-700"
+            class="flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
           >
             取消
           </button>
           <button
             @click="handleSaveNewProject"
-            class="px-4 py-1.5 rounded-lg text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white"
+            class="flex-1 sm:flex-none px-5 py-2 rounded-lg text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
           >
             保存
           </button>
@@ -507,11 +518,18 @@
       </div>
     </div>
 
-    <div v-if="showAddAreaModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div class="w-full max-w-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 space-y-4 shadow-xl">
+    <!-- Add Area Modal -->
+    <div
+      v-if="showAddAreaModal"
+      class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-sm"
+      @click.self="showAddAreaModal = false"
+    >
+      <div class="w-full sm:max-w-sm bg-white dark:bg-slate-900 border-t sm:border border-slate-200 dark:border-slate-800 rounded-t-2xl sm:rounded-xl p-5 space-y-4 shadow-xl pb-safe animate-in slide-in-from-bottom-6 sm:slide-in-from-bottom-2 duration-200">
+        <div class="sm:hidden w-10 h-1 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto -mt-2 mb-2"></div>
+
         <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
           <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">新建领域</h3>
-          <button @click="showAddAreaModal = false" class="text-slate-400 hover:text-slate-600">
+          <button @click="showAddAreaModal = false" class="p-1 rounded-md text-slate-400 hover:text-slate-600">
             <X class="w-4 h-4" />
           </button>
         </div>
@@ -520,20 +538,20 @@
           v-model="newAreaTitle"
           type="text"
           placeholder="领域名称..."
-          class="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950"
+          class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950"
           @keyup.enter="handleSaveNewArea"
         />
 
-        <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
           <button
             @click="showAddAreaModal = false"
-            class="px-3 py-1.5 rounded-lg text-xs text-slate-500 hover:text-slate-700"
+            class="flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
           >
             取消
           </button>
           <button
             @click="handleSaveNewArea"
-            class="px-4 py-1.5 rounded-lg text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white"
+            class="flex-1 sm:flex-none px-5 py-2 rounded-lg text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
           >
             保存
           </button>
@@ -541,22 +559,29 @@
       </div>
     </div>
 
-    <div v-if="editingProjectTodo" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div class="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 space-y-4 shadow-xl">
+    <!-- Edit Project Todo Modal -->
+    <div
+      v-if="editingProjectTodo"
+      class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-sm"
+      @click.self="editingProjectTodo = null"
+    >
+      <div class="w-full sm:max-w-md bg-white dark:bg-slate-900 border-t sm:border border-slate-200 dark:border-slate-800 rounded-t-2xl sm:rounded-xl p-5 space-y-4 shadow-xl max-h-[88vh] overflow-y-auto pb-safe animate-in slide-in-from-bottom-6 sm:slide-in-from-bottom-2 duration-200">
+        <div class="sm:hidden w-10 h-1 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto -mt-2 mb-2"></div>
+
         <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
           <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">设置待办属性</h3>
-          <button @click="editingProjectTodo = null" class="text-slate-400 hover:text-slate-600">
+          <button @click="editingProjectTodo = null" class="p-1 rounded-md text-slate-400 hover:text-slate-600">
             <X class="w-4 h-4" />
           </button>
         </div>
 
-        <div class="space-y-3 text-xs sm:text-sm">
+        <div class="space-y-3.5 text-xs sm:text-sm">
           <div>
             <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">待办名称</label>
             <input
               v-model="editingProjectTodo.title"
               type="text"
-              class="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 focus:outline-none focus:border-blue-500"
+              class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 focus:outline-none focus:border-blue-500"
             />
           </div>
 
@@ -570,17 +595,17 @@
               type="range"
               min="1"
               max="10"
-              class="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-600"
+              class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-600"
             />
           </div>
 
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">开始日期</label>
               <input
                 v-model="editingProjectTodo.startDate"
                 type="date"
-                class="w-full px-2.5 py-1 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 focus:outline-none focus:border-blue-500"
+                class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 focus:outline-none focus:border-blue-500"
               />
             </div>
 
@@ -589,7 +614,7 @@
               <input
                 v-model="editingProjectTodo.dueDate"
                 type="date"
-                class="w-full px-2.5 py-1 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 focus:outline-none focus:border-blue-500"
+                class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 focus:outline-none focus:border-blue-500"
               />
             </div>
           </div>
@@ -598,23 +623,23 @@
             <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">备注信息</label>
             <textarea
               v-model="editingProjectTodo.notes"
-              rows="2"
+              rows="3"
               placeholder="补充说明..."
-              class="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 focus:outline-none focus:border-blue-500"
+              class="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 focus:outline-none focus:border-blue-500"
             ></textarea>
           </div>
         </div>
 
-        <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
           <button
             @click="editingProjectTodo = null"
-            class="px-3 py-1.5 rounded-lg text-xs text-slate-500 hover:text-slate-700"
+            class="flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
           >
             取消
           </button>
           <button
             @click="saveProjectTodoDetails"
-            class="px-4 py-1.5 rounded-lg text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white"
+            class="flex-1 sm:flex-none px-5 py-2 rounded-lg text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
           >
             保存
           </button>

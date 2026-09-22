@@ -1,9 +1,9 @@
 <template>
-  <div class="space-y-6">
-    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm space-y-4">
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+  <div class="space-y-4 sm:space-y-6">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 sm:p-5 shadow-sm space-y-3 sm:space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+          <h2 class="text-base sm:text-lg font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
             <Sparkles class="w-5 h-5 text-amber-500" />
             <span>日常习惯</span>
             <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300">
@@ -14,7 +14,7 @@
 
         <button
           @click="showAddForm = !showAddForm"
-          class="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-medium shadow-sm transition-all self-start md:self-auto"
+          class="flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-medium shadow-sm transition-all w-full sm:w-auto"
         >
           <Plus class="w-4 h-4" />
           <span>新建习惯</span>
@@ -188,7 +188,7 @@
 
               <button
                 @click.stop="handleDelete(h.id)"
-                class="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-rose-600 transition-opacity"
+                class="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 sm:p-1 text-slate-400 hover:text-rose-600 transition-opacity"
               >
                 <Trash2 class="w-3.5 h-3.5" />
               </button>
@@ -259,7 +259,7 @@
 
                 <button
                   @click.stop="handleDelete(h.id)"
-                  class="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-rose-600"
+                  class="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 sm:p-1 text-slate-400 hover:text-rose-600 transition-opacity"
                 >
                   <Trash2 class="w-3.5 h-3.5" />
                 </button>
@@ -318,7 +318,7 @@
 
                 <button
                   @click.stop="handleDelete(h.id)"
-                  class="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-rose-600"
+                  class="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 sm:p-1 text-slate-400 hover:text-rose-600 transition-opacity"
                 >
                   <Trash2 class="w-3.5 h-3.5" />
                 </button>

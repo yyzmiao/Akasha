@@ -1,16 +1,17 @@
 <template>
-  <div class="space-y-4">
-    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 sm:p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-2xs">
-      <div class="flex items-center gap-2.5">
+  <div class="space-y-3.5 sm:space-y-4">
+    <!-- Calendar Top Control Bar -->
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+      <div class="flex items-center justify-between sm:justify-start gap-2.5">
         <div class="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5 border border-slate-200/80 dark:border-slate-700">
           <button
             @click="prevMonth"
-            class="p-1.5 rounded-md text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:white hover:bg-white dark:hover:bg-slate-700 transition-colors"
+            class="p-1.5 rounded-md text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-700 transition-colors"
             title="上个月"
           >
             <ChevronLeft class="w-4 h-4" />
           </button>
-          <span class="px-3 text-sm font-semibold text-slate-800 dark:text-slate-100 min-w-[120px] text-center">
+          <span class="px-2.5 sm:px-3 text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-100 min-w-[100px] sm:min-w-[120px] text-center">
             {{ currentYear }}年 {{ currentMonth + 1 }}月
           </span>
           <button
@@ -24,16 +25,16 @@
 
         <button
           @click="goToToday"
-          class="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-medium text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-all active:scale-95"
+          class="px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-medium text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-all active:scale-95"
         >
           今天
         </button>
       </div>
 
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar">
         <button
           @click="$emit('switch-tab', 'projects')"
-          class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 text-xs font-medium transition-all"
+          class="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 text-xs font-medium transition-all shrink-0"
         >
           <FolderKanban class="w-3.5 h-3.5 text-blue-600" />
           <span>项目 ({{ projects.length }})</span>
@@ -41,7 +42,7 @@
 
         <button
           @click="$emit('switch-tab', 'todos')"
-          class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 text-xs font-medium transition-all"
+          class="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 text-xs font-medium transition-all shrink-0"
         >
           <CheckSquare class="w-3.5 h-3.5 text-emerald-600" />
           <span>待办 ({{ datedTodos.length }})</span>
@@ -49,7 +50,7 @@
 
         <button
           @click="$emit('switch-tab', 'habits')"
-          class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 text-xs font-medium transition-all"
+          class="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 text-xs font-medium transition-all shrink-0"
         >
           <Sparkles class="w-3.5 h-3.5 text-amber-500" />
           <span>习惯</span>
@@ -57,6 +58,7 @@
       </div>
     </div>
 
+    <!-- Monthly Grid Container -->
     <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xs">
       <div class="grid grid-cols-7 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 text-center py-2 text-xs font-semibold text-slate-600 dark:text-slate-400">
         <div>周一</div>
@@ -72,10 +74,11 @@
         <div
           v-for="day in calendarDays"
           :key="day.dateStr"
-          @click="handleDayClick(day.dateStr)"
+          @click="handleDayCellClick(day.dateStr)"
           :class="[
-            'min-h-[58px] sm:min-h-[68px] p-1.5 sm:p-2 flex flex-col transition-all duration-200 group relative cursor-pointer',
+            'min-h-[50px] sm:min-h-[68px] p-1 sm:p-2 flex flex-col transition-all duration-200 group relative cursor-pointer select-none',
             day.isCurrentMonth ? 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/40' : 'bg-slate-50/60 dark:bg-slate-950/40 text-slate-400 opacity-60',
+            selectedMobileDate === day.dateStr ? 'ring-2 ring-blue-500 bg-blue-50/40 dark:bg-blue-950/40 z-10' : '',
             day.isToday && isTodayPulsing
               ? 'bg-blue-100/70 dark:bg-blue-900/50 ring-2 ring-blue-500 shadow-md scale-[1.01] z-10'
               : day.isToday
@@ -83,8 +86,8 @@
               : ''
           ]"
         >
-          <div class="flex items-center justify-between mb-1">
-            <div class="flex items-center gap-1.5">
+          <div class="flex items-center justify-between mb-0.5 sm:mb-1">
+            <div class="flex items-center gap-1 sm:gap-1.5">
               <span
                 :class="[
                   'text-xs font-semibold w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-md',
@@ -104,14 +107,37 @@
 
             <button
               @click.stop="quickAddTodo(day.dateStr)"
-              class="opacity-0 group-hover:opacity-100 p-1 rounded bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-[10px] transition-opacity"
+              class="hidden sm:inline-block opacity-0 group-hover:opacity-100 p-1 rounded bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-[10px] transition-opacity"
               title="添加代办"
             >
               <Plus class="w-3 h-3" />
             </button>
           </div>
 
-          <div class="flex-1 space-y-1">
+          <!-- Mobile Only: Clean Category Dots -->
+          <div class="sm:hidden flex items-center justify-center gap-1 mt-auto py-1">
+            <span
+              v-if="getSchedulesForDay(day.dateStr).length > 0"
+              class="w-1.5 h-1.5 rounded-full bg-indigo-500"
+              :title="`${getSchedulesForDay(day.dateStr).length} 个日程`"
+            ></span>
+            <span
+              v-if="getTodosForDay(day.dateStr).length > 0"
+              :class="[
+                'w-1.5 h-1.5 rounded-full',
+                hasIncompleteTodos(day.dateStr) ? 'bg-rose-500' : 'bg-emerald-500'
+              ]"
+              :title="`${getTodosForDay(day.dateStr).length} 个待办`"
+            ></span>
+            <span
+              v-if="hasJournalOnDate(day.dateStr)"
+              class="w-1.5 h-1.5 rounded-full bg-amber-500"
+              title="已写随笔"
+            ></span>
+          </div>
+
+          <!-- Desktop Only: Detailed Pills Container -->
+          <div class="hidden sm:block flex-1 space-y-1">
             <div
               v-for="s in getSchedulesForDay(day.dateStr)"
               :key="s.id"
@@ -173,7 +199,7 @@
           <div
             v-if="hasJournalOnDate(day.dateStr)"
             @click.stop="$emit('open-journal', day.dateStr)"
-            class="mt-1 flex items-center gap-1 text-[10px] text-slate-500 hover:text-blue-600 truncate"
+            class="hidden sm:flex mt-1 items-center gap-1 text-[10px] text-slate-500 hover:text-blue-600 truncate"
             title="查看此日记"
           >
             <BookOpen class="w-3 h-3 shrink-0" />
@@ -183,14 +209,118 @@
       </div>
     </div>
 
-    <div v-if="selectedSchedule" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div class="w-full max-w-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 space-y-4 shadow-xl">
+    <!-- Mobile Only: Selected Day Agenda Details Card -->
+    <div
+      v-if="selectedMobileDate"
+      class="sm:hidden bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-3.5 space-y-3 shadow-xs"
+    >
+      <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+        <div class="flex items-center gap-2">
+          <Calendar class="w-4 h-4 text-blue-600" />
+          <span class="text-xs font-bold text-slate-800 dark:text-slate-100">
+            {{ formatDisplayDate(selectedMobileDate) }}
+          </span>
+        </div>
+
+        <div class="flex items-center gap-1.5">
+          <button
+            @click="quickAddTodo(selectedMobileDate)"
+            class="flex items-center gap-1 px-2.5 py-1 rounded-md bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 text-[11px] font-medium active:scale-95"
+          >
+            <Plus class="w-3 h-3" />
+            <span>加待办</span>
+          </button>
+
+          <button
+            @click="$emit('open-journal', selectedMobileDate)"
+            class="flex items-center gap-1 px-2.5 py-1 rounded-md bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 text-[11px] font-medium active:scale-95"
+          >
+            <BookOpen class="w-3 h-3" />
+            <span>{{ hasJournalOnDate(selectedMobileDate) ? '读随笔' : '写随笔' }}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Schedules List -->
+      <div v-if="getSchedulesForDay(selectedMobileDate).length > 0" class="space-y-1.5">
+        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">固定日程</div>
+        <div
+          v-for="s in getSchedulesForDay(selectedMobileDate)"
+          :key="s.id"
+          @click="handleOpenSchedule(s)"
+          class="flex items-center justify-between p-2 rounded-lg bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200/80 dark:border-indigo-900 text-xs active:bg-indigo-100 transition-colors"
+        >
+          <div class="flex items-center gap-2 min-w-0">
+            <CalendarDays class="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+            <span v-if="s.time" class="font-mono font-semibold text-indigo-700 dark:text-indigo-300 text-[11px] shrink-0">{{ s.time }}</span>
+            <span class="font-medium text-slate-800 dark:text-slate-100 truncate">{{ s.title }}</span>
+          </div>
+          <span
+            v-if="getProjectColor(s.projectId)"
+            class="w-2 h-2 rounded-full shrink-0"
+            :style="{ backgroundColor: getProjectColor(s.projectId) }"
+          ></span>
+        </div>
+      </div>
+
+      <!-- Todos List -->
+      <div v-if="getTodosForDay(selectedMobileDate).length > 0" class="space-y-1.5">
+        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">截止待办</div>
+        <div
+          v-for="todo in getTodosForDay(selectedMobileDate)"
+          :key="todo.id"
+          @click="$emit('open-todo', todo)"
+          :class="[
+            'flex items-center justify-between p-2 rounded-lg border text-xs active:bg-slate-100 dark:active:bg-slate-800 transition-colors',
+            todo.completed
+              ? 'opacity-60 line-through bg-slate-50 dark:bg-slate-800/40 border-slate-200 text-slate-500'
+              : todo.importance && todo.importance >= 8
+              ? 'bg-rose-50/60 text-rose-800 border-rose-200 dark:bg-rose-950/30 dark:text-rose-300 dark:border-rose-900'
+              : 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-800'
+          ]"
+        >
+          <div class="flex items-center gap-2 min-w-0">
+            <button
+              @click.stop="$emit('toggle-todo', todo.id)"
+              class="w-4 h-4 rounded border border-slate-400 flex items-center justify-center shrink-0"
+            >
+              <Check v-if="todo.completed" class="w-3 h-3 stroke-[3]" />
+            </button>
+            <span class="font-medium truncate">{{ todo.title }}</span>
+            <span v-if="todo.importance" class="text-[10px] font-mono font-bold text-slate-500 shrink-0">P{{ todo.importance }}</span>
+          </div>
+          <span
+            v-if="todo.dueDate === selectedMobileDate"
+            class="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 font-bold shrink-0"
+          >
+            截止
+          </span>
+        </div>
+      </div>
+
+      <div
+        v-if="getSchedulesForDay(selectedMobileDate).length === 0 && getTodosForDay(selectedMobileDate).length === 0"
+        class="py-3 text-center text-xs text-slate-400"
+      >
+        <span>本日暂无固定日程或截止待办</span>
+      </div>
+    </div>
+
+    <!-- Schedule Details Modal: Center on desktop, Bottom Sheet on mobile -->
+    <div
+      v-if="selectedSchedule"
+      class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-sm"
+      @click.self="selectedSchedule = null"
+    >
+      <div class="w-full sm:max-w-sm bg-white dark:bg-slate-900 border-t sm:border border-slate-200 dark:border-slate-800 rounded-t-2xl sm:rounded-xl p-5 space-y-4 shadow-xl pb-safe">
+        <div class="sm:hidden w-10 h-1 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto -mt-2 mb-2"></div>
+
         <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
           <div class="flex items-center gap-2">
             <CalendarDays class="w-4 h-4 text-indigo-600" />
             <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">日程详情</h3>
           </div>
-          <button @click="selectedSchedule = null" class="text-slate-400 hover:text-slate-600">
+          <button @click="selectedSchedule = null" class="p-1 rounded-md text-slate-400 hover:text-slate-600">
             <X class="w-4 h-4" />
           </button>
         </div>
@@ -256,12 +386,13 @@ import {
   Plus,
   BookOpen,
   CalendarDays,
+  Calendar,
   Check,
   X,
   Trash2,
 } from 'lucide-vue-next'
 import type { TodoItem, JournalEntry, ScheduleItem, Project } from '@/types'
-import { getCalendarDays, parseDate, isDateInRange } from '@/utils/date'
+import { getCalendarDays, parseDate, isDateInRange, formatDate, formatDisplayDate } from '@/utils/date'
 
 const props = defineProps<{
   todos: TodoItem[]
@@ -284,6 +415,18 @@ const currentYear = ref(today.getFullYear())
 const currentMonth = ref(today.getMonth())
 const isTodayPulsing = ref(false)
 const selectedSchedule = ref<ScheduleItem | null>(null)
+const selectedMobileDate = ref(formatDate(today))
+
+function hasIncompleteTodos(dateStr: string): boolean {
+  return getTodosForDay(dateStr).some((t) => !t.completed)
+}
+
+function handleDayCellClick(dateStr: string) {
+  selectedMobileDate.value = dateStr
+  if (typeof window !== 'undefined' && window.innerWidth >= 640) {
+    emit('open-journal', dateStr)
+  }
+}
 
 function handleOpenSchedule(s: ScheduleItem) {
   selectedSchedule.value = s

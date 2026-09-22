@@ -5,24 +5,24 @@
       @click="$emit('close')"
     ></div>
 
-    <div class="fixed inset-y-0 left-0 max-w-full flex pr-10">
+    <div class="fixed inset-y-0 left-0 max-w-full flex pr-0 sm:pr-10">
       <div
-        class="w-screen max-w-md bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col transition-all duration-300 transform"
+        class="w-screen sm:max-w-md bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col transition-all duration-300 transform"
       >
-        <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800">
+        <div class="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 dark:border-slate-800">
           <div>
             <h2 class="text-base font-semibold text-slate-900 dark:text-slate-100">系统设置</h2>
             <p class="text-xs text-slate-400 mt-0.5">偏好配置与本地数据管理</p>
           </div>
           <button
             @click="$emit('close')"
-            class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            class="p-2 sm:p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           >
             <X class="w-5 h-5" />
           </button>
         </div>
 
-        <div class="flex-1 overflow-y-auto p-6 space-y-6">
+        <div class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 sm:space-y-6">
           <section class="space-y-3">
             <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
               <Activity class="w-3.5 h-3.5 text-blue-500" />
@@ -219,11 +219,11 @@
           </section>
         </div>
 
-        <div class="px-6 py-3.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 flex items-center justify-between text-xs text-slate-400">
-          <span>Akasha · 本地数据存储</span>
+        <div class="px-4 sm:px-6 py-3.5 pb-safe border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 flex items-center justify-between text-xs text-slate-400">
+          <span>Akasha · 本地存储</span>
           <button
             @click="$emit('close')"
-            class="px-3 py-1 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 font-medium transition-colors"
+            class="px-4 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 font-medium transition-colors"
           >
             完成
           </button>

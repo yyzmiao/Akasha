@@ -1,19 +1,19 @@
 <template>
-  <div class="relative min-h-[calc(100vh-100px)] flex flex-col lg:flex-row gap-8 items-start">
-    <div class="flex-1 w-full flex justify-center py-2">
-      <div class="w-full max-w-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl shadow-sm p-7 sm:p-9 relative min-h-[580px] flex flex-col">
-        <div class="flex items-start justify-between mb-6">
-          <div class="flex flex-col items-center justify-center w-12 h-12 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-center select-none shrink-0">
-            <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+  <div class="relative min-h-[calc(100vh-100px)] flex flex-col lg:flex-row gap-4 sm:gap-8 items-start">
+    <div class="flex-1 w-full flex justify-center py-1 sm:py-2">
+      <div class="w-full max-w-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl shadow-sm p-4 sm:p-8 relative min-h-[380px] sm:min-h-[580px] flex flex-col">
+        <div class="flex items-start justify-between mb-4 sm:mb-6">
+          <div class="flex flex-col items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-center select-none shrink-0">
+            <span class="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-slate-400">
               {{ currentMonthShort }}
             </span>
-            <span class="text-base font-bold text-slate-800 dark:text-slate-100 leading-none mt-0.5">
+            <span class="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-100 leading-none mt-0.5">
               {{ currentDayNumber }}
             </span>
           </div>
 
-          <div class="flex-1 text-center px-4">
-            <h2 class="text-lg sm:text-xl font-medium text-slate-800 dark:text-slate-100 tracking-normal select-none">
+          <div class="flex-1 text-center px-2 sm:px-4">
+            <h2 class="text-base sm:text-xl font-medium text-slate-800 dark:text-slate-100 tracking-normal select-none">
               {{ formattedDateTitle }}
             </h2>
           </div>
@@ -21,7 +21,7 @@
           <div class="relative shrink-0">
             <button
               @click="showMoodPicker = !showMoodPicker"
-              class="w-9 h-9 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-lg transition-colors border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
+              class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-base sm:text-lg transition-colors border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
               title="选择心情"
             >
               <span>{{ activeEntry?.mood || '😊' }}</span>
@@ -48,12 +48,12 @@
             v-model="journalContent"
             @input="handleAutoSave"
             placeholder="写下今天的日记与随笔..."
-            class="w-full flex-1 min-h-[420px] resize-none bg-transparent text-slate-700 dark:text-slate-200 text-sm sm:text-base focus:outline-none placeholder:text-slate-400 tracking-wide"
+            class="w-full flex-1 min-h-[260px] sm:min-h-[420px] resize-none bg-transparent text-slate-700 dark:text-slate-200 text-sm sm:text-base focus:outline-none placeholder:text-slate-400 tracking-wide"
             style="line-height: 2.2;"
           ></textarea>
         </div>
 
-        <div class="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800/80 text-xs text-slate-400">
+        <div class="flex items-center justify-between pt-3 sm:pt-4 border-t border-slate-100 dark:border-slate-800/80 text-xs text-slate-400">
           <span class="text-[11px] text-slate-400">
             {{ autoSaveStatus || '已自动保存' }}
           </span>
@@ -234,37 +234,43 @@
       </div>
     </aside>
 
-    <div v-if="showTemplateModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div class="w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 space-y-4 shadow-xl">
+    <div
+      v-if="showTemplateModal"
+      class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-sm"
+      @click.self="showTemplateModal = false"
+    >
+      <div class="w-full sm:max-w-lg bg-white dark:bg-slate-900 border-t sm:border border-slate-200 dark:border-slate-800 rounded-t-2xl sm:rounded-xl p-5 space-y-4 shadow-xl max-h-[88vh] overflow-y-auto pb-safe animate-in slide-in-from-bottom-6 sm:slide-in-from-bottom-2 duration-200">
+        <div class="sm:hidden w-10 h-1 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto -mt-2 mb-2"></div>
+
         <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
           <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">日记模板设置</h3>
-          <button @click="showTemplateModal = false" class="text-slate-400 hover:text-slate-600">
+          <button @click="showTemplateModal = false" class="p-1 rounded-md text-slate-400 hover:text-slate-600">
             <X class="w-4 h-4" />
           </button>
         </div>
 
         <textarea
           v-model="customTemplate"
-          rows="12"
-          class="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500 font-mono"
+          rows="8"
+          class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500 font-mono"
         ></textarea>
 
-        <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
           <button
             @click="resetDefaultTemplate"
-            class="px-3 py-1.5 rounded-lg text-xs text-slate-500 hover:text-slate-700 mr-auto"
+            class="px-3 py-2 rounded-lg text-xs text-slate-500 hover:text-slate-700 mr-auto border border-slate-200 dark:border-slate-700"
           >
             恢复默认
           </button>
           <button
             @click="showTemplateModal = false"
-            class="px-3 py-1.5 rounded-lg text-xs text-slate-500 hover:text-slate-700"
+            class="px-4 py-2 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
           >
             取消
           </button>
           <button
             @click="saveCustomTemplate"
-            class="px-4 py-1.5 rounded-lg text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white"
+            class="px-5 py-2 rounded-lg text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
           >
             保存
           </button>

@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans pb-16 md:pb-6 transition-colors">
+  <div class="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:pb-6 transition-colors">
     <Navbar
       :active-tab="activeTab"
       :is-dark="isDark"
@@ -9,7 +9,7 @@
       @toggle-theme="toggleTheme"
     />
 
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5">
+    <main class="flex-1 max-w-7xl w-full mx-auto px-2.5 sm:px-6 lg:px-8 py-3.5 sm:py-5">
       <CalendarView
         v-if="activeTab === 'calendar'"
         :todos="todos"

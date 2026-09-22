@@ -1,26 +1,33 @@
 <template>
   <div
     v-if="isOpen"
-    class="fixed inset-0 z-50 flex items-start justify-center pt-16 sm:pt-24 px-4 bg-black/50 backdrop-blur-sm"
+    class="fixed inset-0 z-50 flex items-start justify-center pt-4 sm:pt-20 px-2.5 sm:px-4 bg-black/50 backdrop-blur-sm"
     @click.self="$emit('close')"
   >
     <div
-      class="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[80vh] transition-all"
+      class="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[86vh] sm:max-h-[80vh] transition-all pb-safe sm:pb-0 animate-in zoom-in-95 duration-150"
     >
-      <div class="relative flex items-center px-4 border-b border-slate-100 dark:border-slate-800">
-        <Search class="w-5 h-5 text-slate-400 shrink-0 mr-3" />
+      <div class="relative flex items-center px-3 sm:px-4 border-b border-slate-100 dark:border-slate-800">
+        <Search class="w-5 h-5 text-slate-400 shrink-0 mr-2 sm:mr-3" />
         <input
           ref="searchInputRef"
           v-model="query"
           type="text"
-          placeholder="搜索项目、待办、日程、习惯、日记... (↑↓ 导航, Enter 选择)"
-          class="w-full py-4 text-sm sm:text-base bg-transparent text-slate-800 dark:text-slate-100 placeholder-slate-400 outline-none"
+          placeholder="搜索项目、待办、日程、习惯、日记..."
+          class="w-full py-3.5 sm:py-4 text-xs sm:text-base bg-transparent text-slate-800 dark:text-slate-100 placeholder-slate-400 outline-none"
           @keydown="handleKeyDown"
         />
         <button
           v-if="query"
           @click="query = ''"
-          class="p-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 mr-2"
+          class="p-1.5 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 mr-1 sm:mr-2"
+        >
+          <X class="w-4 h-4" />
+        </button>
+        <button
+          @click="$emit('close')"
+          class="sm:hidden p-1.5 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+          aria-label="关闭"
         >
           <X class="w-4 h-4" />
         </button>
@@ -29,13 +36,13 @@
         </kbd>
       </div>
 
-      <div class="flex items-center gap-1.5 px-4 py-2 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 overflow-x-auto text-xs">
+      <div class="flex items-center gap-1.5 px-3 sm:px-4 py-2 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 overflow-x-auto no-scrollbar text-xs">
         <button
           v-for="cat in categories"
           :key="cat.id"
           @click="selectedCategory = cat.id"
           :class="[
-            'px-2.5 py-1 rounded-lg font-medium transition-all whitespace-nowrap',
+            'px-2.5 py-1 rounded-lg font-medium transition-all whitespace-nowrap shrink-0',
             selectedCategory === cat.id
               ? 'bg-blue-600 text-white shadow-sm'
               : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
@@ -46,7 +53,7 @@
         </button>
       </div>
 
-      <div class="flex-1 overflow-y-auto p-2 divide-y divide-slate-100 dark:divide-slate-800/60 max-h-[55vh]">
+      <div class="flex-1 overflow-y-auto p-2 divide-y divide-slate-100 dark:divide-slate-800/60 max-h-[60vh] sm:max-h-[55vh]">
         <div
           v-if="filteredResults.length === 0"
           class="py-12 text-center text-slate-400 text-xs sm:text-sm"
