@@ -3,10 +3,13 @@
     <!-- Top Header -->
     <header class="sticky top-0 z-40 w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-3.5 sm:px-8 py-2.5 transition-colors">
       <div class="max-w-7xl mx-auto flex items-center justify-between">
-        <div class="flex items-center gap-2 sm:gap-3">
+        <div class="flex items-center gap-1.5 sm:gap-3">
           <span class="font-bold text-base sm:text-base tracking-tight text-slate-900 dark:text-white font-mono select-none">
             Akasha
           </span>
+
+          <!-- 今日天气微件 -->
+          <WeatherWidget />
 
           <!-- Desktop Quick Actions -->
           <div class="hidden md:flex items-center gap-1">
@@ -230,6 +233,7 @@ import {
   Sun,
   Moon,
 } from 'lucide-vue-next'
+import WeatherWidget from './WeatherWidget.vue'
 import type { ActiveTab } from '@/types'
 
 defineProps<{
