@@ -5,8 +5,8 @@
 </p>
 
 <p align="center">
-  <strong>An open-source, clean personal planner, calendar, and todo app.</strong><br>
-  <em>一个开源、简洁的个人日程计划、日历与待办管理工具。</em>
+  <strong>An open-source, clean personal planner, calendar, and todo app that can be deployed on your own computer or server.</strong><br>
+  <em>一个开源、简洁的个人日程计划、日历与待办管理工具，可部署在自己的电脑或服务器上。</em>
 </p>
 
 <p align="center">
@@ -27,14 +27,14 @@
 
 ## 📖 Introduction
 
-**Akasha** is an open-source, lightweight, and local-first personal planner, dynamic calendar, and multi-level todo app.
+**Akasha** is an open-source, lightweight personal planner, dynamic calendar, and multi-level todo app that can be deployed on your own computer or server.
 
-In our daily routines, we often find ourselves juggling multiple separate apps: checking schedules in calendars, breaking down tasks in todo lists, tracking habits in habit apps, and jotting notes in memo pads — switching back and forth is both cumbersome and distracting.
+In our daily routines, we often find ourselves juggling between multiple separate apps: checking schedules in calendars, breaking down tasks in todo lists, tracking habits in habit apps, and jotting notes in memo pads — switching back and forth is both cumbersome and distracting.
 
 **Akasha brings these daily essentials together into one clean, unified tool:**  
 It combines an **adaptive dynamic monthly calendar, infinite multi-level todo lists, habit streak tracking, fixed schedules, and daily journaling**. The interface is intuitive, uncluttered, and tailored for daily task planning and time management.
 
-Built with a **Local-First** architecture, all your data is stored directly in your browser's IndexedDB. No registration required, no cloud dependencies, instant response times, 100% offline-ready, and fully installable as a standalone desktop or mobile application (PWA).
+Easily deployed on your personal computer (PC / Mac) or private cloud server (VPS). Built with a **Local-First** architecture, all your data is stored directly in your browser's IndexedDB. No registration required, no cloud dependencies, instant response times, 100% offline-ready, and fully installable as a standalone desktop or mobile application (PWA).
 
 ---
 
@@ -103,57 +103,55 @@ Built with a **Local-First** architecture, all your data is stored directly in y
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Deployment Guide
 
-### Prerequisites
-* Node.js >= 18.0.0
-* npm >= 9.0.0 (or pnpm / yarn)
+This project can be deployed on your **personal computer** or **cloud server**, offering lightweight and flexible setups:
 
-### Installation & Development
+### 1. Deploy on Your Own Computer (Local PC / Mac)
 
+#### Option A: Run locally with Node.js
 ```bash
-# 1. Clone the repository
+# 1. Clone repository and navigate into directory
 git clone https://github.com/yyzmiao/Akasha.git
-
-# 2. Enter project directory
 cd Akasha
 
-# 3. Install dependencies
+# 2. Install dependencies
 npm install
 
-# 4. Start local development server
+# 3. Start local development server (runs at http://localhost:5173/)
 npm run dev
 ```
 
-The dev server will run at: `http://localhost:5173/`
-
-### Production Build & Preview
-
+#### Option B: One-click local Docker startup
 ```bash
-# Build for production
-npm run build
-
-# Preview production build locally
-npm run preview
-```
-
-### Docker Deployment
-
-A lightweight multi-stage `Dockerfile` and `docker-compose.yml` are included for instant containerized building and Nginx serving:
-
-```bash
-# Build and run container in detached mode (maps host port 8080:80)
+# Build and run container locally (visit http://localhost:8080)
 docker compose up -d --build
 ```
 
-For reverse proxying, SSL termination, and HTTP Basic Auth, refer to `deploy/nginx-proxy.conf`:
+---
 
+### 2. Deploy on Your Own Server (VPS / Cloud)
+
+#### Step 1: Start container with Docker Compose
+```bash
+# Clone the repository on your server
+git clone https://github.com/yyzmiao/Akasha.git
+cd Akasha
+
+# Launch container service (mapped to host port 8080)
+docker compose up -d --build
+```
+
+#### Step 2: Configure Nginx reverse proxy & Basic Auth (Optional)
+Refer to the included production template [`deploy/nginx-proxy.conf`](deploy/nginx-proxy.conf) to bind your custom domain and SSL certificate.
+
+To protect your instance with password authentication (HTTP Basic Auth):
 ```bash
 # Generate credential file (optional)
 htpasswd -b -c deploy/.htpasswd username your_secure_password
 ```
 
-> **Note**: If enabling Basic Auth, ensure PWA manifests (`/manifest.json`), Service Worker (`/sw.js`), and app icons are excluded from authentication to preserve standalone mobile installation.
+> **Tip**: If enabling Basic Auth, the configuration template automatically permits unauthenticated access to PWA manifests (`/manifest.json`), Service Worker (`/sw.js`), and icons, ensuring full standalone WebAPK / mobile homescreen installation remains smooth and seamless.
 
 ---
 

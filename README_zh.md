@@ -5,8 +5,8 @@
 </p>
 
 <p align="center">
-  <strong>一个开源、简洁的个人日程计划、日历与待办管理工具。</strong><br>
-  <em>An open-source, clean personal planner, calendar, and todo app.</em>
+  <strong>一个开源、简洁的个人日程计划、日历与待办管理工具，可部署在自己的电脑或服务器上。</strong><br>
+  <em>An open-source, clean personal planner, calendar, and todo app that can be deployed on your own computer or server.</em>
 </p>
 
 <p align="center">
@@ -27,14 +27,14 @@
 
 ## 📖 简介
 
-**Akasha** 是一个开源、轻量且纯粹由本地驱动的个人日程计划、动态日历与多级待办事项管理工具。
+**Akasha** 是一个开源、轻量且可部署在自己电脑或服务器上的个人日程计划、动态日历与多级待办事项管理工具。
 
 日常生活中，我们常常需要在不同的应用之间来回切换：在日历里查日程、在待办软件里拆任务、在打卡工具里记习惯、在备忘录里写随笔——多款工具割裂跳转，既繁琐又分散精力。
 
 **Akasha 将这些常用的计划与待办功能融为一体：**  
 它汇集了**自适应动态月历、无限多级待办清单、规律习惯打卡、固定日程规划以及随笔日记**。界面直观清爽，专注于日常任务的高效规划与时间管理。
 
-采用 **本地优先（Local-First）** 架构，所有数据均保存在本地浏览器的 IndexedDB 数据库中。无需注册账号，不依赖云端服务，毫秒级即时响应，全离线可用，并支持一键安装为桌面或手机独立应用（PWA）。
+支持自由部署在个人电脑（PC / Mac）或私有云服务器（VPS）中。采用 **本地优先（Local-First）** 架构，所有数据均保存在本地浏览器的 IndexedDB 数据库中。无需注册账号，不依赖任何第三方云端服务，毫秒级即时响应，全离线可用，并支持一键安装为桌面或手机独立应用（PWA）。
 
 ---
 
@@ -103,57 +103,55 @@
 
 ---
 
-## 🚀 快速上手 (Getting Started)
+## 🚀 部署与运行 (Deployment & Running)
 
-### 环境要求 (Prerequisites)
-* Node.js >= 18.0.0
-* npm >= 9.0.0 (或 pnpm / yarn)
+本项目支持部署在**个人电脑**或**云端服务器**上，提供轻量灵活的运行方式：
 
-### 安装与运行 (Installation & Dev)
+### 1. 部署在自己的电脑上 (Local Computer)
 
+#### 方式 A：Node.js 本地极速运行
 ```bash
-# 1. 克隆代码仓库
+# 1. 克隆代码仓库并进入目录
 git clone https://github.com/yyzmiao/Akasha.git
-
-# 2. 进入项目目录
 cd Akasha
 
-# 3. 安装依赖
+# 2. 安装项目依赖
 npm install
 
-# 4. 启动本地开发服务
+# 3. 启动本地开发服务 (默认运行在 http://localhost:5173/)
 npm run dev
 ```
 
-默认开发服务运行在：`http://localhost:5173/`
-
-### 生产构建与预览 (Build & Preview)
-
+#### 方式 B：本地 Docker 一键启动
 ```bash
-# 构建生产包
-npm run build
-
-# 本地预览生产构建产物
-npm run preview
+# 一键编译并启动本地容器服务 (访问 http://localhost:8080)
+docker compose up -d --build
 ```
 
-### Docker 容器化部署 (Docker Deployment)
+---
 
-项目内置轻量多阶段 `Dockerfile` 与 `docker-compose.yml`，可一键完成静态资源编译与生产环境 Nginx 伺服：
+### 2. 部署在自己的服务器上 (Server / VPS)
 
+#### 第一步：Docker 容器化启动
 ```bash
+# 在服务器克隆代码并进入目录
+git clone https://github.com/yyzmiao/Akasha.git
+cd Akasha
+
 # 启动容器服务 (默认映射宿主机 8080 端口)
 docker compose up -d --build
 ```
 
-如需配置生产反向代理、SSL 证书与安全访问控制 (HTTP Basic Auth)，可参考 `deploy/nginx-proxy.conf`：
+#### 第二步：配置 Nginx 域名反代与访问密码 (可选)
+可直接参考项目内置的生产反代模板 [`deploy/nginx-proxy.conf`](deploy/nginx-proxy.conf)，配置域名绑定与 SSL 证书。
 
+如需配置网页访问密码认证 (HTTP Basic Auth)：
 ```bash
 # 生成密码凭证文件 (可选)
 htpasswd -b -c deploy/.htpasswd username your_secure_password
 ```
 
-> **注意**：若开启 Basic Auth，请务必放行 PWA 清单 (`/manifest.json`)、Service Worker (`/sw.js`) 及图标资源，确保 Android/iOS 桌面独立应用模式与离线缓存正常运转。
+> **提示**：若开启 Basic Auth 访问认证，模板已自动对 PWA 清单 (`/manifest.json`)、Service Worker (`/sw.js`) 及图标资源放行，确保 Android Chrome / iOS Safari 仍可正常免密获取清单并一键安装为独立桌面全屏应用。
 
 ---
 
