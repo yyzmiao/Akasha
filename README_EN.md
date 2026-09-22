@@ -5,8 +5,8 @@
 </p>
 
 <p align="center">
-  <strong>An open-source, minimalist, and privacy-first Personal Life & Work Architecture OS.</strong><br>
-  <em>一个开源、极简且注重隐私的个人生活与工作架构流操作系统。</em>
+  <strong>An open-source, clean, and privacy-first personal planner, calendar, and todo app.</strong><br>
+  <em>一个开源、简洁且注重隐私的个人日程计划、日历与待办管理工具。</em>
 </p>
 
 <p align="center">
@@ -27,16 +27,14 @@
 
 ## 📖 Introduction
 
-**Akasha** is an open-source, elegant, and self-sovereign Personal Life & Work Architecture OS.
+**Akasha** is an open-source, lightweight, and local-first personal planner, dynamic calendar, and multi-level todo app.
 
-In today's digital era, we frequently find ourselves trapped in a disjointed cycle of apps: checking schedules in calendars, breaking down tasks in todo managers, ticking boxes in habit trackers, and jotting thoughts in separate notes. Tools meant to liberate our time often end up fracturing our focus.
+In our daily routines, we often find ourselves juggling multiple separate apps: checking schedules in calendars, breaking down tasks in todo lists, tracking habits in habit apps, and jotting notes in memo pads — switching back and forth is both cumbersome and distracting.
 
-**Akasha was crafted to restore clarity, order, and mindful flow.**  
-Its name stems from the ancient Sanskrit term *Ākāśa* (ether / space — the primordial element that holds and nurtures all existence). It seamlessly knits **macro life area governance, an intelligent adaptive monthly calendar, infinite recursive task decomposition, rhythmic habit streak tracking, fixed schedules, and mindful daily journaling** into one unified, tranquil canvas. Long-term aspirations effortlessly cascade into every single daily action.
+**Akasha brings these daily essentials together into one clean, unified tool:**  
+It combines an **adaptive dynamic monthly calendar, infinite multi-level todo lists, habit streak tracking, fixed schedules, and daily journaling**. The interface is intuitive, uncluttered, and tailored for daily task planning and time management.
 
-Rooted in a steadfast **Local-First** philosophy, all your data resides solely within your browser's IndexedDB. Zero mandatory sign-ups, zero remote tracking, sub-millisecond responsiveness, 100% offline functionality, and full progressive web app (PWA) standalone installation for mobile and desktop.
-
-Akasha is not just another productivity tool — it is your serene digital sanctuary designed to help you organize life's complexity and master your inner calm.
+Built with a steadfast **Local-First** and privacy-first approach, all your data is stored strictly inside your browser's IndexedDB. No registration required, zero cloud tracking, sub-millisecond responsiveness, 100% offline-ready, and fully installable as a standalone desktop or mobile application (PWA).
 
 ---
 
