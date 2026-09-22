@@ -1,7 +1,7 @@
 {
   "name": "akasha",
   "version": "1.0.0",
-  "description": "Akasha - Personal Life & Work Architecture Flow OS",
+  "description": "An all-in-one calendar, multi-level todo, habit tracking, and journal app",
   "type": "module",
   "scripts": {
     "dev": "vite",

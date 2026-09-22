@@ -1,7 +1,7 @@
 {
   "name": "Akasha",
   "short_name": "Akasha",
-  "description": "Akasha - Personal Life & Work Architecture Flow OS",
+  "description": "An all-in-one calendar, multi-level todo, habit tracking, and journal app",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#020617",

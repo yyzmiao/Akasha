@@ -1,7 +1,7 @@
 # Akasha
 
-> **A personal life and work architecture flow OS.**  
-> 统领人生领域、目标项目、无限层级任务分解、规律习惯打卡与深度日记复盘的个人效能系统。
+> **An all-in-one productivity app combining calendar, multi-level todos, habit tracking, and daily journal.**  
+> 一款集动态日历、无限多级待办清单、习惯打卡与随笔日记于一体的个人计划管理工具。
 
 [![Vue 3](https://img.shields.io/badge/Vue-3.5-4FC08D?style=flat-square&logo=vue.js&logoColor=white)](https://vuejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -14,11 +14,11 @@
 
 ## 📖 简介 (Introduction)
 
-**Akasha** 是一个面向长期成长、专注个人效能与自律节奏的本地优先（Local-First）系统。
+**Akasha** 是一款简洁实用、本地优先（Local-First）的个人计划与时间管理工具。
 
-许多任务管理工具往往割裂了“宏观愿景”与“微观行动”：项目列表缺少时间维度的日程联动，日历工具难以承载无限细分的复杂待办树，而打卡与日记复盘又常常分散在不同应用中。
+日常生活中，我们经常需要在不同的应用间来回切换：在日历里查日程、在待办软件里拆任务、在打卡工具里记习惯、在备忘录里写随笔。
 
-Akasha 通过统一的数据模型与穿透式交互，将**人生领域划分、项目目标、规律习惯、固定日程、多级待办清单、自适应动态日历以及随笔复盘**整合为自洽的完整闭环。所有数据均持久化保存在用户本地浏览器 IndexedDB 中，无需担心隐私泄漏或云端服务中断。
+Akasha 将**自适应动态日历、多级待办清单、规律习惯追踪、固定日程规划以及随笔复盘**整合为一体。操作直观自然，无需在多款工具间割裂跳转。同时，所有数据均存储在本地浏览器 IndexedDB 数据库中，无需登录账号，私密、快速且支持离线使用。
 
 ---
 
