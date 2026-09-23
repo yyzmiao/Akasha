@@ -16,12 +16,15 @@
         :schedules="schedules"
         :projects="projects"
         :journals="journals"
+        :habits="habits"
+        :habit-logs="habitLogs"
         @switch-tab="handleTabChange($event as any)"
         @open-todo="handleOpenTodo"
         @delete-schedule="handleDeleteSchedule"
         @quick-create-todo="handleQuickCreateTodo"
         @open-journal="handleOpenJournalDate"
         @toggle-todo="handleToggleTodoComplete"
+        @toggle-habit="handleToggleHabit"
       />
 
       <ProjectView
@@ -594,6 +597,7 @@ async function handleSaveHabit(habitData: Partial<Habit>) {
       anchorDate: habitData.anchorDate || formatDate(new Date()),
       cycleWeeks: habitData.cycleWeeks,
       weekPatterns: habitData.weekPatterns,
+      showOnCalendar: habitData.showOnCalendar ?? false,
       color: habitData.color || '#2563eb',
       createdAt: new Date().toISOString(),
       updatedAt: now,

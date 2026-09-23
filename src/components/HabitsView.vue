@@ -299,6 +299,19 @@
 
               <div class="flex items-center gap-1 shrink-0">
                 <button
+                  @click.stop="toggleShowOnCalendar(h)"
+                  :class="[
+                    'p-1.5 sm:p-1 rounded-md transition-all',
+                    h.showOnCalendar
+                      ? 'opacity-100 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60'
+                      : 'opacity-100 sm:opacity-0 sm:group-hover:opacity-100 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/30'
+                  ]"
+                  :title="h.showOnCalendar ? '已在日历显示（点击隐藏）' : '在日历上显示（点击开启）'"
+                >
+                  <Calendar v-if="h.showOnCalendar" class="w-3.5 h-3.5" />
+                  <CalendarOff v-else class="w-3.5 h-3.5" />
+                </button>
+                <button
                   @click.stop="openEditHabit(h)"
                   class="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 sm:p-1 rounded-md text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-all"
                   title="修改习惯"
@@ -379,6 +392,19 @@
                 </div>
 
                 <div class="flex items-center gap-1 shrink-0">
+                  <button
+                    @click.stop="toggleShowOnCalendar(h)"
+                    :class="[
+                      'p-1.5 sm:p-1 rounded-md transition-all',
+                      h.showOnCalendar
+                        ? 'opacity-100 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60'
+                        : 'opacity-100 sm:opacity-0 sm:group-hover:opacity-100 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/30'
+                    ]"
+                    :title="h.showOnCalendar ? '已在日历显示（点击隐藏）' : '在日历上显示（点击开启）'"
+                  >
+                    <Calendar v-if="h.showOnCalendar" class="w-3.5 h-3.5" />
+                    <CalendarOff v-else class="w-3.5 h-3.5" />
+                  </button>
                   <button
                     @click.stop="openEditHabit(h)"
                     class="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 sm:p-1 rounded-md text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-all"
@@ -490,6 +516,19 @@
 
                 <div class="flex items-center gap-1 shrink-0">
                   <button
+                    @click.stop="toggleShowOnCalendar(h)"
+                    :class="[
+                      'p-1.5 sm:p-1 rounded-md transition-all',
+                      h.showOnCalendar
+                        ? 'opacity-100 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60'
+                        : 'opacity-100 sm:opacity-0 sm:group-hover:opacity-100 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/30'
+                    ]"
+                    :title="h.showOnCalendar ? '已在日历显示（点击隐藏）' : '在日历上显示（点击开启）'"
+                  >
+                    <Calendar v-if="h.showOnCalendar" class="w-3.5 h-3.5" />
+                    <CalendarOff v-else class="w-3.5 h-3.5" />
+                  </button>
+                  <button
                     @click.stop="openEditHabit(h)"
                     class="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 sm:p-1 rounded-md text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-all"
                     title="修改习惯"
@@ -558,6 +597,19 @@
                 </div>
 
                 <div class="flex items-center gap-1 shrink-0">
+                  <button
+                    @click.stop="toggleShowOnCalendar(h)"
+                    :class="[
+                      'p-1.5 sm:p-1 rounded-md transition-all',
+                      h.showOnCalendar
+                        ? 'opacity-100 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60'
+                        : 'opacity-100 sm:opacity-0 sm:group-hover:opacity-100 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/30'
+                    ]"
+                    :title="h.showOnCalendar ? '已在日历显示（点击隐藏）' : '在日历上显示（点击开启）'"
+                  >
+                    <Calendar v-if="h.showOnCalendar" class="w-3.5 h-3.5" />
+                    <CalendarOff v-else class="w-3.5 h-3.5" />
+                  </button>
                   <button
                     @click.stop="openEditHabit(h)"
                     class="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 sm:p-1 rounded-md text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-all"
@@ -797,6 +849,22 @@
               <p class="text-[11px] text-blue-700 dark:text-blue-300 font-mono">{{ editRotatingPreview.currentWeekDesc }}</p>
             </div>
           </div>
+
+          <!-- 是否在日历上显示 -->
+          <div class="flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+            <div class="space-y-0.5">
+              <div class="text-xs font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                <Calendar class="w-3.5 h-3.5 text-blue-600" />
+                <span>在日历中显示该习惯</span>
+              </div>
+              <div class="text-[11px] text-slate-400">开启后该习惯排期将在月历中作为卡片展示并支持打卡</div>
+            </div>
+            <input
+              v-model="editingHabit.showOnCalendar"
+              type="checkbox"
+              class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300 dark:border-slate-700 cursor-pointer"
+            />
+          </div>
         </div>
 
         <div class="flex justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
@@ -820,7 +888,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { Sparkles, Plus, X, Check, Trash2, Pencil } from 'lucide-vue-next'
+import { Sparkles, Plus, X, Check, Trash2, Pencil, Calendar, CalendarOff } from 'lucide-vue-next'
 import type { Habit, HabitLog, HabitFrequency, TimeSlot, TimingType, Project } from '@/types'
 import { formatDate, getWeekKey, getMonday } from '@/utils/date'
 import {
@@ -927,9 +995,17 @@ interface EditingHabitState {
   anchorDate: string
   cycleWeeks: number
   weekPatterns: Record<number, number[]>
+  showOnCalendar: boolean
 }
 
 const editingHabit = ref<EditingHabitState | null>(null)
+
+function toggleShowOnCalendar(habit: Habit) {
+  emit('save-habit', {
+    ...habit,
+    showOnCalendar: !habit.showOnCalendar,
+  })
+}
 
 function openEditHabit(habit: Habit) {
   const isRotating = habit.frequency === 'rotating' || habit.frequency === 'biweekly'
@@ -955,6 +1031,7 @@ function openEditHabit(habit: Habit) {
     anchorDate: habit.anchorDate || formatDate(getMonday(new Date())),
     cycleWeeks,
     weekPatterns: initialPatterns,
+    showOnCalendar: habit.showOnCalendar ?? false,
   }
   isEditModalOpen.value = true
 }
@@ -1030,6 +1107,7 @@ function handleSaveEdit() {
     anchorDate: editingHabit.value.anchorDate,
     cycleWeeks: editingHabit.value.frequency === 'rotating' ? (editingHabit.value.cycleWeeks || 2) : undefined,
     weekPatterns: editingHabit.value.frequency === 'rotating' ? editingHabit.value.weekPatterns : undefined,
+    showOnCalendar: editingHabit.value.showOnCalendar,
   }
   emit('save-habit', payload)
   closeEditModal()

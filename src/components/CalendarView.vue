@@ -130,6 +130,11 @@
               :title="`${getTodosForDay(day.dateStr).length} 个待办`"
             ></span>
             <span
+              v-if="getHabitsForDay(day.dateStr).length > 0"
+              class="w-1.5 h-1.5 rounded-full bg-amber-400"
+              :title="`${getHabitsForDay(day.dateStr).length} 个习惯排期`"
+            ></span>
+            <span
               v-if="hasJournalOnDate(day.dateStr)"
               class="w-1.5 h-1.5 rounded-full bg-amber-500"
               title="已写随笔"
@@ -155,6 +160,36 @@
                 class="w-1.5 h-1.5 rounded-full shrink-0"
                 :style="{ backgroundColor: getProjectColor(s.projectId) }"
               ></span>
+            </div>
+
+            <!-- Habits scheduled for this day with showOnCalendar -->
+            <div
+              v-for="h in getHabitsForDay(day.dateStr)"
+              :key="h.id"
+              @click.stop="$emit('toggle-habit', { habitId: h.id, date: day.dateStr })"
+              :class="[
+                'px-1.5 py-0.5 sm:py-1 rounded border text-[11px] leading-tight flex items-center justify-between gap-1 select-none truncate shadow-2xs cursor-pointer transition-colors',
+                isHabitDoneOnDate(h.id, day.dateStr)
+                  ? 'opacity-60 line-through bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900 text-emerald-800 dark:text-emerald-300'
+                  : 'bg-amber-50/80 dark:bg-amber-950/40 border-amber-200 dark:border-amber-900/60 hover:border-amber-400 text-amber-900 dark:text-amber-200'
+              ]"
+              :title="`习惯: ${h.title} (点击${isHabitDoneOnDate(h.id, day.dateStr) ? '取消打卡' : '打卡'})`"
+            >
+              <div class="flex items-center gap-1 min-w-0 truncate">
+                <button
+                  type="button"
+                  class="w-3 h-3 rounded flex items-center justify-center shrink-0 border transition-colors"
+                  :class="[
+                    isHabitDoneOnDate(h.id, day.dateStr)
+                      ? 'bg-emerald-600 border-emerald-600 text-white'
+                      : 'border-amber-400 dark:border-amber-600 bg-white/50 dark:bg-slate-900/50'
+                  ]"
+                >
+                  <Check v-if="isHabitDoneOnDate(h.id, day.dateStr)" class="w-2.5 h-2.5 stroke-[3]" />
+                </button>
+                <span class="truncate font-medium">{{ h.title }}</span>
+              </div>
+              <Sparkles class="w-3 h-3 text-amber-500 shrink-0" />
             </div>
 
             <div
@@ -303,11 +338,47 @@
         </div>
       </div>
 
+      <!-- Habits List -->
+      <div v-if="getHabitsForDay(selectedMobileDate).length > 0" class="space-y-1.5">
+        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">打卡习惯</div>
+        <div
+          v-for="h in getHabitsForDay(selectedMobileDate)"
+          :key="h.id"
+          @click="$emit('toggle-habit', { habitId: h.id, date: selectedMobileDate })"
+          :class="[
+            'flex items-center justify-between p-2 rounded-lg border text-xs active:bg-amber-100 dark:active:bg-amber-950/50 transition-colors cursor-pointer',
+            isHabitDoneOnDate(h.id, selectedMobileDate)
+              ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-900/60 text-emerald-800 dark:text-emerald-300'
+              : 'bg-amber-50/50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900/60 text-amber-900 dark:text-amber-200'
+          ]"
+        >
+          <div class="flex items-center gap-2 min-w-0">
+            <button
+              type="button"
+              class="w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors"
+              :class="[
+                isHabitDoneOnDate(h.id, selectedMobileDate)
+                  ? 'bg-emerald-600 border-emerald-600 text-white'
+                  : 'border-amber-400 dark:border-amber-600'
+              ]"
+            >
+              <Check v-if="isHabitDoneOnDate(h.id, selectedMobileDate)" class="w-3 h-3 stroke-[3]" />
+            </button>
+            <span :class="['font-medium truncate', isHabitDoneOnDate(h.id, selectedMobileDate) ? 'line-through text-slate-400' : '']">
+              {{ h.title }}
+            </span>
+          </div>
+          <span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 shrink-0 font-medium">
+            习惯
+          </span>
+        </div>
+      </div>
+
       <div
-        v-if="getSchedulesForDay(selectedMobileDate).length === 0 && getTodosForDay(selectedMobileDate).length === 0"
+        v-if="getSchedulesForDay(selectedMobileDate).length === 0 && getTodosForDay(selectedMobileDate).length === 0 && getHabitsForDay(selectedMobileDate).length === 0"
         class="py-3 text-center text-xs text-slate-400"
       >
-        <span>本日暂无固定日程或截止待办</span>
+        <span>本日暂无固定日程、截止待办或习惯排期</span>
       </div>
     </div>
 
@@ -396,15 +467,18 @@ import {
   X,
   Trash2,
 } from 'lucide-vue-next'
-import type { TodoItem, JournalEntry, ScheduleItem, Project } from '@/types'
+import type { TodoItem, JournalEntry, ScheduleItem, Project, Habit, HabitLog } from '@/types'
 import { getCalendarDays, parseDate, isDateInRange, formatDate, formatDisplayDate } from '@/utils/date'
 import { getPriorityStyle } from '@/utils/priority'
+import { isHabitScheduledForDay } from '@/utils/habit'
 
 const props = defineProps<{
   todos: TodoItem[]
   schedules: ScheduleItem[]
   projects: Project[]
   journals: JournalEntry[]
+  habits?: Habit[]
+  habitLogs?: HabitLog[]
 }>()
 
 const emit = defineEmits<{
@@ -414,7 +488,21 @@ const emit = defineEmits<{
   (e: 'open-journal', date: string): void
   (e: 'toggle-todo', id: string): void
   (e: 'delete-schedule', id: string): void
+  (e: 'toggle-habit', payload: { habitId: string; date: string }): void
 }>()
+
+function getHabitsForDay(dateStr: string): Habit[] {
+  if (!props.habits) return []
+  return props.habits.filter((h) => {
+    if (!h.showOnCalendar) return false
+    return isHabitScheduledForDay(h, dateStr)
+  })
+}
+
+function isHabitDoneOnDate(habitId: string, dateStr: string): boolean {
+  if (!props.habitLogs) return false
+  return props.habitLogs.some((l) => l.habitId === habitId && l.date === dateStr && l.completed)
+}
 
 const today = new Date()
 const currentYear = ref(today.getFullYear())

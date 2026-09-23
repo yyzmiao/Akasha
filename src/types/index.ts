@@ -48,6 +48,7 @@ export interface Habit {
   anchorDate?: string
   cycleWeeks?: number
   weekPatterns?: Record<number, number[]>
+  showOnCalendar?: boolean
   icon?: string
   color?: string
   description?: string
