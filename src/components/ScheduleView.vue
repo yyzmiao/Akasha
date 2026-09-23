@@ -161,7 +161,8 @@
           <div
             v-for="s in weeklySchedules"
             :key="s.id"
-            class="group p-3.5 rounded-xl border border-indigo-100/90 dark:border-indigo-950/70 bg-gradient-to-br from-indigo-50/40 to-white dark:from-indigo-950/20 dark:to-slate-900 hover:border-indigo-300 dark:hover:border-indigo-800 transition-all shadow-2xs hover:shadow-xs flex flex-col justify-between"
+            @click="openEditModal(s)"
+            class="group p-3.5 rounded-xl border border-indigo-100/90 dark:border-indigo-950/70 bg-gradient-to-br from-indigo-50/40 to-white dark:from-indigo-950/20 dark:to-slate-900 hover:border-indigo-300 dark:hover:border-indigo-800 transition-all shadow-2xs hover:shadow-xs flex flex-col justify-between cursor-pointer"
           >
             <div>
               <!-- Timing & Project Badges -->
@@ -197,14 +198,14 @@
             <!-- Actions Bar -->
             <div class="flex items-center justify-end gap-1 pt-3 mt-2 border-t border-slate-100 dark:border-slate-800/80">
               <button
-                @click="openEditModal(s)"
+                @click.stop="openEditModal(s)"
                 class="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/50 transition-colors cursor-pointer"
                 title="编辑日程"
               >
                 <Pencil class="w-3.5 h-3.5" />
               </button>
               <button
-                @click="handleDelete(s.id)"
+                @click.stop="handleDelete(s.id)"
                 class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors cursor-pointer"
                 title="删除日程"
               >
@@ -270,7 +271,8 @@
           <div
             v-for="s in onceSchedules"
             :key="s.id"
-            class="group p-3.5 rounded-xl border border-teal-100/90 dark:border-teal-950/70 bg-gradient-to-br from-teal-50/40 to-white dark:from-teal-950/20 dark:to-slate-900 hover:border-teal-300 dark:hover:border-teal-800 transition-all shadow-2xs hover:shadow-xs flex flex-col justify-between"
+            @click="openEditModal(s)"
+            class="group p-3.5 rounded-xl border border-teal-100/90 dark:border-teal-950/70 bg-gradient-to-br from-teal-50/40 to-white dark:from-teal-950/20 dark:to-slate-900 hover:border-teal-300 dark:hover:border-teal-800 transition-all shadow-2xs hover:shadow-xs flex flex-col justify-between cursor-pointer"
           >
             <div>
               <!-- Timing & Project Badges -->
@@ -312,14 +314,14 @@
             <!-- Actions Bar -->
             <div class="flex items-center justify-end gap-1 pt-3 mt-2 border-t border-slate-100 dark:border-slate-800/80">
               <button
-                @click="openEditModal(s)"
+                @click.stop="openEditModal(s)"
                 class="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/50 transition-colors cursor-pointer"
                 title="编辑日程"
               >
                 <Pencil class="w-3.5 h-3.5" />
               </button>
               <button
-                @click="handleDelete(s.id)"
+                @click.stop="handleDelete(s.id)"
                 class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors cursor-pointer"
                 title="删除日程"
               >
@@ -385,7 +387,8 @@
           <div
             v-for="s in monthlySchedules"
             :key="s.id"
-            class="group p-3.5 rounded-xl border border-amber-100/90 dark:border-amber-950/70 bg-gradient-to-br from-amber-50/40 to-white dark:from-amber-950/20 dark:to-slate-900 hover:border-amber-300 dark:hover:border-amber-800 transition-all shadow-2xs hover:shadow-xs flex flex-col justify-between"
+            @click="openEditModal(s)"
+            class="group p-3.5 rounded-xl border border-amber-100/90 dark:border-amber-950/70 bg-gradient-to-br from-amber-50/40 to-white dark:from-amber-950/20 dark:to-slate-900 hover:border-amber-300 dark:hover:border-amber-800 transition-all shadow-2xs hover:shadow-xs flex flex-col justify-between cursor-pointer"
           >
             <div>
               <!-- Timing & Project Badges -->
@@ -421,14 +424,14 @@
             <!-- Actions Bar -->
             <div class="flex items-center justify-end gap-1 pt-3 mt-2 border-t border-slate-100 dark:border-slate-800/80">
               <button
-                @click="openEditModal(s)"
+                @click.stop="openEditModal(s)"
                 class="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/50 transition-colors cursor-pointer"
                 title="编辑日程"
               >
                 <Pencil class="w-3.5 h-3.5" />
               </button>
               <button
-                @click="handleDelete(s.id)"
+                @click.stop="handleDelete(s.id)"
                 class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors cursor-pointer"
                 title="删除日程"
               >

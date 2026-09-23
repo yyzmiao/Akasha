@@ -620,15 +620,22 @@
             </div>
 
             <!-- 习惯打卡 -->
-            <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <div
+              @click="$emit('switch-tab', 'habits')"
+              class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 hover:border-amber-300 dark:hover:border-amber-700/60 hover:bg-amber-50/40 dark:hover:bg-amber-950/20 flex items-center justify-between cursor-pointer transition-all group"
+              title="点击前往习惯管理"
+            >
               <div class="space-y-0.5 min-w-0">
-                <div class="text-[11px] text-slate-400 font-medium">打卡习惯</div>
+                <div class="text-[11px] text-slate-400 group-hover:text-amber-600 dark:group-hover:text-amber-400 font-medium flex items-center gap-1 transition-colors">
+                  <span>打卡习惯</span>
+                  <ExternalLink class="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
                 <div class="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
                   <span>{{ getDayHabitsCompleted(displayDays[0].dateStr) }}/{{ getHabitsForDay(displayDays[0].dateStr).length }}</span>
                   <span class="text-[11px] text-slate-400 font-normal">已打卡</span>
                 </div>
               </div>
-              <div class="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+              <div class="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                 <Sparkles class="w-4 h-4" />
               </div>
             </div>
@@ -791,7 +798,7 @@
           <!-- Timeline Flow Container -->
           <div class="relative pt-2 pb-2">
             <!-- Continuous Vertical Track Line -->
-            <div class="absolute left-[3.25rem] sm:left-[3.75rem] -translate-x-1/2 top-4 bottom-4 w-0.5 bg-slate-200 dark:bg-slate-800"></div>
+            <div class="absolute left-[4rem] sm:left-[4.5rem] -translate-x-1/2 top-4 bottom-4 w-0.5 bg-slate-200 dark:bg-slate-800"></div>
 
             <!-- Timeline Items -->
             <div class="space-y-4 sm:space-y-5">
@@ -804,7 +811,7 @@
                   v-if="shouldShowGap(item, getDayTimelineItems(displayDays[0].dateStr, displayDays[0].isToday)[idx + 1])"
                   class="relative flex items-center py-2 my-1"
                 >
-                  <div class="w-[3rem] sm:w-[3.5rem] pr-2 text-right shrink-0">
+                  <div class="w-16 sm:w-18 pr-3 sm:pr-4 text-right shrink-0">
                     <span class="text-[10px] text-slate-300 dark:text-slate-600 font-mono">···</span>
                   </div>
                   <div class="relative flex items-center justify-center shrink-0 w-3.5 h-3.5 -ml-[7px] z-10">
@@ -818,7 +825,7 @@
                 <!-- Item Row -->
                 <div class="relative flex items-start group">
                   <!-- Left Timestamp -->
-                  <div class="w-[3rem] sm:w-[3.5rem] pr-2 pt-1 text-right shrink-0">
+                  <div class="w-16 sm:w-18 pr-3 sm:pr-4 pt-1 text-right shrink-0">
                     <span
                       :class="[
                         'text-xs font-mono select-none',
@@ -861,7 +868,7 @@
                   <!-- Right Card / Content -->
                   <div class="flex-1 ml-3 sm:ml-4 min-w-0">
                     <!-- 1. Real-time Now Line -->
-                    <div v-if="item.type === 'now'" class="flex items-center gap-2 py-1">
+                    <div v-if="item.type === 'now'" class="flex items-center gap-2 py-1.5">
                       <div class="h-[2px] bg-rose-500/80 dark:bg-rose-500/70 flex-1 rounded-full relative">
                         <div class="absolute left-0 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-rose-500"></div>
                       </div>
@@ -875,7 +882,8 @@
                     <div
                       v-else-if="item.type === 'schedule'"
                       @click="handleOpenSchedule(item.data)"
-                      class="p-3 sm:p-3.5 rounded-xl border border-indigo-200/80 dark:border-indigo-900/70 bg-indigo-50/50 dark:bg-indigo-950/30 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:border-indigo-300 dark:hover:border-indigo-800 transition-all cursor-pointer shadow-2xs group-hover:shadow-xs"
+                      class="p-3 sm:p-3.5 rounded-xl border border-indigo-200/80 dark:border-indigo-900/70 bg-indigo-50/50 dark:bg-indigo-950/30 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:border-indigo-300 dark:hover:border-indigo-800 transition-all cursor-pointer shadow-2xs group-hover:shadow-xs group/sch"
+                      title="点击查看或编辑日程"
                     >
                       <div class="flex items-center justify-between gap-2">
                         <div class="flex items-center gap-2 min-w-0">
@@ -885,12 +893,12 @@
                           </span>
                           <span
                             v-if="item.data.recurringType !== 'none'"
-                            class="text-[10px] px-1.5 py-0.2 rounded bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 shrink-0"
+                            class="text-[10px] px-1.5 py-0.2 rounded bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 shrink-0 font-medium"
                           >
                             {{ item.data.recurringType === 'weekly' ? '每周' : '每月' }}
                           </span>
                         </div>
-                        <div class="flex items-center gap-1.5 shrink-0">
+                        <div class="flex items-center gap-2 shrink-0">
                           <span v-if="item.projectName" class="text-[11px] text-slate-500 dark:text-slate-400">
                             {{ item.projectName }}
                           </span>
@@ -899,6 +907,14 @@
                             class="w-2.5 h-2.5 rounded-full ring-2 ring-white dark:ring-slate-900"
                             :style="{ backgroundColor: item.projectColor }"
                           ></span>
+                          <button
+                            type="button"
+                            @click.stop="openEditScheduleModal(item.data)"
+                            class="p-1 rounded-md text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-colors cursor-pointer"
+                            title="编辑日程"
+                          >
+                            <Pencil class="w-3.5 h-3.5" />
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -906,23 +922,26 @@
                     <!-- 3. Habit Card -->
                     <div
                       v-else-if="item.type === 'habit'"
-                      @click="$emit('toggle-habit', { habitId: item.data.id, date: displayDays[0].dateStr })"
+                      @click="$emit('switch-tab', 'habits')"
                       :class="[
-                        'p-3 sm:p-3.5 rounded-xl border transition-all cursor-pointer shadow-2xs group-hover:shadow-xs flex items-center justify-between gap-3',
+                        'p-3 sm:p-3.5 rounded-xl border transition-all cursor-pointer shadow-2xs hover:shadow-xs flex items-center justify-between gap-3 group/habit',
                         item.completed
-                          ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-900/60'
+                          ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-900/60 hover:border-emerald-300'
                           : 'bg-amber-50/40 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900/60 hover:border-amber-300'
                       ]"
+                      title="点击前往习惯页面管理此习惯"
                     >
                       <div class="flex items-center gap-2.5 min-w-0">
                         <button
                           type="button"
-                          class="w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors"
+                          @click.stop="$emit('toggle-habit', { habitId: item.data.id, date: displayDays[0].dateStr })"
+                          class="w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-all active:scale-90 cursor-pointer"
                           :class="[
                             item.completed
                               ? 'bg-emerald-600 border-emerald-600 text-white'
-                              : 'border-amber-400 dark:border-amber-600'
+                              : 'border-amber-400 dark:border-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/40'
                           ]"
+                          :title="item.completed ? '点击取消打卡' : '点击打卡'"
                         >
                           <Check v-if="item.completed" class="w-3 h-3 stroke-[3]" />
                         </button>
@@ -930,8 +949,10 @@
                           <div class="flex items-center gap-1.5">
                             <span
                               :class="[
-                                'font-semibold text-xs sm:text-sm truncate',
-                                item.completed ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100'
+                                'font-semibold text-xs sm:text-sm truncate transition-colors',
+                                item.completed
+                                  ? 'text-slate-400 dark:text-slate-500 line-through decoration-slate-300 dark:decoration-slate-600 decoration-1'
+                                  : 'text-slate-800 dark:text-slate-100 group-hover/habit:text-amber-800 dark:group-hover/habit:text-amber-200'
                               ]"
                             >
                               {{ item.title }}
@@ -942,22 +963,28 @@
                               {{ item.timeSlotLabel }}
                             </span>
                           </div>
-                          <div v-if="item.projectName" class="text-[11px] text-slate-400 mt-0.5">
-                            {{ item.projectName }}
+                          <div class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1.5">
+                            <span v-if="item.projectName">{{ item.projectName }} · </span>
+                            <span class="text-[10px] text-amber-600 dark:text-amber-400 font-medium inline-flex items-center gap-0.5">
+                              前往习惯管理
+                              <ExternalLink class="w-2.5 h-2.5" />
+                            </span>
                           </div>
                         </div>
                       </div>
 
-                      <span
+                      <button
+                        type="button"
+                        @click.stop="$emit('toggle-habit', { habitId: item.data.id, date: displayDays[0].dateStr })"
                         :class="[
-                          'text-[10px] px-2 py-0.5 rounded-full font-medium shrink-0',
+                          'text-[10px] px-2.5 py-1 rounded-full font-semibold shrink-0 active:scale-95 transition-all cursor-pointer select-none border',
                           item.completed
-                            ? 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300'
-                            : 'bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300'
+                            ? 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 hover:bg-emerald-200'
+                            : 'bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800 hover:bg-amber-200'
                         ]"
                       >
                         {{ item.completed ? '已打卡' : '打卡' }}
-                      </span>
+                      </button>
                     </div>
 
                     <!-- 4. Due / High Priority Todo Milestone Card -->
@@ -1441,18 +1468,219 @@
         </div>
 
         <div class="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
-          <button
-            @click="handleDeleteScheduleItem(selectedSchedule.id)"
-            class="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
-          >
-            <Trash2 class="w-3.5 h-3.5" />
-            <span>删除日程</span>
-          </button>
+          <div class="flex items-center gap-2">
+            <button
+              @click="openEditScheduleModal(selectedSchedule); selectedSchedule = null"
+              class="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors cursor-pointer"
+            >
+              <Pencil class="w-3.5 h-3.5" />
+              <span>编辑日程</span>
+            </button>
+            <button
+              @click="handleDeleteScheduleItem(selectedSchedule.id)"
+              class="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer"
+            >
+              <Trash2 class="w-3.5 h-3.5" />
+              <span>删除日程</span>
+            </button>
+          </div>
           <button
             @click="selectedSchedule = null"
-            class="px-4 py-1.5 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 transition-colors"
+            class="px-4 py-1.5 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
           >
             关闭
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Schedule Modal -->
+    <div
+      v-if="showScheduleEditModal"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs"
+      @click.self="closeScheduleEditModal"
+    >
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-6 w-full max-w-md shadow-xl space-y-4">
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+          <div class="flex items-center gap-2">
+            <CalendarDays class="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            <h3 class="text-base font-bold text-slate-900 dark:text-slate-100">
+              编辑日程
+            </h3>
+          </div>
+          <button
+            @click="closeScheduleEditModal"
+            class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+          >
+            <X class="w-4 h-4" />
+          </button>
+        </div>
+
+        <!-- Form Content -->
+        <div class="space-y-3.5">
+          <!-- Title -->
+          <div class="space-y-1">
+            <label class="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              日程名称 <span class="text-rose-500">*</span>
+            </label>
+            <input
+              v-model="scheduleFormTitle"
+              type="text"
+              placeholder="例如：周一团队例会、发薪日、季度总结..."
+              class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              @keydown.enter="handleSaveScheduleSubmit"
+            />
+          </div>
+
+          <!-- Project Select -->
+          <div class="space-y-1">
+            <label class="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              所属项目 (可选)
+            </label>
+            <select
+              v-model="scheduleFormProjectId"
+              class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
+            >
+              <option :value="null">无归属项目 (公共日常)</option>
+              <option
+                v-for="p in projects"
+                :key="p.id"
+                :value="p.id"
+              >
+                {{ p.title }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Recurring Type -->
+          <div class="space-y-1.5">
+            <label class="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              周期规约类型
+            </label>
+            <div class="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                @click="scheduleFormRecurringType = 'weekly'"
+                :class="[
+                  'py-2 px-1 text-center rounded-xl border text-xs font-medium transition-all cursor-pointer',
+                  scheduleFormRecurringType === 'weekly'
+                    ? 'bg-indigo-50 dark:bg-indigo-950/60 border-indigo-500 text-indigo-700 dark:text-indigo-300 font-bold'
+                    : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
+                ]"
+              >
+                每周规律
+              </button>
+
+              <button
+                type="button"
+                @click="scheduleFormRecurringType = 'none'"
+                :class="[
+                  'py-2 px-1 text-center rounded-xl border text-xs font-medium transition-all cursor-pointer',
+                  scheduleFormRecurringType === 'none'
+                    ? 'bg-teal-50 dark:bg-teal-950/60 border-teal-500 text-teal-700 dark:text-teal-300 font-bold'
+                    : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
+                ]"
+              >
+                单次特定
+              </button>
+
+              <button
+                type="button"
+                @click="scheduleFormRecurringType = 'monthly'"
+                :class="[
+                  'py-2 px-1 text-center rounded-xl border text-xs font-medium transition-all cursor-pointer',
+                  scheduleFormRecurringType === 'monthly'
+                    ? 'bg-amber-50 dark:bg-amber-950/60 border-amber-500 text-amber-700 dark:text-amber-300 font-bold'
+                    : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
+                ]"
+              >
+                每月固定
+              </button>
+            </div>
+          </div>
+
+          <!-- Dynamic Field: Weekly Day Picker -->
+          <div v-if="scheduleFormRecurringType === 'weekly'" class="space-y-1.5">
+            <label class="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              触发星期
+            </label>
+            <div class="grid grid-cols-7 gap-1">
+              <button
+                v-for="opt in scheduleWeekdayOptions"
+                :key="opt.value"
+                type="button"
+                @click="scheduleFormDayOfWeek = opt.value"
+                :class="[
+                  'py-1.5 text-center rounded-lg border text-xs font-medium transition-all cursor-pointer',
+                  scheduleFormDayOfWeek === opt.value
+                    ? 'bg-indigo-600 border-indigo-600 text-white font-bold'
+                    : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
+                ]"
+              >
+                {{ opt.label }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Dynamic Field: Once Specific Date Picker -->
+          <div v-else-if="scheduleFormRecurringType === 'none'" class="space-y-1">
+            <label class="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              发生日期
+            </label>
+            <input
+              v-model="scheduleFormDate"
+              type="date"
+              class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            />
+          </div>
+
+          <!-- Dynamic Field: Monthly Day Picker -->
+          <div v-else-if="scheduleFormRecurringType === 'monthly'" class="space-y-1">
+            <label class="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              每月几号
+            </label>
+            <div class="flex items-center gap-2">
+              <input
+                v-model.number="scheduleFormDayOfMonth"
+                type="number"
+                min="1"
+                max="31"
+                class="w-24 px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs sm:text-sm text-center focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              />
+              <span class="text-xs text-slate-500">日触发</span>
+            </div>
+          </div>
+
+          <!-- Time Picker -->
+          <div class="space-y-1">
+            <label class="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center justify-between">
+              <span>开始时间点 (可选)</span>
+              <span class="text-[10px] text-slate-400 font-normal">留空代表全天</span>
+            </label>
+            <input
+              v-model="scheduleFormTime"
+              type="time"
+              class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            />
+          </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+          <button
+            type="button"
+            @click="closeScheduleEditModal"
+            class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+          >
+            取消
+          </button>
+          <button
+            type="button"
+            @click="handleSaveScheduleSubmit"
+            class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs font-semibold transition-all shadow-xs cursor-pointer"
+          >
+            保存变更
           </button>
         </div>
       </div>
@@ -1544,9 +1772,8 @@
             <div
               v-for="h in getHabitsForDay(selectedDayOverview)"
               :key="h.id"
-              @click="$emit('toggle-habit', { habitId: h.id, date: selectedDayOverview })"
+              class="p-2 rounded-lg border flex items-center justify-between gap-2 transition-colors"
               :class="[
-                'p-2 rounded-lg border flex items-center justify-between gap-2 cursor-pointer transition-colors',
                 isHabitDoneOnDate(h.id, selectedDayOverview)
                   ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-200 text-emerald-800 dark:text-emerald-300'
                   : 'bg-amber-50/50 dark:bg-amber-950/20 border-amber-200 text-amber-900 dark:text-amber-200'
@@ -1555,7 +1782,8 @@
               <div class="flex items-center gap-2 min-w-0">
                 <button
                   type="button"
-                  class="w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors"
+                  @click.stop="$emit('toggle-habit', { habitId: h.id, date: selectedDayOverview })"
+                  class="w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors cursor-pointer"
                   :class="[
                     isHabitDoneOnDate(h.id, selectedDayOverview)
                       ? 'bg-emerald-600 border-emerald-600 text-white'
@@ -1564,13 +1792,25 @@
                 >
                   <Check v-if="isHabitDoneOnDate(h.id, selectedDayOverview)" class="w-3 h-3 stroke-[3]" />
                 </button>
-                <span :class="['font-medium truncate', isHabitDoneOnDate(h.id, selectedDayOverview) ? 'line-through text-slate-400' : '']">
+                <span
+                  @click="$emit('switch-tab', 'habits'); closeDayOverview()"
+                  :class="[
+                    'font-medium truncate cursor-pointer hover:underline',
+                    isHabitDoneOnDate(h.id, selectedDayOverview) ? 'line-through text-slate-400' : 'text-slate-800 dark:text-slate-200'
+                  ]"
+                  title="点击跳转至习惯管理"
+                >
                   {{ h.title }}
                 </span>
               </div>
-              <span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 font-medium shrink-0">
-                {{ isHabitDoneOnDate(h.id, selectedDayOverview) ? '已打卡' : '未打卡' }}
-              </span>
+              <button
+                type="button"
+                @click.stop="$emit('switch-tab', 'habits'); closeDayOverview()"
+                class="text-[10px] text-amber-600 dark:text-amber-400 hover:underline shrink-0 cursor-pointer flex items-center gap-0.5"
+              >
+                <span>前往习惯</span>
+                <ExternalLink class="w-2.5 h-2.5" />
+              </button>
             </div>
           </div>
 
@@ -1598,6 +1838,14 @@
             >
               <BookOpen class="w-3.5 h-3.5 text-amber-500" />
               <span>当日随笔</span>
+            </button>
+            <button
+              @click="$emit('switch-tab', 'habits'); closeDayOverview()"
+              class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              title="前往习惯管理"
+            >
+              <Sparkles class="w-3.5 h-3.5 text-amber-500" />
+              <span class="hidden sm:inline">习惯</span>
             </button>
           </div>
           <button
@@ -1629,6 +1877,8 @@ import {
   X,
   Trash2,
   Clock,
+  Pencil,
+  ExternalLink,
 } from 'lucide-vue-next'
 import type { TodoItem, JournalEntry, ScheduleItem, Project, Habit, HabitLog, CalendarViewMode } from '@/types'
 import {
@@ -1659,6 +1909,7 @@ const emit = defineEmits<{
   (e: 'open-journal', date: string): void
   (e: 'toggle-todo', id: string): void
   (e: 'delete-schedule', id: string): void
+  (e: 'save-schedule', payload: Partial<ScheduleItem>): void
   (e: 'toggle-habit', payload: { habitId: string; date: string }): void
 }>()
 
@@ -1931,6 +2182,77 @@ function handleDeleteScheduleItem(id: string) {
     emit('delete-schedule', id)
     selectedSchedule.value = null
   }
+}
+
+// 日程编辑弹窗状态
+const showScheduleEditModal = ref(false)
+const scheduleEditId = ref<string | null>(null)
+const scheduleFormTitle = ref('')
+const scheduleFormProjectId = ref<string | null>(null)
+const scheduleFormRecurringType = ref<'none' | 'weekly' | 'monthly'>('none')
+const scheduleFormDate = ref('')
+const scheduleFormDayOfWeek = ref(1)
+const scheduleFormDayOfMonth = ref(1)
+const scheduleFormTime = ref('')
+
+const scheduleWeekdayOptions = [
+  { value: 1, label: '周一' },
+  { value: 2, label: '周二' },
+  { value: 3, label: '周三' },
+  { value: 4, label: '周四' },
+  { value: 5, label: '周五' },
+  { value: 6, label: '周六' },
+  { value: 0, label: '周日' },
+]
+
+function openEditScheduleModal(s: ScheduleItem) {
+  scheduleEditId.value = s.id
+  scheduleFormTitle.value = s.title
+  scheduleFormProjectId.value = s.projectId || null
+  scheduleFormRecurringType.value = s.recurringType || 'none'
+  scheduleFormDate.value = s.date || formatDate(new Date())
+  scheduleFormDayOfWeek.value = s.recurringDayOfWeek !== undefined ? s.recurringDayOfWeek : 1
+  scheduleFormDayOfMonth.value = s.recurringDayOfMonth !== undefined ? s.recurringDayOfMonth : 1
+  scheduleFormTime.value = s.time || ''
+  showScheduleEditModal.value = true
+}
+
+function closeScheduleEditModal() {
+  showScheduleEditModal.value = false
+  scheduleEditId.value = null
+}
+
+function handleSaveScheduleSubmit() {
+  if (!scheduleFormTitle.value.trim()) {
+    alert('请输入日程名称')
+    return
+  }
+  const payload: Partial<ScheduleItem> = {
+    title: scheduleFormTitle.value.trim(),
+    projectId: scheduleFormProjectId.value,
+    recurringType: scheduleFormRecurringType.value,
+    time: scheduleFormTime.value.trim() || undefined,
+  }
+  if (scheduleEditId.value) {
+    payload.id = scheduleEditId.value
+  }
+  if (scheduleFormRecurringType.value === 'none') {
+    payload.date = scheduleFormDate.value
+    payload.recurringDayOfWeek = undefined
+    payload.recurringDayOfMonth = undefined
+  } else if (scheduleFormRecurringType.value === 'weekly') {
+    payload.date = undefined
+    payload.recurringDayOfWeek = scheduleFormDayOfWeek.value
+    payload.recurringDayOfMonth = undefined
+  } else if (scheduleFormRecurringType.value === 'monthly') {
+    payload.date = undefined
+    payload.recurringDayOfWeek = undefined
+    payload.recurringDayOfMonth = scheduleFormDayOfMonth.value
+  }
+
+  emit('save-schedule', payload)
+  closeScheduleEditModal()
+  selectedSchedule.value = null
 }
 
 function formatScheduleDetailTiming(s: ScheduleItem): string {

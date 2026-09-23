@@ -24,7 +24,8 @@
         @quick-create-todo="handleQuickCreateTodo"
         @open-journal="handleOpenJournalDate"
         @toggle-todo="handleToggleTodoComplete"
-        @toggle-habit="handleToggleHabit"
+        @toggle-habit="handleToggleHabitLog"
+        @save-schedule="handleSaveSchedule"
       />
 
       <ProjectView
@@ -442,10 +443,27 @@ async function handleDeleteProject(id: string) {
 async function handleSaveSchedule(scheduleData: Partial<ScheduleItem>) {
   const now = Date.now()
   if (scheduleData.id) {
-    const updated = { ...scheduleData, updatedAt: now }
-    await db.schedules.update(scheduleData.id, updated)
-    const saved = await db.schedules.get(scheduleData.id)
-    if (saved) enqueueChange('schedule', saved.id, saved)
+    const existing = await db.schedules.get(scheduleData.id)
+    if (existing) {
+      const merged: ScheduleItem = {
+        ...existing,
+        ...scheduleData,
+        updatedAt: now,
+      }
+      if (scheduleData.recurringType === 'none') {
+        delete (merged as any).recurringDayOfWeek
+        delete (merged as any).recurringDayOfMonth
+      } else if (scheduleData.recurringType === 'weekly') {
+        delete (merged as any).date
+        delete (merged as any).recurringDayOfMonth
+      } else if (scheduleData.recurringType === 'monthly') {
+        delete (merged as any).date
+        delete (merged as any).recurringDayOfWeek
+      }
+      await db.schedules.put(merged)
+      const saved = await db.schedules.get(scheduleData.id)
+      if (saved) enqueueChange('schedule', saved.id, saved)
+    }
   } else {
     const newSchedule: ScheduleItem = {
       id: 'sch-' + Date.now(),
