@@ -14,11 +14,16 @@ import {
   RefreshCw,
   Droplets,
   Wind,
+  Search,
+  Loader2,
+  LocateFixed,
   X
 } from 'lucide-vue-next'
 import {
   fetchWeather,
   detectLocation,
+  searchCities,
+  hasStoredLocation,
   PRESET_CITIES,
   type WeatherSummary,
   type WeatherLocation
@@ -28,6 +33,61 @@ const weather = ref<WeatherSummary | null>(null)
 const isLoading = ref(false)
 const isPopoverOpen = ref(false)
 const widgetRef = ref<HTMLElement | null>(null)
+
+// 城市搜索状态
+const searchKeyword = ref('')
+const searchResults = ref<WeatherLocation[]>([])
+const isSearching = ref(false)
+const hasSearched = ref(false)
+let searchTimer: any = null
+
+function clearSearch() {
+  searchKeyword.value = ''
+  searchResults.value = []
+  isSearching.value = false
+  hasSearched.value = false
+  if (searchTimer) {
+    clearTimeout(searchTimer)
+    searchTimer = null
+  }
+}
+
+function onSearchInput() {
+  if (searchTimer) clearTimeout(searchTimer)
+  const kw = searchKeyword.value.trim()
+  if (!kw) {
+    searchResults.value = []
+    isSearching.value = false
+    hasSearched.value = false
+    return
+  }
+  isSearching.value = true
+  searchTimer = setTimeout(() => {
+    executeSearch(kw)
+  }, 300)
+}
+
+async function executeSearch(kw: string) {
+  isSearching.value = true
+  try {
+    const list = await searchCities(kw)
+    searchResults.value = list
+    hasSearched.value = true
+  } catch (e) {
+    console.error('Failed to search cities', e)
+    searchResults.value = []
+  } finally {
+    isSearching.value = false
+  }
+}
+
+function onSearchEnter() {
+  if (searchTimer) clearTimeout(searchTimer)
+  const kw = searchKeyword.value.trim()
+  if (kw) {
+    executeSearch(kw)
+  }
+}
 
 // 根据 iconName 动态选择对应的 Lucide 图标组件
 const weatherIconComponent = computed(() => {
@@ -63,7 +123,7 @@ const iconColorClass = computed(() => {
   }
 })
 
-// 加载天气数据
+// 加载天气数据 (优先读取手动保存的常驻城市)
 async function loadWeatherData(force: boolean = false) {
   isLoading.value = true
   try {
@@ -76,11 +136,14 @@ async function loadWeatherData(force: boolean = false) {
   }
 }
 
-// 重新定位并刷新
+// 重新自动定位并刷新 (仅在用户主动触发时调用)
 async function handleRedetectLocation() {
+  clearSearch()
   isLoading.value = true
   try {
     const loc = await detectLocation()
+    loc.isAuto = true
+    loc.isManual = false
     const data = await fetchWeather(loc, true)
     weather.value = data
   } catch (e) {
@@ -90,11 +153,17 @@ async function handleRedetectLocation() {
   }
 }
 
-// 切换预设城市
+// 手动切换/锁定城市 (支持搜索结果或预设城市)
 async function handleSelectCity(city: WeatherLocation) {
+  clearSearch()
   isLoading.value = true
   try {
-    const data = await fetchWeather(city, true)
+    const manualCity: WeatherLocation = {
+      ...city,
+      isAuto: false,
+      isManual: true
+    }
+    const data = await fetchWeather(manualCity, true)
     weather.value = data
   } catch (e) {
     console.error('Select city failed', e)
@@ -107,16 +176,28 @@ async function handleSelectCity(city: WeatherLocation) {
 function handleClickOutside(event: MouseEvent) {
   if (widgetRef.value && !widgetRef.value.contains(event.target as Node)) {
     isPopoverOpen.value = false
+    clearSearch()
   }
 }
 
 onMounted(async () => {
-  // 首次挂载立即尝试从缓存恢复并更新
-  await loadWeatherData()
+  // 首次访问若无任何持久化记录，尝试自动定位一次；若已有记录则坚决尊重锁定城市
+  if (!hasStoredLocation()) {
+    try {
+      const loc = await detectLocation()
+      const data = await fetchWeather(loc, false)
+      weather.value = data
+    } catch {
+      await loadWeatherData()
+    }
+  } else {
+    await loadWeatherData()
+  }
   window.addEventListener('click', handleClickOutside)
 })
 
 onUnmounted(() => {
+  if (searchTimer) clearTimeout(searchTimer)
   window.removeEventListener('click', handleClickOutside)
 })
 </script>
@@ -127,7 +208,7 @@ onUnmounted(() => {
     <button
       @click="isPopoverOpen = !isPopoverOpen"
       class="group flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all border border-transparent hover:border-slate-200 dark:hover:border-slate-700 cursor-pointer select-none"
-      :title="weather ? `${weather.location.name} · ${weather.characteristic.displayLabel} ${weather.current.temp}°C (点击查看详情)` : '获取天气中...'"
+      :title="weather ? `${weather.location.name} [${weather.location.isAuto ? '定位' : '手动'}] · ${weather.characteristic.displayLabel} ${weather.current.temp}°C (点击查看详情)` : '获取天气中...'"
     >
       <!-- 天气图标 -->
       <div class="relative flex items-center justify-center">
@@ -176,25 +257,37 @@ onUnmounted(() => {
         v-if="isPopoverOpen && weather"
         class="fixed inset-x-3 top-13 sm:absolute sm:inset-auto sm:left-0 sm:top-full sm:mt-2 sm:w-80 p-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl shadow-slate-900/10 dark:shadow-black/40 z-50 text-slate-800 dark:text-slate-200 transition-colors"
       >
-        <!-- 顶部：城市名、定位与操作 -->
+        <!-- 顶部：城市名、定位/手动与操作 -->
         <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800/80">
-          <div class="flex items-center gap-1.5">
+          <div class="flex items-center gap-1.5 truncate mr-2">
             <MapPin class="w-3.5 h-3.5 text-blue-500 shrink-0" />
-            <span class="font-semibold text-sm tracking-tight text-slate-900 dark:text-white">
+            <span class="font-semibold text-sm tracking-tight text-slate-900 dark:text-white truncate" :title="weather.location.name">
               {{ weather.location.name }}
             </span>
             <span
-              class="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
+              class="text-[10px] px-1.5 py-0.2 rounded-full font-medium shrink-0 transition-colors"
+              :class="weather.location.isAuto
+                ? 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                : 'bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200/50 dark:border-blue-900/40'"
             >
-              {{ weather.location.isAuto ? '定位' : '已选' }}
+              {{ weather.location.isAuto ? '定位' : '手动' }}
             </span>
           </div>
 
-          <div class="flex items-center gap-1">
+          <div class="flex items-center gap-0.5 shrink-0">
+            <!-- 重新自动定位按钮 -->
+            <button
+              @click="handleRedetectLocation"
+              class="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              title="重新自动定位 (IP/GPS)"
+            >
+              <LocateFixed class="w-3.5 h-3.5" />
+            </button>
+
             <!-- 刷新按钮 -->
             <button
               @click="loadWeatherData(true)"
-              class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               title="刷新天气"
             >
               <RefreshCw class="w-3.5 h-3.5" :class="{ 'animate-spin': isLoading }" />
@@ -203,7 +296,7 @@ onUnmounted(() => {
             <!-- 关闭按钮 -->
             <button
               @click="isPopoverOpen = false"
-              class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
             >
               <X class="w-3.5 h-3.5" />
             </button>
@@ -283,33 +376,92 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <!-- 快速切换城市 -->
-        <div class="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/80">
-          <div class="flex items-center justify-between mb-2">
-            <span class="text-[11px] font-medium text-slate-400">切换城市</span>
-            <button
-              @click="handleRedetectLocation"
-              class="text-[11px] text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer"
+        <!-- 城市搜索与快捷切换 -->
+        <div class="mt-2 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 space-y-2.5">
+          <!-- 城市搜索输入框与下拉结果 -->
+          <div class="relative">
+            <div class="relative flex items-center">
+              <Search class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 pointer-events-none" />
+              <input
+                v-model="searchKeyword"
+                @input="onSearchInput"
+                @keydown.enter.prevent="onSearchEnter"
+                type="text"
+                placeholder="搜索任意城市 (如: 苏州、大连、青岛...)"
+                class="w-full pl-8 pr-7 py-1.5 text-xs bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-lg text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              />
+              <Loader2 v-if="isSearching" class="w-3.5 h-3.5 text-blue-500 animate-spin absolute right-2.5" />
+              <button
+                v-else-if="searchKeyword"
+                @click="clearSearch"
+                class="absolute right-2 p-0.5 rounded text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+                title="清空搜索"
+              >
+                <X class="w-3 h-3" />
+              </button>
+            </div>
+
+            <!-- 搜索匹配结果下拉面板 -->
+            <div
+              v-if="searchKeyword.trim() && (searchResults.length > 0 || hasSearched || isSearching)"
+              class="absolute left-0 right-0 top-full mt-1.5 max-h-48 overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-700/80 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-xl z-20 divide-y divide-slate-100 dark:divide-slate-800/60 no-scrollbar"
             >
-              <MapPin class="w-3 h-3" />
-              重新自动定位
-            </button>
+              <div v-if="isSearching && searchResults.length === 0" class="py-3 text-center text-xs text-slate-400 flex items-center justify-center gap-1.5">
+                <Loader2 class="w-3.5 h-3.5 animate-spin text-blue-500" />
+                <span>正在检索城市...</span>
+              </div>
+              <div v-else-if="hasSearched && searchResults.length === 0" class="py-3 text-center text-xs text-slate-400">
+                未找到匹配城市，请尝试输入完整地名
+              </div>
+              <button
+                v-for="res in searchResults"
+                :key="res.lat + ',' + res.lon + res.name"
+                @click="handleSelectCity(res)"
+                class="w-full px-3 py-2 flex items-center justify-between text-left hover:bg-blue-50/80 dark:hover:bg-slate-800/80 transition-colors cursor-pointer group"
+              >
+                <div class="flex items-center gap-1.5 truncate">
+                  <MapPin class="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-500 shrink-0 transition-colors" />
+                  <span class="font-medium text-xs text-slate-800 dark:text-slate-200">{{ res.name }}</span>
+                  <span v-if="res.displaySubtext" class="text-[10px] text-slate-400 truncate">
+                    ({{ res.displaySubtext }})
+                  </span>
+                </div>
+                <span class="text-[10px] text-blue-600 dark:text-blue-400 opacity-0 group-hover:opacity-100 shrink-0 font-medium transition-opacity">
+                  选择锁定
+                </span>
+              </button>
+            </div>
           </div>
 
-          <div class="flex flex-wrap gap-1.5">
-            <button
-              v-for="city in PRESET_CITIES"
-              :key="city.name"
-              @click="handleSelectCity(city)"
-              class="px-2 py-0.5 rounded-md text-[11px] transition-colors cursor-pointer"
-              :class="[
-                weather.location.name.includes(city.name)
-                  ? 'bg-blue-600 text-white font-medium shadow-xs'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-              ]"
-            >
-              {{ city.name }}
-            </button>
+          <!-- 热门城市快捷点选 -->
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-[11px] font-medium text-slate-400">热门城市</span>
+              <button
+                @click="handleRedetectLocation"
+                class="text-[11px] text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer"
+                title="重新根据网络/GPS进行自动定位"
+              >
+                <LocateFixed class="w-3 h-3" />
+                重新自动定位
+              </button>
+            </div>
+
+            <div class="flex flex-wrap gap-1.5">
+              <button
+                v-for="city in PRESET_CITIES"
+                :key="city.name"
+                @click="handleSelectCity(city)"
+                class="px-2 py-0.5 rounded-md text-[11px] transition-colors cursor-pointer"
+                :class="[
+                  weather.location.name.includes(city.name)
+                    ? 'bg-blue-600 text-white font-medium shadow-xs'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                ]"
+              >
+                {{ city.name }}
+              </button>
+            </div>
           </div>
         </div>
       </div>

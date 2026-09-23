@@ -14,6 +14,10 @@ export interface WeatherLocation {
   lat: number
   lon: number
   isAuto?: boolean
+  isManual?: boolean
+  admin1?: string
+  country?: string
+  displaySubtext?: string
 }
 
 export interface WeatherCurrent {
@@ -59,16 +63,16 @@ export interface WeatherSummary {
 
 // 预设常用城市兜底选项
 export const PRESET_CITIES: WeatherLocation[] = [
-  { name: '北京', lat: 39.9042, lon: 116.4074 },
-  { name: '上海', lat: 31.2304, lon: 121.4737 },
-  { name: '广州', lat: 23.1291, lon: 113.2644 },
-  { name: '深圳', lat: 22.5431, lon: 114.0579 },
-  { name: '杭州', lat: 30.2741, lon: 120.1551 },
-  { name: '成都', lat: 30.5728, lon: 104.0668 },
-  { name: '武汉', lat: 30.5928, lon: 114.3055 },
-  { name: '南京', lat: 32.0603, lon: 118.7969 },
-  { name: '西安', lat: 34.3416, lon: 108.9398 },
-  { name: '重庆', lat: 29.5630, lon: 106.5516 },
+  { name: '北京', lat: 39.9042, lon: 116.4074, isAuto: false, isManual: true },
+  { name: '上海', lat: 31.2304, lon: 121.4737, isAuto: false, isManual: true },
+  { name: '广州', lat: 23.1291, lon: 113.2644, isAuto: false, isManual: true },
+  { name: '深圳', lat: 22.5431, lon: 114.0579, isAuto: false, isManual: true },
+  { name: '杭州', lat: 30.2741, lon: 120.1551, isAuto: false, isManual: true },
+  { name: '成都', lat: 30.5728, lon: 104.0668, isAuto: false, isManual: true },
+  { name: '武汉', lat: 30.5928, lon: 114.3055, isAuto: false, isManual: true },
+  { name: '南京', lat: 32.0603, lon: 118.7969, isAuto: false, isManual: true },
+  { name: '西安', lat: 34.3416, lon: 108.9398, isAuto: false, isManual: true },
+  { name: '重庆', lat: 29.5630, lon: 106.5516, isAuto: false, isManual: true },
 ]
 
 export const DEFAULT_LOCATION: WeatherLocation = PRESET_CITIES[1] // 上海默认
@@ -227,6 +231,17 @@ const LOCATION_KEY = 'akasha_weather_location_v1'
 const CACHE_DURATION_MS = 60 * 60 * 1000 // 1 小时缓存
 
 /**
+ * 检查是否存在已持久化的地理位置
+ */
+export function hasStoredLocation(): boolean {
+  try {
+    return Boolean(localStorage.getItem(LOCATION_KEY))
+  } catch {
+    return false
+  }
+}
+
+/**
  * 读取保存的自定义位置
  */
 export function getStoredLocation(): WeatherLocation {
@@ -235,7 +250,11 @@ export function getStoredLocation(): WeatherLocation {
     if (raw) {
       const parsed = JSON.parse(raw)
       if (parsed && typeof parsed.lat === 'number' && typeof parsed.lon === 'number') {
-        return parsed
+        return {
+          ...parsed,
+          isAuto: parsed.isAuto ?? false,
+          isManual: parsed.isManual ?? (!parsed.isAuto)
+        }
       }
     }
   } catch (e) {
@@ -307,7 +326,8 @@ export async function detectLocation(): Promise<WeatherLocation> {
         name: matchedCity ? `${matchedCity.name}附近` : '本地',
         lat,
         lon,
-        isAuto: true
+        isAuto: true,
+        isManual: false
       }
     } catch {
       // 用户拒绝授权或超时，平滑进入 IP 定位兜底
@@ -327,7 +347,8 @@ export async function detectLocation(): Promise<WeatherLocation> {
           name: data.city || '本地',
           lat: parseFloat(data.latitude.toFixed(4)),
           lon: parseFloat(data.longitude.toFixed(4)),
-          isAuto: true
+          isAuto: true,
+          isManual: false
         }
       }
     }
@@ -359,6 +380,95 @@ function findClosestCity(lat: number, lon: number): WeatherLocation | null {
     return closest
   }
   return null
+}
+
+// 国际主要大都市与常用缩写别名映射表 (优化跨语种搜索命中率)
+const CITY_ALIASES: Record<string, string> = {
+  '东京': 'Tokyo',
+  '伦敦': 'London',
+  '纽约': 'New York',
+  '巴黎': 'Paris',
+  '悉尼': 'Sydney',
+  '首尔': 'Seoul',
+  '新加坡': 'Singapore',
+  '香港': 'Hong Kong',
+  '澳门': 'Macau',
+  '台北': 'Taipei',
+  '曼谷': 'Bangkok',
+  '旧金山': 'San Francisco',
+  '洛杉矶': 'Los Angeles',
+  '芝加哥': 'Chicago',
+  '多伦多': 'Toronto',
+  '柏林': 'Berlin',
+  '莫斯科': 'Moscow',
+  '迪拜': 'Dubai'
+}
+
+/**
+ * 免 Key 城市地理编码搜索能力 (基于 Open-Meteo Geocoding API)
+ * 支持中文城市名（如“苏州”、“大连”、“青岛”），自动智能补全行政级别与人口权重排序
+ */
+export async function searchCities(keyword: string): Promise<WeatherLocation[]> {
+  const trimmed = keyword.trim()
+  if (!trimmed) return []
+
+  try {
+    const isChinese = /[\u4e00-\u9fa5]/.test(trimmed)
+    const needsCitySuffix = isChinese && !trimmed.endsWith('市') && !trimmed.endsWith('区') && !trimmed.endsWith('县')
+    const alias = CITY_ALIASES[trimmed]
+
+    const fetchApi = async (name: string) => {
+      const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name)}&count=6&language=zh&format=json`
+      const controller = new AbortController()
+      const timer = setTimeout(() => controller.abort(), 4000)
+      const res = await fetch(url, { signal: controller.signal })
+      clearTimeout(timer)
+      if (!res.ok) return []
+      const data = await res.json()
+      return data.results || []
+    }
+
+    const queries: Promise<any[]>[] = [fetchApi(trimmed).catch(() => [])]
+    if (needsCitySuffix) {
+      queries.push(fetchApi(trimmed + '市').catch(() => []))
+    }
+    if (alias) {
+      queries.push(fetchApi(alias).catch(() => []))
+    }
+
+    const resultsArray = await Promise.all(queries)
+    const combined = resultsArray.flat()
+
+    // 去重并按人口降序排列 (人口多的重点城市排在前面)
+    const map = new Map<number | string, any>()
+    for (const item of combined) {
+      if (!map.has(item.id)) {
+        map.set(item.id, item)
+      }
+    }
+    const list = Array.from(map.values())
+    list.sort((a, b) => (b.population || 0) - (a.population || 0))
+
+    return list.slice(0, 6).map((item): WeatherLocation => {
+      const countryStr = item.country || ''
+      const adminStr = item.admin1 || ''
+      const details = [adminStr, countryStr && countryStr !== '中国' ? countryStr : ''].filter(Boolean).join(' · ')
+
+      return {
+        name: item.name,
+        lat: parseFloat(Number(item.latitude).toFixed(4)),
+        lon: parseFloat(Number(item.longitude).toFixed(4)),
+        isAuto: false,
+        isManual: true,
+        admin1: adminStr,
+        country: countryStr,
+        displaySubtext: details || undefined
+      }
+    })
+  } catch (err) {
+    console.warn('City geocoding search failed', err)
+    return []
+  }
 }
 
 /**
