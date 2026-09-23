@@ -287,7 +287,12 @@
               <Check v-if="todo.completed" class="w-3 h-3 stroke-[3]" />
             </button>
             <span class="font-medium truncate">{{ todo.title }}</span>
-            <span v-if="todo.importance" class="text-[10px] font-mono font-bold text-slate-500 shrink-0">P{{ todo.importance }}</span>
+            <span
+              v-if="todo.importance"
+              :class="['text-[10px] font-mono font-bold px-1.5 py-0.2 rounded border shrink-0', getPriorityStyle(todo.importance).badgeClass]"
+            >
+              P{{ todo.importance }}
+            </span>
           </div>
           <span
             v-if="todo.dueDate === selectedMobileDate"
@@ -393,6 +398,7 @@ import {
 } from 'lucide-vue-next'
 import type { TodoItem, JournalEntry, ScheduleItem, Project } from '@/types'
 import { getCalendarDays, parseDate, isDateInRange, formatDate, formatDisplayDate } from '@/utils/date'
+import { getPriorityStyle } from '@/utils/priority'
 
 const props = defineProps<{
   todos: TodoItem[]

@@ -67,20 +67,55 @@
               {{ project.title }}
             </span>
 
-            <span
-              v-if="item.importance"
-              :class="[
-                'px-1.5 py-0.2 rounded text-[10px] font-mono font-bold shrink-0',
-                item.importance >= 8
-                  ? 'bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-900'
-                  : item.importance >= 5
-                  ? 'bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900'
-                  : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
-              ]"
-              :title="`重要度: ${item.importance}/10`"
-            >
-              P{{ item.importance }}
-            </span>
+            <!-- Interactive Priority Badge & Quick Selector -->
+            <div class="relative shrink-0" ref="popoverContainerRef">
+              <button
+                type="button"
+                @click.stop="isPopoverOpen = !isPopoverOpen"
+                :class="[
+                  'px-1.5 py-0.5 rounded text-[10px] font-mono font-bold shrink-0 border transition-all flex items-center gap-1 cursor-pointer select-none active:scale-95',
+                  priorityMeta.badgeClass,
+                  isPopoverOpen ? 'ring-2 ring-blue-400 dark:ring-blue-500 shadow-xs' : 'hover:opacity-85'
+                ]"
+                :title="`重要度: P${currentImportance} (${priorityMeta.shortLabel}) · 点击快捷修改`"
+              >
+                <span>P{{ currentImportance }}</span>
+              </button>
+
+              <!-- Quick Priority Selector Popover Bubble -->
+              <div
+                v-if="isPopoverOpen"
+                @click.stop
+                class="absolute z-50 top-full mt-1.5 left-0 sm:left-auto sm:right-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl p-2.5 w-60 sm:w-64 animate-in fade-in zoom-in-95 duration-150"
+              >
+                <div class="flex items-center justify-between pb-1.5 mb-2 border-b border-slate-100 dark:border-slate-800 text-[11px] font-medium text-slate-500">
+                  <span>设定任务重要度</span>
+                  <span class="font-mono text-blue-600 dark:text-blue-400 font-semibold">P{{ currentImportance }} ({{ priorityMeta.label }})</span>
+                </div>
+
+                <!-- Grid of P1 to P10 -->
+                <div class="grid grid-cols-5 gap-1.5">
+                  <button
+                    v-for="p in 10"
+                    :key="p"
+                    type="button"
+                    @click.stop="selectPriority(p)"
+                    :class="[
+                      'flex flex-col items-center justify-center py-1.5 px-1 rounded-lg border text-[11px] font-mono transition-all',
+                      getPriorityStyle(p).badgeClass,
+                      currentImportance === p
+                        ? 'ring-2 ring-blue-500 dark:ring-blue-400 font-bold scale-105 shadow-xs'
+                        : 'hover:opacity-80 active:scale-95'
+                    ]"
+                  >
+                    <span class="font-bold">P{{ p }}</span>
+                    <span class="text-[9px] font-sans scale-90 text-slate-500 dark:text-slate-400">
+                      {{ getPriorityStyle(p).shortLabel }}
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </div>
 
             <span
               v-if="item.dueDate"
@@ -135,6 +170,7 @@
         @edit-title="handleChildEditTitle"
         @edit-details="$emit('edit-details', $event)"
         @delete-item="$emit('delete-item', $event)"
+        @update-importance="$emit('update-importance', $event)"
       />
     </div>
   </div>
@@ -150,6 +186,7 @@ import {
   Trash2,
 } from 'lucide-vue-next'
 import type { TodoItem, Project } from '@/types'
+import { getPriorityStyle, normalizePriority } from '@/utils/priority'
 
 const props = defineProps<{
   item: TodoItem
@@ -158,6 +195,22 @@ const props = defineProps<{
 }>()
 
 const isMobile = ref(false)
+const isPopoverOpen = ref(false)
+const popoverContainerRef = ref<HTMLElement | null>(null)
+
+const currentImportance = computed(() => normalizePriority(props.item.importance))
+const priorityMeta = computed(() => getPriorityStyle(currentImportance.value))
+
+function selectPriority(level: number) {
+  isPopoverOpen.value = false
+  emit('update-importance', { id: props.item.id, importance: level })
+}
+
+function handleDocumentClick(e: MouseEvent) {
+  if (popoverContainerRef.value && !popoverContainerRef.value.contains(e.target as Node)) {
+    isPopoverOpen.value = false
+  }
+}
 
 function checkMobile() {
   if (typeof window !== 'undefined') {
@@ -168,10 +221,12 @@ function checkMobile() {
 onMounted(() => {
   checkMobile()
   window.addEventListener('resize', checkMobile)
+  document.addEventListener('click', handleDocumentClick)
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', checkMobile)
+  document.removeEventListener('click', handleDocumentClick)
 })
 
 const paddingLeftStyle = computed(() => {
@@ -194,6 +249,7 @@ const emit = defineEmits<{
   (e: 'edit-title', payload: { id: string; title: string }): void
   (e: 'edit-details', item: TodoItem): void
   (e: 'delete-item', id: string): void
+  (e: 'update-importance', payload: { id: string; importance: number }): void
 }>()
 
 const isEditing = ref(false)

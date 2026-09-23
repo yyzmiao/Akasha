@@ -452,8 +452,14 @@ async function handleDeleteSchedule(id: string) {
 
 async function handleSaveTodo(itemData: Partial<TodoItem>) {
   const now = Date.now()
+  const { children, ...cleanData } = itemData
   if (itemData.id) {
-    const updated = { ...itemData, updatedAt: now }
+    const importanceVal = itemData.importance !== undefined ? Number(itemData.importance) : 5
+    const updated = {
+      ...cleanData,
+      importance: importanceVal,
+      updatedAt: now,
+    }
     await db.todos.update(itemData.id, updated)
     const saved = await db.todos.get(itemData.id)
     if (saved) enqueueChange('todo', saved.id, saved)
@@ -464,7 +470,7 @@ async function handleSaveTodo(itemData: Partial<TodoItem>) {
       parentId: itemData.parentId ?? null,
       title: itemData.title || '新待办',
       completed: itemData.completed || false,
-      importance: itemData.importance || 5,
+      importance: itemData.importance !== undefined ? Number(itemData.importance) : 5,
       startDate: itemData.startDate,
       dueDate: itemData.dueDate,
       notes: itemData.notes || '',

@@ -42,7 +42,7 @@
       </div>
 
       <div class="flex flex-wrap items-center justify-between gap-2.5 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-500">
-        <div class="flex items-center gap-2">
+        <div class="flex flex-wrap items-center gap-2">
           <button
             @click="expandAll(true)"
             class="px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 font-medium"
@@ -56,7 +56,7 @@
             全部折叠
           </button>
 
-          <label class="flex items-center gap-1.5 cursor-pointer select-none ml-2 text-slate-600 dark:text-slate-400">
+          <label class="flex items-center gap-1.5 cursor-pointer select-none ml-1 text-slate-600 dark:text-slate-400">
             <input
               type="checkbox"
               v-model="hideCompleted"
@@ -64,6 +64,20 @@
             />
             <span>隐藏已完成</span>
           </label>
+        </div>
+
+        <!-- 排序方式 (支持优先级降序/升序实时排序联动) -->
+        <div class="flex items-center gap-1.5">
+          <ArrowDownUp class="w-3.5 h-3.5 text-slate-400" />
+          <select
+            v-model="sortBy"
+            class="px-2 py-1 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-300 focus:outline-none"
+          >
+            <option value="default">默认序号</option>
+            <option value="importance-desc">优先级从高到低 (P10 ➔ P1)</option>
+            <option value="importance-asc">优先级从低到高 (P1 ➔ P10)</option>
+            <option value="dueDate">截止日期优先</option>
+          </select>
         </div>
       </div>
     </div>
@@ -91,6 +105,7 @@
         @edit-title="handleEditTitle"
         @edit-details="handleOpenDetails"
         @delete-item="handleDeleteItem"
+        @update-importance="handleQuickUpdateImportance"
       />
     </div>
 
@@ -133,17 +148,42 @@
           </div>
 
           <div>
-            <div class="flex items-center justify-between mb-1">
-              <label class="text-xs font-medium text-slate-700 dark:text-slate-300">重要程度 (1 - 10)</label>
-              <span class="text-xs font-mono font-bold text-blue-600">P{{ editingItem.importance || 5 }}</span>
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="text-xs font-medium text-slate-700 dark:text-slate-300">重要程度 (优先级)</label>
+              <span
+                v-if="editingItem"
+                :class="['px-2 py-0.5 rounded text-xs font-mono font-bold border transition-colors', getPriorityStyle(editingItem.importance).badgeClass]"
+              >
+                P{{ normalizePriority(editingItem.importance) }} · {{ getPriorityStyle(editingItem.importance).label }}
+              </span>
             </div>
+            <!-- Range Slider -->
             <input
+              v-if="editingItem"
               v-model.number="editingItem.importance"
               type="range"
               min="1"
               max="10"
-              class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-600"
+              class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-600 mb-2"
             />
+            <!-- Quick Chips P1 to P10 -->
+            <div v-if="editingItem" class="grid grid-cols-5 gap-1.5 pt-1">
+              <button
+                v-for="p in 10"
+                :key="p"
+                type="button"
+                @click="editingItem.importance = p"
+                :class="[
+                  'py-1 rounded text-xs font-mono transition-all border text-center',
+                  getPriorityStyle(p).badgeClass,
+                  normalizePriority(editingItem.importance) === p
+                    ? 'ring-2 ring-blue-500 dark:ring-blue-400 font-bold scale-105 shadow-xs'
+                    : 'opacity-70 hover:opacity-100 active:scale-95'
+                ]"
+              >
+                P{{ p }}
+              </button>
+            </div>
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -198,10 +238,11 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { CheckSquare, Plus, X } from 'lucide-vue-next'
+import { CheckSquare, Plus, X, ArrowDownUp } from 'lucide-vue-next'
 import TodoTreeItem from '@/components/TodoTreeItem.vue'
 import type { TodoItem, Project } from '@/types'
 import { buildTodoTree } from '@/utils/tree'
+import { getPriorityStyle, normalizePriority } from '@/utils/priority'
 import confetti from 'canvas-confetti'
 
 const props = defineProps<{
@@ -219,6 +260,7 @@ const emit = defineEmits<{
 const newRootTitle = ref('')
 const selectedProjectFilter = ref<string>('')
 const hideCompleted = ref(false)
+const sortBy = ref<'default' | 'importance-desc' | 'importance-asc' | 'dueDate'>('default')
 const editingItem = ref<TodoItem | null>(null)
 
 watch(
@@ -230,7 +272,11 @@ watch(
         if (target.projectId && selectedProjectFilter.value && selectedProjectFilter.value !== target.projectId) {
           selectedProjectFilter.value = target.projectId
         }
-        editingItem.value = JSON.parse(JSON.stringify(target))
+        const { children, ...cleanTarget } = target
+        editingItem.value = {
+          ...JSON.parse(JSON.stringify(cleanTarget)),
+          importance: normalizePriority(target.importance),
+        }
       }
     }
   },
@@ -243,7 +289,36 @@ const activeTodos = computed(() => {
 })
 
 const treeData = computed(() => {
-  return buildTodoTree(activeTodos.value)
+  const tree = buildTodoTree(activeTodos.value)
+  if (sortBy.value === 'default') return tree
+
+  const sortFn = (a: TodoItem, b: TodoItem): number => {
+    if (sortBy.value === 'importance-desc') {
+      const diff = normalizePriority(b.importance) - normalizePriority(a.importance)
+      return diff !== 0 ? diff : a.order - b.order
+    }
+    if (sortBy.value === 'importance-asc') {
+      const diff = normalizePriority(a.importance) - normalizePriority(b.importance)
+      return diff !== 0 ? diff : a.order - b.order
+    }
+    if (sortBy.value === 'dueDate') {
+      if (!a.dueDate && !b.dueDate) return a.order - b.order
+      if (!a.dueDate) return 1
+      if (!b.dueDate) return -1
+      return a.dueDate.localeCompare(b.dueDate)
+    }
+    return a.order - b.order
+  }
+
+  const applySort = (nodes: TodoItem[]): TodoItem[] => {
+    const sorted = [...nodes].sort(sortFn)
+    return sorted.map((n) => ({
+      ...n,
+      children: n.children ? applySort(n.children) : [],
+    }))
+  }
+
+  return applySort(tree)
 })
 
 const totalCount = computed(() => activeTodos.value.length)
@@ -330,13 +405,32 @@ function handleEditTitle(payload: { id: string; title: string }) {
   }
 }
 
+function handleQuickUpdateImportance(payload: { id: string; importance: number }) {
+  const item = props.todos.find((t) => t.id === payload.id)
+  if (item) {
+    const { children, ...cleanItem } = item
+    emit('save-todo', {
+      ...cleanItem,
+      importance: normalizePriority(payload.importance),
+    })
+  }
+}
+
 function handleOpenDetails(item: TodoItem) {
-  editingItem.value = JSON.parse(JSON.stringify(item))
+  const { children, ...cleanItem } = item
+  editingItem.value = {
+    ...JSON.parse(JSON.stringify(cleanItem)),
+    importance: normalizePriority(item.importance),
+  }
 }
 
 function saveDetails() {
   if (editingItem.value) {
-    emit('save-todo', editingItem.value)
+    const { children, ...cleanItem } = editingItem.value
+    emit('save-todo', {
+      ...cleanItem,
+      importance: normalizePriority(cleanItem.importance),
+    })
     editingItem.value = null
   }
 }

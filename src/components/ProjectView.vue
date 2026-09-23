@@ -440,6 +440,7 @@
                 @edit-title="handleEditTodoTitle"
                 @edit-details="handleOpenTodoDetails"
                 @delete-item="handleDeleteTodoItem"
+                @update-importance="handleQuickUpdateProjectTodoImportance"
               />
             </div>
           </div>
@@ -586,17 +587,42 @@
           </div>
 
           <div>
-            <div class="flex items-center justify-between mb-1">
-              <label class="text-xs font-medium text-slate-700 dark:text-slate-300">重要程度 (1 - 10)</label>
-              <span class="text-xs font-mono font-bold text-blue-600">P{{ editingProjectTodo.importance || 5 }}</span>
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="text-xs font-medium text-slate-700 dark:text-slate-300">重要程度 (优先级)</label>
+              <span
+                v-if="editingProjectTodo"
+                :class="['px-2 py-0.5 rounded text-xs font-mono font-bold border transition-colors', getPriorityStyle(editingProjectTodo.importance).badgeClass]"
+              >
+                P{{ normalizePriority(editingProjectTodo.importance) }} · {{ getPriorityStyle(editingProjectTodo.importance).label }}
+              </span>
             </div>
+            <!-- Range Slider -->
             <input
+              v-if="editingProjectTodo"
               v-model.number="editingProjectTodo.importance"
               type="range"
               min="1"
               max="10"
-              class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-600"
+              class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-600 mb-2"
             />
+            <!-- Quick Chips P1 to P10 -->
+            <div v-if="editingProjectTodo" class="grid grid-cols-5 gap-1.5 pt-1">
+              <button
+                v-for="p in 10"
+                :key="p"
+                type="button"
+                @click="editingProjectTodo.importance = p"
+                :class="[
+                  'py-1 rounded text-xs font-mono transition-all border text-center',
+                  getPriorityStyle(p).badgeClass,
+                  normalizePriority(editingProjectTodo.importance) === p
+                    ? 'ring-2 ring-blue-500 dark:ring-blue-400 font-bold scale-105 shadow-xs'
+                    : 'opacity-70 hover:opacity-100 active:scale-95'
+                ]"
+              >
+                P{{ p }}
+              </button>
+            </div>
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -677,6 +703,7 @@ import type {
   TimeSlot,
   ScheduleRecurringType,
 } from '@/types'
+import { getPriorityStyle, normalizePriority } from '@/utils/priority'
 import { buildTodoTree } from '@/utils/tree'
 import { formatDate } from '@/utils/date'
 
@@ -906,13 +933,32 @@ function handleEditTodoTitle(payload: { id: string; title: string }) {
 
 const editingProjectTodo = ref<TodoItem | null>(null)
 
+function handleQuickUpdateProjectTodoImportance(payload: { id: string; importance: number }) {
+  const item = props.todos.find((t) => t.id === payload.id)
+  if (item) {
+    const { children, ...cleanItem } = item
+    emit('save-todo', {
+      ...cleanItem,
+      importance: normalizePriority(payload.importance),
+    })
+  }
+}
+
 function handleOpenTodoDetails(item: TodoItem) {
-  editingProjectTodo.value = JSON.parse(JSON.stringify(item))
+  const { children, ...cleanItem } = item
+  editingProjectTodo.value = {
+    ...JSON.parse(JSON.stringify(cleanItem)),
+    importance: normalizePriority(item.importance),
+  }
 }
 
 function saveProjectTodoDetails() {
   if (editingProjectTodo.value) {
-    emit('save-todo', editingProjectTodo.value)
+    const { children, ...cleanItem } = editingProjectTodo.value
+    emit('save-todo', {
+      ...cleanItem,
+      importance: normalizePriority(cleanItem.importance),
+    })
     editingProjectTodo.value = null
   }
 }
