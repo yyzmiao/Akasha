@@ -36,21 +36,74 @@ export function setServerUrl(newUrl: string): void {
   pb.baseUrl = cleanUrl
 }
 
-export async function loginUser(email: string, password: string): Promise<any> {
-  const authData = await pb.collection('users').authWithPassword(email.trim(), password)
+/**
+ * Normalize username or email:
+ * If the user inputs a plain username without '@' (e.g. 'admin' or 'yyzmiao'),
+ * automatically map it to an email address (e.g. 'admin@akasha.local').
+ */
+export function normalizeAccount(account: string): string {
+  const clean = (account || '').trim()
+  if (!clean) return ''
+  if (!clean.includes('@')) {
+    return `${clean}@akasha.local`
+  }
+  return clean
+}
+
+export function formatAuthErrorMessage(err: any): string {
+  if (!err) return '认证失败，请检查网络或服务器连接'
+
+  // PocketBase ClientResponseError details/data
+  const data = err.data || err.response?.data || {}
+  const details = data.details || data.data || data
+
+  if (details.email) {
+    const emailMsg = typeof details.email === 'string' ? details.email : (details.email.message || '')
+    if (emailMsg.includes('valid email')) {
+      return '账号格式不正确（请输入有效用户名或邮箱）'
+    }
+    if (emailMsg.includes('unique') || emailMsg.includes('already')) {
+      return '该账号/邮箱已被注册，请直接切换为【登录已有账号】'
+    }
+    return `账号错误: ${emailMsg}`
+  }
+
+  if (details.password) {
+    const pwdMsg = typeof details.password === 'string' ? details.password : (details.password.message || '')
+    if (pwdMsg.includes('least 8') || pwdMsg.includes('out_of_range') || pwdMsg.includes('length')) {
+      return '密码过短：密码长度至少需要 8 个字符（例如 12345678）'
+    }
+    return `密码错误: ${pwdMsg}`
+  }
+
+  if (err.status === 400) {
+    if (err.message?.includes('Failed to authenticate')) {
+      return '登录失败：账号或密码不正确，请重新输入'
+    }
+    if (err.message?.includes('Failed to create record')) {
+      return '注册失败：账号需至少包含字符，且密码需至少8位'
+    }
+  }
+
+  return err.message || '操作失败，请重试'
+}
+
+export async function loginUser(account: string, password: string): Promise<any> {
+  const normalizedEmail = normalizeAccount(account)
+  const authData = await pb.collection('users').authWithPassword(normalizedEmail, password)
   currentUser.value = authData.record
   return authData
 }
 
-export async function registerUser(email: string, password: string): Promise<any> {
-  const cleanEmail = email.trim()
+export async function registerUser(account: string, password: string): Promise<any> {
+  const normalizedEmail = normalizeAccount(account)
   await pb.collection('users').create({
-    email: cleanEmail,
+    email: normalizedEmail,
     password: password,
     passwordConfirm: password,
   })
   // Automatically login after register
-  return loginUser(cleanEmail, password)
+  return loginUser(normalizedEmail, password)
 }
 
 export function logoutUser(): void {

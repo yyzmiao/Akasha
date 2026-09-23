@@ -191,7 +191,8 @@
                   </div>
                   <div>
                     <div class="text-xs font-medium text-slate-800 dark:text-slate-200">
-                      {{ currentUser?.email }}
+                      {{ currentUser?.email?.replace(/@akasha\.local$/, '') || currentUser?.email }}
+                      <span v-if="currentUser?.email?.endsWith('@akasha.local')" class="text-[10px] text-slate-400 font-normal ml-1">(简易账号)</span>
                     </div>
                     <div class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1">
                       <span>状态: {{ syncStatusLabel }}</span>
@@ -305,20 +306,29 @@
               </div>
 
               <!-- Form inputs -->
-              <div class="space-y-2">
+              <div class="space-y-2.5">
                 <div>
+                  <label class="block text-[11px] font-medium text-slate-600 dark:text-slate-300 mb-1">
+                    账号 / 邮箱 (Account)
+                  </label>
                   <input
                     v-model="authEmail"
-                    type="email"
-                    placeholder="登录邮箱 (Email)"
+                    type="text"
+                    placeholder="输入用户名 (如 admin) 或邮箱 (如 you@example.com)"
                     class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-hidden focus:border-blue-500"
                   />
+                  <div v-if="authEmail.trim() && !authEmail.includes('@')" class="text-[10px] text-blue-600 dark:text-blue-400 mt-1 flex items-center gap-1">
+                    <span>💡 用户名将自动匹配为 <b>{{ authEmail.trim() }}@akasha.local</b></span>
+                  </div>
                 </div>
                 <div>
+                  <label class="block text-[11px] font-medium text-slate-600 dark:text-slate-300 mb-1">
+                    密码 (Password)
+                  </label>
                   <input
                     v-model="authPassword"
                     type="password"
-                    :placeholder="authMode === 'register' ? '设置密码 (最少 8 位)' : '账号密码'"
+                    :placeholder="authMode === 'register' ? '设置密码 (最少 8 位，如 12345678)' : '输入账号密码'"
                     class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-hidden focus:border-blue-500"
                   />
                 </div>
@@ -429,6 +439,7 @@ import {
   loginUser,
   registerUser,
   logoutUser,
+  formatAuthErrorMessage,
 } from '@/sync/pocketbase'
 import {
   syncStatus,
@@ -505,21 +516,26 @@ function handleSaveServerUrl() {
 
 async function handleAuthSubmit() {
   authErrorMessage.value = ''
-  if (!authEmail.value.trim() || !authPassword.value) {
-    authErrorMessage.value = '请填写完整的邮箱与密码'
+  const trimmedAccount = authEmail.value.trim()
+  if (!trimmedAccount) {
+    authErrorMessage.value = '请输入账号或邮箱'
+    return
+  }
+  if (!authPassword.value) {
+    authErrorMessage.value = '请输入密码'
     return
   }
   if (authMode.value === 'register' && authPassword.value.length < 8) {
-    authErrorMessage.value = '注册密码长度至少为 8 位'
+    authErrorMessage.value = '安全限制：注册密码长度必须至少为 8 位（例如 12345678）'
     return
   }
 
   isAuthLoading.value = true
   try {
     if (authMode.value === 'login') {
-      await loginUser(authEmail.value, authPassword.value)
+      await loginUser(trimmedAccount, authPassword.value)
     } else {
-      await registerUser(authEmail.value, authPassword.value)
+      await registerUser(trimmedAccount, authPassword.value)
     }
     // Perform initial bidirectional sync
     await syncAll()
@@ -527,7 +543,7 @@ async function handleAuthSubmit() {
     emit('reload-data')
   } catch (err: any) {
     console.error('Auth error:', err)
-    authErrorMessage.value = err?.message || '认证失败，请检查账号密码或服务器连接'
+    authErrorMessage.value = formatAuthErrorMessage(err)
   } finally {
     isAuthLoading.value = false
   }
