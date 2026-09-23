@@ -185,7 +185,7 @@
                 v-if="editingItem"
                 :class="['px-2 py-0.5 rounded text-xs font-mono font-bold border transition-colors', getPriorityStyle(editingItem.importance).badgeClass]"
               >
-                P{{ normalizePriority(editingItem.importance) }} · {{ getPriorityStyle(editingItem.importance).label }}
+                {{ getPriorityStyle(editingItem.importance).label }}
               </span>
             </div>
             <!-- Range Slider -->

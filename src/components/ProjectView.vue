@@ -643,7 +643,7 @@
                 v-if="editingProjectTodo"
                 :class="['px-2 py-0.5 rounded text-xs font-mono font-bold border transition-colors', getPriorityStyle(editingProjectTodo.importance).badgeClass]"
               >
-                P{{ normalizePriority(editingProjectTodo.importance) }} · {{ getPriorityStyle(editingProjectTodo.importance).label }}
+                {{ getPriorityStyle(editingProjectTodo.importance).label }}
               </span>
             </div>
             <!-- Range Slider -->
