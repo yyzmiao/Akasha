@@ -169,6 +169,176 @@
             </div>
           </section>
 
+          <!-- 云端多端实时同步 (PocketBase) -->
+          <section class="space-y-3">
+            <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center justify-between">
+              <span class="flex items-center gap-1.5">
+                <Cloud class="w-3.5 h-3.5 text-blue-500" />
+                <span>云端多端同步 (PocketBase)</span>
+              </span>
+              <span v-if="isAuthenticated" class="text-[11px] font-normal text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                已连接
+              </span>
+            </h3>
+
+            <!-- Logged In Card -->
+            <div v-if="isAuthenticated" class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 space-y-3.5">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <div class="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs">
+                    {{ (currentUser?.email || 'U').substring(0, 1).toUpperCase() }}
+                  </div>
+                  <div>
+                    <div class="text-xs font-medium text-slate-800 dark:text-slate-200">
+                      {{ currentUser?.email }}
+                    </div>
+                    <div class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1">
+                      <span>状态: {{ syncStatusLabel }}</span>
+                      <span>·</span>
+                      <span>最近: {{ formatSyncTime(lastSyncTime) }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  @click="handleLogout"
+                  class="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                  title="退出登录"
+                >
+                  <LogOut class="w-4 h-4" />
+                </button>
+              </div>
+
+              <div v-if="syncError" class="p-2.5 rounded-lg bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 text-[11px] text-rose-600 dark:text-rose-400">
+                {{ syncError }}
+              </div>
+
+              <!-- Action buttons -->
+              <div class="grid grid-cols-1 gap-2 pt-1">
+                <button
+                  @click="handleManualSync"
+                  :disabled="isSyncing"
+                  class="flex items-center justify-center gap-2 w-full py-2 px-3 rounded-lg bg-blue-600 hover:bg-blue-700 active:scale-98 disabled:opacity-50 text-white text-xs font-medium transition-all shadow-xs"
+                >
+                  <RefreshCw :class="['w-3.5 h-3.5', isSyncing ? 'animate-spin' : '']" />
+                  <span>{{ isSyncing ? '正在同步中...' : '立即双向同步' }}</span>
+                </button>
+
+                <div class="grid grid-cols-2 gap-2">
+                  <button
+                    @click="handleUploadAll"
+                    :disabled="isSyncing"
+                    class="py-1.5 px-2 rounded-lg bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-600 text-[11px] font-medium transition-colors"
+                    title="将本地已有全部数据批量推送到云端"
+                  >
+                    本地数据推送到云端
+                  </button>
+                  <button
+                    @click="handleDownloadAll"
+                    :disabled="isSyncing"
+                    class="py-1.5 px-2 rounded-lg bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-600 text-[11px] font-medium transition-colors"
+                    title="从云端拉取全量覆盖当前本地（常用于新设备首次同步）"
+                  >
+                    从云端重新拉取全量
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Login / Register Form -->
+            <div v-else class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 space-y-3">
+              <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                连接私有云服务器（PocketBase），手机修改后电脑瞬间同步，且两端断网依然可用。
+              </p>
+
+              <!-- Server URL config -->
+              <div>
+                <label class="block text-[11px] font-medium text-slate-600 dark:text-slate-300 mb-1">
+                  服务器地址 (Server URL)
+                </label>
+                <div class="flex items-center gap-1.5">
+                  <input
+                    v-model="inputServerUrl"
+                    type="text"
+                    placeholder="例如: https://your-domain.com 或 http://IP:8090"
+                    class="flex-1 px-2.5 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-hidden focus:border-blue-500"
+                  />
+                  <button
+                    @click="handleSaveServerUrl"
+                    class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
+                  >
+                    保存
+                  </button>
+                </div>
+                <div class="text-[10px] text-slate-400 mt-1">
+                  若已配置 Nginx 反代，可留空或使用当前网址
+                </div>
+              </div>
+
+              <!-- Auth Mode Switcher -->
+              <div class="flex items-center gap-2 pt-1 border-t border-slate-200/60 dark:border-slate-700/60">
+                <button
+                  type="button"
+                  @click="authMode = 'login'"
+                  :class="[
+                    'text-xs font-medium pb-1 border-b-2 transition-colors',
+                    authMode === 'login'
+                      ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                      : 'border-transparent text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+                  ]"
+                >
+                  登录已有账号
+                </button>
+                <button
+                  type="button"
+                  @click="authMode = 'register'"
+                  :class="[
+                    'text-xs font-medium pb-1 border-b-2 transition-colors',
+                    authMode === 'register'
+                      ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                      : 'border-transparent text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+                  ]"
+                >
+                  注册新账号
+                </button>
+              </div>
+
+              <!-- Form inputs -->
+              <div class="space-y-2">
+                <div>
+                  <input
+                    v-model="authEmail"
+                    type="email"
+                    placeholder="登录邮箱 (Email)"
+                    class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-hidden focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <input
+                    v-model="authPassword"
+                    type="password"
+                    :placeholder="authMode === 'register' ? '设置密码 (最少 8 位)' : '账号密码'"
+                    class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-hidden focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div v-if="authErrorMessage" class="p-2 rounded-lg bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 text-[11px] text-rose-600 dark:text-rose-400">
+                {{ authErrorMessage }}
+              </div>
+
+              <button
+                @click="handleAuthSubmit"
+                :disabled="isAuthLoading"
+                class="flex items-center justify-center gap-2 w-full py-2 px-3 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-medium transition-all shadow-xs"
+              >
+                <RefreshCw v-if="isAuthLoading" class="w-3.5 h-3.5 animate-spin" />
+                <span>{{ isAuthLoading ? '正在验证...' : (authMode === 'login' ? '登录并开启同步' : '注册账号并开启同步') }}</span>
+              </button>
+            </div>
+          </section>
+
           <section class="space-y-3">
             <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
               <Database class="w-3.5 h-3.5 text-blue-500" />
@@ -234,7 +404,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import {
   X,
   Activity,
@@ -246,8 +416,28 @@ import {
   Upload,
   AlertTriangle,
   Trash2,
+  Cloud,
+  RefreshCw,
+  LogOut,
 } from 'lucide-vue-next'
 import type { FontSize, FontFamily, UiScale } from '@/types'
+import {
+  serverUrl,
+  currentUser,
+  isAuthenticated,
+  setServerUrl,
+  loginUser,
+  registerUser,
+  logoutUser,
+} from '@/sync/pocketbase'
+import {
+  syncStatus,
+  lastSyncTime,
+  syncError,
+  syncAll,
+  uploadAllLocalToCloud,
+  downloadAllCloudToLocal,
+} from '@/sync/syncEngine'
 
 const props = defineProps<{
   isOpen: boolean
@@ -270,7 +460,118 @@ const emit = defineEmits<{
   (e: 'export-data'): void
   (e: 'import-data', jsonData: string): void
   (e: 'clear-all'): void
+  (e: 'reload-data'): void
 }>()
+
+// --- Cloud Sync Logic ---
+const inputServerUrl = ref(serverUrl.value)
+const authMode = ref<'login' | 'register'>('login')
+const authEmail = ref('')
+const authPassword = ref('')
+const isAuthLoading = ref(false)
+const authErrorMessage = ref('')
+
+const isSyncing = computed(() => syncStatus.value === 'syncing')
+
+const syncStatusLabel = computed(() => {
+  switch (syncStatus.value) {
+    case 'synced':
+      return '已同步'
+    case 'syncing':
+      return '正在同步'
+    case 'error':
+      return '同步异常'
+    case 'offline':
+      return '离线'
+    default:
+      return '未连接'
+  }
+})
+
+function formatSyncTime(ts: number | null): string {
+  if (!ts) return '尚未同步'
+  const date = new Date(ts)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
+}
+
+function handleSaveServerUrl() {
+  if (!inputServerUrl.value.trim()) {
+    inputServerUrl.value = window.location.origin
+  }
+  setServerUrl(inputServerUrl.value)
+  alert('服务器地址已更新：' + serverUrl.value)
+}
+
+async function handleAuthSubmit() {
+  authErrorMessage.value = ''
+  if (!authEmail.value.trim() || !authPassword.value) {
+    authErrorMessage.value = '请填写完整的邮箱与密码'
+    return
+  }
+  if (authMode.value === 'register' && authPassword.value.length < 8) {
+    authErrorMessage.value = '注册密码长度至少为 8 位'
+    return
+  }
+
+  isAuthLoading.value = true
+  try {
+    if (authMode.value === 'login') {
+      await loginUser(authEmail.value, authPassword.value)
+    } else {
+      await registerUser(authEmail.value, authPassword.value)
+    }
+    // Perform initial bidirectional sync
+    await syncAll()
+    authPassword.value = ''
+    emit('reload-data')
+  } catch (err: any) {
+    console.error('Auth error:', err)
+    authErrorMessage.value = err?.message || '认证失败，请检查账号密码或服务器连接'
+  } finally {
+    isAuthLoading.value = false
+  }
+}
+
+function handleLogout() {
+  if (confirm('确定退出当前云端账号吗？退出后数据依然保存在本地浏览器中。')) {
+    logoutUser()
+  }
+}
+
+async function handleManualSync() {
+  try {
+    await syncAll()
+    emit('reload-data')
+  } catch (err: any) {
+    alert('同步出错：' + (err?.message || err))
+  }
+}
+
+async function handleUploadAll() {
+  if (confirm('确认将当前设备本地全部数据推送到云端吗？')) {
+    try {
+      const res = await uploadAllLocalToCloud()
+      alert(`已成功推送 ${res.count} 项数据到云端！`)
+      emit('reload-data')
+    } catch (err: any) {
+      alert('推送失败：' + (err?.message || err))
+    }
+  }
+}
+
+async function handleDownloadAll() {
+  if (confirm('【高危提醒】从云端拉取将用云端数据覆盖当前本地 IndexedDB 数据，确定继续吗？')) {
+    try {
+      const res = await downloadAllCloudToLocal()
+      alert(`已从云端拉取还原 ${res.count} 项数据！`)
+      emit('reload-data')
+    } catch (err: any) {
+      alert('拉取失败：' + (err?.message || err))
+    }
+  }
+}
+
 
 const uiScaleOptions: { value: UiScale; label: string }[] = [
   { value: 'compact', label: '紧凑 90%' },

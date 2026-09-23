@@ -4,3 +4,4 @@ dist
 .gitignore
 README.md
 LICENSE
+pb_data/

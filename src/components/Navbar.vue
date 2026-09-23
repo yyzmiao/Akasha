@@ -103,6 +103,9 @@
 
         <!-- Right Side: Tools (Desktop theme toggle, Mobile full tools) -->
         <div class="flex items-center gap-1 sm:gap-2">
+          <!-- Sync Status Badge -->
+          <SyncStatusBadge @click="$emit('open-settings')" />
+
           <!-- Mobile Only Search Button -->
           <button
             @click="$emit('open-search')"
@@ -234,6 +237,7 @@ import {
   Moon,
 } from 'lucide-vue-next'
 import WeatherWidget from './WeatherWidget.vue'
+import SyncStatusBadge from './SyncStatusBadge.vue'
 import type { ActiveTab } from '@/types'
 
 defineProps<{

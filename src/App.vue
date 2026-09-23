@@ -93,6 +93,7 @@
       @export-data="handleExportData"
       @import-data="handleImportData"
       @clear-all="handleClearAll"
+      @reload-data="loadAllData"
     />
 
     <GlobalSearch
@@ -139,6 +140,8 @@ import type {
   UiScale,
 } from '@/types'
 import { formatDate } from '@/utils/date'
+import { enqueueChange, onRemoteDataChange, syncAll } from '@/sync/syncEngine'
+import { isAuthenticated } from '@/sync/pocketbase'
 
 const THEME_KEY = 'flow_os_theme'
 const isDark = ref(false)
@@ -301,6 +304,18 @@ onMounted(async () => {
     localStorage.setItem(BLANK_KEY, 'true')
   }
   await loadAllData()
+
+  // 监听远程跨端变更推送（SSE Realtime）
+  onRemoteDataChange(async () => {
+    await loadAllData()
+  })
+
+  // 若已登录云端，启动后台双向同步与长连接订阅
+  if (isAuthenticated.value) {
+    syncAll().catch((err) => {
+      console.warn('Initial sync error:', err)
+    })
+  }
 })
 
 onUnmounted(() => {
@@ -308,16 +323,22 @@ onUnmounted(() => {
 })
 
 async function handleSaveArea(areaData: Partial<Area>) {
+  const now = Date.now()
   if (areaData.id) {
-    await db.areas.update(areaData.id, areaData)
+    const updated = { ...areaData, updatedAt: now }
+    await db.areas.update(areaData.id, updated)
+    const saved = await db.areas.get(areaData.id)
+    if (saved) enqueueChange('area', saved.id, saved)
   } else {
     const newArea: Area = {
       id: 'area-' + Date.now(),
       title: areaData.title || '新领域',
       order: areaData.order ?? areas.value.length,
       createdAt: new Date().toISOString(),
+      updatedAt: now,
     }
     await db.areas.add(newArea)
+    enqueueChange('area', newArea.id, newArea)
   }
   areas.value = await db.areas.toArray()
 }
@@ -325,18 +346,38 @@ async function handleSaveArea(areaData: Partial<Area>) {
 async function handleDeleteArea(id: string) {
   const projs = await db.projects.where('areaId').equals(id).toArray()
   for (const p of projs) {
+    const schs = await db.schedules.where('projectId').equals(p.id).toArray()
+    for (const s of schs) enqueueChange('schedule', s.id, null, true)
     await db.schedules.where('projectId').equals(p.id).delete()
+
+    const hbs = await db.habits.where('projectId').equals(p.id).toArray()
+    for (const h of hbs) {
+      const logs = await db.habitLogs.where('habitId').equals(h.id).toArray()
+      for (const l of logs) enqueueChange('habitLog', l.id, null, true)
+      await db.habitLogs.where('habitId').equals(h.id).delete()
+      enqueueChange('habit', h.id, null, true)
+    }
     await db.habits.where('projectId').equals(p.id).delete()
+
+    const tds = await db.todos.where('projectId').equals(p.id).toArray()
+    for (const t of tds) enqueueChange('todo', t.id, null, true)
     await db.todos.where('projectId').equals(p.id).delete()
+
+    enqueueChange('project', p.id, null, true)
   }
   await db.projects.where('areaId').equals(id).delete()
   await db.areas.delete(id)
+  enqueueChange('area', id, null, true)
   await loadAllData()
 }
 
 async function handleSaveProject(projData: Partial<Project>) {
+  const now = Date.now()
   if (projData.id) {
-    await db.projects.update(projData.id, projData)
+    const updated = { ...projData, updatedAt: now }
+    await db.projects.update(projData.id, updated)
+    const saved = await db.projects.get(projData.id)
+    if (saved) enqueueChange('project', saved.id, saved)
   } else {
     const newProj: Project = {
       id: 'proj-' + Date.now(),
@@ -346,23 +387,44 @@ async function handleSaveProject(projData: Partial<Project>) {
       color: projData.color || '#3b82f6',
       order: projData.order ?? projects.value.length,
       createdAt: new Date().toISOString(),
+      updatedAt: now,
     }
     await db.projects.add(newProj)
+    enqueueChange('project', newProj.id, newProj)
   }
   projects.value = await db.projects.toArray()
 }
 
 async function handleDeleteProject(id: string) {
-  await db.projects.delete(id)
+  const schs = await db.schedules.where('projectId').equals(id).toArray()
+  for (const s of schs) enqueueChange('schedule', s.id, null, true)
   await db.schedules.where('projectId').equals(id).delete()
-  await db.habits.where('projectId').equals(id).delete()
+
+  const hbs = await db.habits.where('projectId').equals(id).toArray()
+  for (const h of hbs) {
+    const logs = await db.habitLogs.where('habitId').equals(h.id).toArray()
+    for (const l of logs) enqueueChange('habitLog', l.id, null, true)
+    await db.habitLogs.where('habitId').equals(h.id).delete()
+    enqueueChange('habit', h.id, null, true)
+  }
+  await db.habits.where('projectId').equals(p.id).delete()
+
+  const tds = await db.todos.where('projectId').equals(id).toArray()
+  for (const t of tds) enqueueChange('todo', t.id, null, true)
   await db.todos.where('projectId').equals(id).delete()
+
+  await db.projects.delete(id)
+  enqueueChange('project', id, null, true)
   await loadAllData()
 }
 
 async function handleSaveSchedule(scheduleData: Partial<ScheduleItem>) {
+  const now = Date.now()
   if (scheduleData.id) {
-    await db.schedules.update(scheduleData.id, scheduleData)
+    const updated = { ...scheduleData, updatedAt: now }
+    await db.schedules.update(scheduleData.id, updated)
+    const saved = await db.schedules.get(scheduleData.id)
+    if (saved) enqueueChange('schedule', saved.id, saved)
   } else {
     const newSchedule: ScheduleItem = {
       id: 'sch-' + Date.now(),
@@ -374,20 +436,27 @@ async function handleSaveSchedule(scheduleData: Partial<ScheduleItem>) {
       recurringDayOfWeek: scheduleData.recurringDayOfWeek,
       recurringDayOfMonth: scheduleData.recurringDayOfMonth,
       createdAt: new Date().toISOString(),
+      updatedAt: now,
     }
     await db.schedules.add(newSchedule)
+    enqueueChange('schedule', newSchedule.id, newSchedule)
   }
   schedules.value = await db.schedules.toArray()
 }
 
 async function handleDeleteSchedule(id: string) {
   await db.schedules.delete(id)
+  enqueueChange('schedule', id, null, true)
   schedules.value = await db.schedules.toArray()
 }
 
 async function handleSaveTodo(itemData: Partial<TodoItem>) {
+  const now = Date.now()
   if (itemData.id) {
-    await db.todos.update(itemData.id, itemData)
+    const updated = { ...itemData, updatedAt: now }
+    await db.todos.update(itemData.id, updated)
+    const saved = await db.todos.get(itemData.id)
+    if (saved) enqueueChange('todo', saved.id, saved)
   } else {
     const newItem: TodoItem = {
       id: 'todo-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
@@ -402,8 +471,10 @@ async function handleSaveTodo(itemData: Partial<TodoItem>) {
       order: itemData.order || 0,
       collapsed: false,
       createdAt: new Date().toISOString(),
+      updatedAt: now,
     }
     await db.todos.add(newItem)
+    enqueueChange('todo', newItem.id, newItem)
   }
   todos.value = await db.todos.toArray()
 }
@@ -411,18 +482,28 @@ async function handleSaveTodo(itemData: Partial<TodoItem>) {
 async function handleToggleTodoComplete(id: string) {
   const item = todos.value.find((t) => t.id === id)
   if (item) {
-    await db.todos.update(id, { completed: !item.completed })
+    const now = Date.now()
+    const newCompleted = !item.completed
+    await db.todos.update(id, { completed: newCompleted, updatedAt: now })
+    const saved = await db.todos.get(id)
+    if (saved) enqueueChange('todo', saved.id, saved)
     todos.value = await db.todos.toArray()
   }
 }
 
 async function handleDeleteTodo(id: string) {
   await db.todos.delete(id)
+  enqueueChange('todo', id, null, true)
   todos.value = await db.todos.toArray()
 }
 
 async function handleBatchUpdateTodos(items: TodoItem[]) {
-  await db.todos.bulkPut(items)
+  const now = Date.now()
+  const withTime = items.map((it) => ({ ...it, updatedAt: now }))
+  await db.todos.bulkPut(withTime)
+  for (const it of withTime) {
+    enqueueChange('todo', it.id, it)
+  }
   todos.value = await db.todos.toArray()
 }
 
@@ -446,11 +527,16 @@ async function handleToggleHabitLog({ habitId, date }: { habitId: string; date: 
     .equals([habitId, date])
     .first()
 
+  const now = Date.now()
   if (existing) {
-    await db.habitLogs.update(existing.id, {
+    const updated = {
       completed: !existing.completed,
       completedAt: new Date().toISOString(),
-    })
+      updatedAt: now,
+    }
+    await db.habitLogs.update(existing.id, updated)
+    const saved = await db.habitLogs.get(existing.id)
+    if (saved) enqueueChange('habitLog', saved.id, saved)
   } else {
     const newLog: HabitLog = {
       id: `hl-${habitId}-${date}-${Date.now()}`,
@@ -458,13 +544,16 @@ async function handleToggleHabitLog({ habitId, date }: { habitId: string; date: 
       date,
       completed: true,
       completedAt: new Date().toISOString(),
+      updatedAt: now,
     }
     await db.habitLogs.add(newLog)
+    enqueueChange('habitLog', newLog.id, newLog)
   }
   habitLogs.value = await db.habitLogs.toArray()
 }
 
 async function handleCreateHabit(habitData: Partial<Habit>) {
+  const now = Date.now()
   const newHabit: Habit = {
     id: 'h-' + Date.now(),
     projectId: habitData.projectId,
@@ -477,14 +566,20 @@ async function handleCreateHabit(habitData: Partial<Habit>) {
     anchorDate: habitData.anchorDate || formatDate(new Date()),
     color: habitData.color || '#2563eb',
     createdAt: new Date().toISOString(),
+    updatedAt: now,
   }
   await db.habits.add(newHabit)
+  enqueueChange('habit', newHabit.id, newHabit)
   habits.value = await db.habits.toArray()
 }
 
 async function handleDeleteHabit(id: string) {
-  await db.habits.delete(id)
+  const logs = await db.habitLogs.where('habitId').equals(id).toArray()
+  for (const l of logs) enqueueChange('habitLog', l.id, null, true)
   await db.habitLogs.where('habitId').equals(id).delete()
+
+  await db.habits.delete(id)
+  enqueueChange('habit', id, null, true)
   habits.value = await db.habits.toArray()
   habitLogs.value = await db.habitLogs.toArray()
 }
@@ -495,11 +590,14 @@ function handleOpenJournalDate(dateStr: string) {
 }
 
 async function handleSaveJournal(entryData: Partial<JournalEntry>) {
+  const now = Date.now()
   if (entryData.id) {
     await db.journals.update(entryData.id, {
       ...entryData,
       updatedAt: new Date().toISOString(),
     })
+    const saved = await db.journals.get(entryData.id)
+    if (saved) enqueueChange('journal', saved.id, saved)
   } else {
     const existing = await db.journals.where('date').equals(entryData.date || '').first()
     if (existing) {
@@ -507,6 +605,8 @@ async function handleSaveJournal(entryData: Partial<JournalEntry>) {
         ...entryData,
         updatedAt: new Date().toISOString(),
       })
+      const saved = await db.journals.get(existing.id)
+      if (saved) enqueueChange('journal', saved.id, saved)
     } else {
       const newEntry: JournalEntry = {
         id: 'j-' + Date.now(),
@@ -518,6 +618,7 @@ async function handleSaveJournal(entryData: Partial<JournalEntry>) {
         tags: entryData.tags || [],
       }
       await db.journals.add(newEntry)
+      enqueueChange('journal', newEntry.id, newEntry)
     }
   }
   journals.value = await db.journals.toArray()
@@ -525,6 +626,7 @@ async function handleSaveJournal(entryData: Partial<JournalEntry>) {
 
 async function handleDeleteJournal(id: string) {
   await db.journals.delete(id)
+  enqueueChange('journal', id, null, true)
   journals.value = await db.journals.toArray()
 }
 

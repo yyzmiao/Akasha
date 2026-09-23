@@ -7,6 +7,7 @@ export interface Area {
   title: string
   order: number
   createdAt: string
+  updatedAt?: number | string
 }
 
 export interface Project {
@@ -17,6 +18,7 @@ export interface Project {
   color?: string
   order: number
   createdAt: string
+  updatedAt?: number | string
 }
 
 export type ScheduleRecurringType = 'none' | 'weekly' | 'monthly'
@@ -31,6 +33,7 @@ export interface ScheduleItem {
   recurringDayOfWeek?: number
   recurringDayOfMonth?: number
   createdAt: string
+  updatedAt?: number | string
 }
 
 export interface Habit {
@@ -48,6 +51,7 @@ export interface Habit {
   description?: string
   targetDayOfMonth?: number
   createdAt: string
+  updatedAt?: number | string
 }
 
 export interface HabitLog {
@@ -56,6 +60,7 @@ export interface HabitLog {
   date: string
   completed: boolean
   completedAt: string
+  updatedAt?: number | string
 }
 
 export interface TodoItem {
@@ -72,6 +77,7 @@ export interface TodoItem {
   collapsed?: boolean
   children?: TodoItem[]
   createdAt: string
+  updatedAt?: number | string
 }
 
 export interface JournalEntry {
@@ -88,3 +94,19 @@ export type ActiveTab = 'calendar' | 'projects' | 'todos' | 'habits' | 'journal'
 export type FontSize = 'small' | 'standard' | 'large' | 'xlarge'
 export type FontFamily = 'wenkai' | 'system' | 'serif'
 export type UiScale = 'compact' | 'standard' | 'comfortable' | 'large'
+
+export type EntityType = 'area' | 'project' | 'schedule' | 'habit' | 'habitLog' | 'todo' | 'journal'
+export type SyncStatus = 'offline' | 'connecting' | 'synced' | 'syncing' | 'error'
+
+export interface SyncItemRecord {
+  id?: string
+  entityType: EntityType
+  entityId: string
+  payload: any
+  clientUpdatedAt: number
+  isDeleted?: boolean
+  user?: string
+  created?: string
+  updated?: string
+}
+

@@ -88,6 +88,13 @@
 * **独立应用模式**：全面适配 Android Chrome WebAPK 与 iOS Safari 添加到主屏幕，无浏览器地址栏与安全角标，呈现原生全屏体验。
 * **离线服务工作线程**：内置 Service Worker 预缓存，断网状态下照常加载与操作。
 
+### 9. 真·多端无缝实时同步 (PocketBase Realtime Sync)
+* **本地优先 + 云端长连接**：基于 PocketBase（单文件轻量级 BaaS，内存仅需 ~25MB）与浏览器 IndexedDB。
+* **毫秒级双向广播**：手机端打勾或修改待办，电脑端通过 SSE (Server-Sent Events) 瞬间无感刷新。
+* **双向离线容灾**：网络中断时依然畅享毫秒级操作；网络恢复自动增量推拉同步。
+* **墓碑防复活机制**：彻底解决断网重连后已删除项目死灰复燃的问题。
+* **单端口统一反代**：容器内置 Nginx 自动反代 `/api/` 与后台 `/_/`，无需多开防火墙端口，零跨域配置烦恼。
+
 ---
 
 ## 🛠️ 技术栈 (Tech Stack)
@@ -138,9 +145,12 @@ docker compose up -d --build
 git clone https://github.com/yyzmiao/Akasha.git
 cd Akasha
 
-# 启动容器服务 (默认映射宿主机 8080 端口)
+# 启动容器服务 (包含 Akasha 前端与 PocketBase 实时同步后端)
 docker compose up -d --build
 ```
+
+> **提示**：启动后，直接访问网页并打开「**设置 ➔ 云端多端同步**」，注册您的专属账号即可开启手机与电脑的毫秒级双向实时同步。PocketBase 数据会自动持久化保存在宿主机的 `./pb_data` 目录中。
+
 
 #### 第二步：配置 Nginx 域名反代与访问密码 (可选)
 
