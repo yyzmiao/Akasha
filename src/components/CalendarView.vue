@@ -133,23 +133,6 @@
             <span class="hidden sm:inline">习惯</span>
           </button>
         </div>
-
-        <!-- 月历全拉伸 / 紧凑切换按钮 (仅在月视图下生效) -->
-        <button
-          v-if="viewMode === 'month'"
-          @click="toggleMonthStretch"
-          class="flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium border transition-all active:scale-95 cursor-pointer shadow-2xs select-none shrink-0"
-          :class="[
-            isMonthStretch
-              ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-900 font-semibold'
-              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:text-slate-900 dark:hover:text-slate-200'
-          ]"
-          :title="isMonthStretch ? '当前为自适应全拉伸模式（点击切为紧凑模式）' : '当前为紧凑模式（点击切为自适应全拉伸）'"
-        >
-          <Maximize2 v-if="isMonthStretch" class="w-3.5 h-3.5" />
-          <Minimize2 v-else class="w-3.5 h-3.5" />
-          <span class="hidden sm:inline">{{ isMonthStretch ? '全拉伸' : '紧凑' }}</span>
-        </button>
       </div>
     </div>
 
@@ -158,7 +141,7 @@
       v-if="viewMode === 'month' || viewMode === '2weeks'"
       :class="[
         'w-full bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xs transition-all duration-200',
-        isMonthStretch && viewMode === 'month'
+        viewMode === 'month'
           ? 'flex-1 min-h-0 flex flex-col sm:min-h-[560px] lg:min-h-[calc(100vh-12rem)]'
           : 'flex flex-col'
       ]"
@@ -176,9 +159,9 @@
       <div
         :class="[
           'grid grid-cols-7 divide-x divide-y divide-slate-200 dark:divide-slate-800',
-          isMonthStretch && viewMode === 'month' ? 'flex-1 min-h-0' : ''
+          viewMode === 'month' ? 'flex-1 min-h-0' : ''
         ]"
-        :style="isMonthStretch && viewMode === 'month' ? {
+        :style="viewMode === 'month' ? {
           gridTemplateRows: `repeat(${monthRowCount}, minmax(0, 1fr))`
         } : {}"
       >
@@ -188,11 +171,9 @@
           @click="handleDayCellClick(day.dateStr)"
           :class="[
             'p-1 sm:p-1.5 flex flex-col justify-start transition-all duration-150 group relative cursor-pointer select-none overflow-hidden',
-            isMonthStretch && viewMode === 'month'
+            viewMode === 'month'
               ? 'min-h-[46px] sm:min-h-0 h-full'
-              : (viewMode === '2weeks'
-                  ? 'min-h-[60px] sm:min-h-[130px]'
-                  : (monthRowCount === 6 ? 'min-h-[46px] sm:min-h-[82px]' : 'min-h-[46px] sm:min-h-[90px]')),
+              : 'min-h-[60px] sm:min-h-[130px]',
             viewMode === 'month' && !day.isCurrentMonth
               ? 'bg-slate-50/60 dark:bg-slate-950/40 text-slate-400 opacity-60'
               : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/40',
@@ -1648,8 +1629,6 @@ import {
   X,
   Trash2,
   Clock,
-  Maximize2,
-  Minimize2,
 } from 'lucide-vue-next'
 import type { TodoItem, JournalEntry, ScheduleItem, Project, Habit, HabitLog, CalendarViewMode } from '@/types'
 import {
@@ -1729,26 +1708,6 @@ function setViewMode(mode: CalendarViewMode) {
   viewMode.value = mode
   try {
     localStorage.setItem(VIEW_STORAGE_KEY, mode)
-  } catch {
-    // ignore
-  }
-}
-
-// 月历全拉伸 / 紧凑模式配置
-const MONTH_STRETCH_KEY = 'akasha_calendar_month_stretch'
-
-function getInitialMonthStretch(): boolean {
-  if (typeof window === 'undefined') return true
-  const saved = localStorage.getItem(MONTH_STRETCH_KEY)
-  return saved !== 'false'
-}
-
-const isMonthStretch = ref<boolean>(getInitialMonthStretch())
-
-function toggleMonthStretch() {
-  isMonthStretch.value = !isMonthStretch.value
-  try {
-    localStorage.setItem(MONTH_STRETCH_KEY, String(isMonthStretch.value))
   } catch {
     // ignore
   }
@@ -1840,7 +1799,7 @@ function getDayCellItems(dateStr: string): { visible: DayCellItem[]; extraCount:
     }
   }
 
-  const maxVisible = viewMode.value === '2weeks' ? 6 : (isMonthStretch.value && viewMode.value === 'month' ? 4 : 3)
+  const maxVisible = viewMode.value === '2weeks' ? 6 : (viewMode.value === 'month' ? 4 : 3)
   const visible = items.slice(0, maxVisible)
   const extraCount = Math.max(0, items.length - maxVisible)
 
