@@ -3,7 +3,7 @@
     <Navbar
       :active-tab="activeTab"
       :is-dark="isDark"
-      @update:active-tab="activeTab = $event"
+      @update:active-tab="handleTabChange"
       @open-settings="isSettingsOpen = true"
       @open-search="isSearchOpen = true"
       @toggle-theme="toggleTheme"
@@ -16,7 +16,7 @@
         :schedules="schedules"
         :projects="projects"
         :journals="journals"
-        @switch-tab="activeTab = $event as any"
+        @switch-tab="handleTabChange($event as any)"
         @open-todo="handleOpenTodo"
         @delete-schedule="handleDeleteSchedule"
         @quick-create-todo="handleQuickCreateTodo"
@@ -54,6 +54,7 @@
         @save-todo="handleSaveTodo"
         @delete-todo="handleDeleteTodo"
         @batch-update="handleBatchUpdateTodos"
+        @clear-target-id="targetTodoId = null"
       />
 
       <HabitsView
@@ -236,6 +237,13 @@ function handleGlobalKeydown(e: KeyboardEvent) {
     e.preventDefault()
     isSearchOpen.value = !isSearchOpen.value
   }
+}
+
+function handleTabChange(tab: ActiveTab) {
+  targetTodoId.value = null
+  targetProjectId.value = null
+  targetJournalDate.value = null
+  activeTab.value = tab
 }
 
 function handleSearchSelectProject(projectId: string) {
