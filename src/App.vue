@@ -9,7 +9,7 @@
       @toggle-theme="toggleTheme"
     />
 
-    <main class="flex-1 max-w-7xl w-full mx-auto px-2.5 sm:px-6 lg:px-8 py-3.5 sm:py-5">
+    <main class="flex-1 flex flex-col max-w-7xl w-full mx-auto px-2.5 sm:px-6 lg:px-8 py-3.5 sm:py-5 min-h-0">
       <CalendarView
         v-if="activeTab === 'calendar'"
         :todos="todos"

@@ -1,7 +1,7 @@
 <template>
-  <div class="space-y-3.5 sm:space-y-4">
+  <div class="flex-1 flex flex-col min-h-0 space-y-3.5 sm:space-y-4 h-full">
     <!-- Calendar Top Control Bar -->
-    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 sm:p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-2xs">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 sm:p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-2xs shrink-0">
       <!-- Left: Period Navigation & Today Button -->
       <div class="flex items-center justify-between sm:justify-start gap-2.5">
         <div class="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5 border border-slate-200/80 dark:border-slate-700">
@@ -118,9 +118,9 @@
     <!-- VIEW 1: Month View & Two-Week View (7 columns grid) -->
     <div
       v-if="viewMode === 'month' || viewMode === '2weeks'"
-      class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xs"
+      class="flex-1 flex flex-col min-h-0 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xs min-h-[460px] sm:min-h-[560px] lg:min-h-[calc(100vh-14rem)]"
     >
-      <div class="grid grid-cols-7 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 text-center py-2 text-xs font-semibold text-slate-600 dark:text-slate-400">
+      <div class="grid grid-cols-7 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 text-center py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 shrink-0">
         <div>周一</div>
         <div>周二</div>
         <div>周三</div>
@@ -130,14 +130,18 @@
         <div class="text-blue-600 dark:text-blue-400">周日</div>
       </div>
 
-      <div class="grid grid-cols-7 auto-rows-auto divide-x divide-y divide-slate-200 dark:divide-slate-800">
+      <div
+        class="flex-1 grid grid-cols-7 divide-x divide-y divide-slate-200 dark:divide-slate-800 min-h-0"
+        :style="{
+          gridTemplateRows: `repeat(${monthRowCount}, minmax(0, 1fr))`
+        }"
+      >
         <div
           v-for="day in displayDays"
           :key="day.dateStr"
           @click="handleDayCellClick(day.dateStr)"
           :class="[
-            viewMode === '2weeks' ? 'min-h-[64px] sm:min-h-[96px]' : 'min-h-[50px] sm:min-h-[68px]',
-            'p-1 sm:p-2 flex flex-col transition-all duration-200 group relative cursor-pointer select-none',
+            'p-1 sm:p-2 flex flex-col h-full min-h-[50px] sm:min-h-[90px] transition-all duration-200 group relative cursor-pointer select-none overflow-hidden',
             viewMode === 'month' && !day.isCurrentMonth
               ? 'bg-slate-50/60 dark:bg-slate-950/40 text-slate-400 opacity-60'
               : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/40',
@@ -149,7 +153,7 @@
               : ''
           ]"
         >
-          <div class="flex items-center justify-between mb-0.5 sm:mb-1">
+          <div class="flex items-center justify-between mb-0.5 sm:mb-1 shrink-0">
             <div class="flex items-center gap-1 sm:gap-1.5">
               <span
                 :class="[
@@ -204,13 +208,13 @@
             ></span>
           </div>
 
-          <!-- Desktop Only: Detailed Pills Container -->
-          <div class="hidden sm:block flex-1 space-y-1">
+          <!-- Desktop Only: Detailed Pills Container with Local Scroll -->
+          <div class="hidden sm:flex flex-1 flex-col space-y-1 min-h-0 overflow-y-auto no-scrollbar">
             <div
               v-for="s in getSchedulesForDay(day.dateStr)"
               :key="s.id"
               @click.stop="handleOpenSchedule(s)"
-              class="px-1.5 py-0.5 sm:py-1 rounded bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900 hover:border-indigo-400 dark:hover:border-indigo-600 text-indigo-900 dark:text-indigo-200 text-[11px] leading-tight flex items-center justify-between gap-1 select-none truncate shadow-2xs cursor-pointer transition-colors"
+              class="px-1.5 py-0.5 sm:py-1 rounded bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900 hover:border-indigo-400 dark:hover:border-indigo-600 text-indigo-900 dark:text-indigo-200 text-[11px] leading-tight flex items-center justify-between gap-1 select-none truncate shadow-2xs cursor-pointer transition-colors shrink-0"
               :title="`${s.title} (${getProjectName(s.projectId)})`"
             >
               <div class="flex items-center gap-1 min-w-0 truncate">
@@ -231,7 +235,7 @@
               :key="h.id"
               @click.stop="$emit('toggle-habit', { habitId: h.id, date: day.dateStr })"
               :class="[
-                'px-1.5 py-0.5 sm:py-1 rounded border text-[11px] leading-tight flex items-center justify-between gap-1 select-none truncate shadow-2xs cursor-pointer transition-colors',
+                'px-1.5 py-0.5 sm:py-1 rounded border text-[11px] leading-tight flex items-center justify-between gap-1 select-none truncate shadow-2xs cursor-pointer transition-colors shrink-0',
                 isHabitDoneOnDate(h.id, day.dateStr)
                   ? 'opacity-60 line-through bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900 text-emerald-800 dark:text-emerald-300'
                   : 'bg-amber-50/80 dark:bg-amber-950/40 border-amber-200 dark:border-amber-900/60 hover:border-amber-400 text-amber-900 dark:text-amber-200'
@@ -256,11 +260,11 @@
             </div>
 
             <div
-              v-for="todo in getTodosForDay(day.dateStr, 5)"
+              v-for="todo in getTodosForDay(day.dateStr, viewMode === '2weeks' ? 8 : 5)"
               :key="todo.id"
               @click.stop="$emit('open-todo', todo)"
               :class="[
-                'px-1.5 py-0.5 sm:py-1 rounded border text-[11px] leading-tight transition-all cursor-pointer select-none truncate flex items-center justify-between gap-1',
+                'px-1.5 py-0.5 sm:py-1 rounded border text-[11px] leading-tight transition-all cursor-pointer select-none truncate flex items-center justify-between gap-1 shrink-0',
                 todo.completed
                   ? 'opacity-50 line-through bg-slate-100 dark:bg-slate-800 border-slate-200 text-slate-500'
                   : todo.importance && todo.importance >= 8
@@ -287,17 +291,17 @@
             </div>
 
             <div
-              v-if="getExtraCount(day.dateStr, 5) > 0"
-              class="text-[10px] text-slate-400 text-center font-medium"
+              v-if="getExtraCount(day.dateStr, viewMode === '2weeks' ? 8 : 5) > 0"
+              class="text-[10px] text-slate-400 text-center font-medium shrink-0"
             >
-              +{{ getExtraCount(day.dateStr, 5) }} 项
+              +{{ getExtraCount(day.dateStr, viewMode === '2weeks' ? 8 : 5) }} 项
             </div>
           </div>
 
           <div
             v-if="hasJournalOnDate(day.dateStr)"
             @click.stop="$emit('open-journal', day.dateStr)"
-            class="hidden sm:flex mt-1 items-center gap-1 text-[10px] text-slate-500 hover:text-blue-600 truncate"
+            class="hidden sm:flex mt-auto pt-1 items-center gap-1 text-[10px] text-slate-500 hover:text-blue-600 truncate shrink-0"
             title="查看此日记"
           >
             <BookOpen class="w-3 h-3 shrink-0" />
@@ -310,10 +314,10 @@
     <!-- VIEW 2: Week View (7 Days Desktop Grid / Mobile Horizontal Swipeable Cards) -->
     <div
       v-else-if="viewMode === 'week'"
-      class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xs"
+      class="flex-1 flex flex-col min-h-0 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xs min-h-[480px] sm:min-h-[580px] lg:min-h-[calc(100vh-14rem)]"
     >
       <!-- Desktop Weekday Header Bar -->
-      <div class="hidden sm:grid sm:grid-cols-7 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 text-center py-2.5 text-xs font-semibold text-slate-600 dark:text-slate-400 divide-x divide-slate-200 dark:divide-slate-800">
+      <div class="hidden sm:grid sm:grid-cols-7 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 text-center py-2.5 text-xs font-semibold text-slate-600 dark:text-slate-400 divide-x divide-slate-200 dark:divide-slate-800 shrink-0">
         <div
           v-for="day in displayDays"
           :key="day.dateStr"
@@ -335,18 +339,18 @@
       </div>
 
       <!-- Week Columns: Horizontal swipe cards on mobile, 7 columns on desktop -->
-      <div class="flex sm:grid sm:grid-cols-7 overflow-x-auto no-scrollbar sm:divide-x divide-slate-200 dark:divide-slate-800 p-2.5 sm:p-0 gap-2.5 sm:gap-0 min-h-[460px]">
+      <div class="flex-1 flex sm:grid sm:grid-cols-7 overflow-x-auto no-scrollbar sm:divide-x divide-slate-200 dark:divide-slate-800 p-2.5 sm:p-0 gap-2.5 sm:gap-0 min-h-0">
         <div
           v-for="day in displayDays"
           :key="day.dateStr"
           :class="[
-            'w-[78vw] max-w-[280px] sm:w-auto shrink-0 sm:shrink flex flex-col p-2.5 sm:p-2.5 transition-colors',
+            'w-[78vw] max-w-[280px] sm:w-auto shrink-0 sm:shrink flex flex-col h-full p-2.5 transition-colors overflow-hidden',
             'bg-slate-50/50 sm:bg-white dark:bg-slate-800/30 sm:dark:bg-slate-900 rounded-xl sm:rounded-none border sm:border-0 border-slate-200 dark:border-slate-800',
             day.isToday ? 'ring-1 ring-blue-500/50 bg-blue-50/20 dark:bg-blue-950/20' : ''
           ]"
         >
           <!-- Mobile Column Header -->
-          <div class="sm:hidden flex items-center justify-between pb-2 mb-2 border-b border-slate-200/80 dark:border-slate-800">
+          <div class="sm:hidden flex items-center justify-between pb-2 mb-2 border-b border-slate-200/80 dark:border-slate-800 shrink-0">
             <div class="flex items-center gap-1.5">
               <span
                 :class="[
@@ -382,7 +386,7 @@
           </div>
 
           <!-- Desktop Column Subheader with Quick Actions -->
-          <div class="hidden sm:flex items-center justify-between mb-2 pb-1 border-b border-slate-100 dark:border-slate-800">
+          <div class="hidden sm:flex items-center justify-between mb-2 pb-1 border-b border-slate-100 dark:border-slate-800 shrink-0">
             <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
               {{ day.date.getMonth() + 1 }}月{{ day.dayNumber }}日
             </span>
@@ -396,7 +400,7 @@
           </div>
 
           <!-- Column Content Sections -->
-          <div class="flex-1 space-y-2.5 overflow-y-auto max-h-[560px] pr-0.5 no-scrollbar">
+          <div class="flex-1 space-y-2.5 overflow-y-auto min-h-0 pr-0.5 no-scrollbar">
             <!-- Schedules -->
             <div v-if="getSchedulesForDay(day.dateStr).length > 0" class="space-y-1">
               <div class="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400">固定日程</div>
@@ -501,7 +505,7 @@
           <div
             v-if="hasJournalOnDate(day.dateStr)"
             @click.stop="$emit('open-journal', day.dateStr)"
-            class="mt-2 pt-1.5 border-t border-slate-100 dark:border-slate-800 flex items-center gap-1 text-[11px] text-amber-600 dark:text-amber-400 hover:underline cursor-pointer truncate"
+            class="mt-auto pt-1.5 border-t border-slate-100 dark:border-slate-800 flex items-center gap-1 text-[11px] text-amber-600 dark:text-amber-400 hover:underline cursor-pointer truncate shrink-0"
           >
             <BookOpen class="w-3 h-3 shrink-0" />
             <span class="truncate">已写随笔</span>
@@ -514,9 +518,10 @@
     <div
       v-else
       :class="[
-        viewMode === 'day' ? 'grid grid-cols-1 max-w-3xl mx-auto' :
-        viewMode === '2days' ? 'grid grid-cols-1 md:grid-cols-2 gap-3.5' :
-        'flex sm:grid sm:grid-cols-3 overflow-x-auto no-scrollbar snap-x gap-3 pb-2 sm:pb-0'
+        'flex-1 min-h-0 min-h-[480px] sm:min-h-[580px] lg:min-h-[calc(100vh-14rem)]',
+        viewMode === 'day' ? 'grid grid-cols-1 max-w-4xl mx-auto w-full' :
+        viewMode === '2days' ? 'grid grid-cols-1 md:grid-cols-2 gap-3.5 w-full' :
+        'flex sm:grid sm:grid-cols-3 overflow-x-auto no-scrollbar snap-x gap-3 pb-2 sm:pb-0 w-full'
       ]"
     >
       <div
@@ -524,11 +529,11 @@
         :key="day.dateStr"
         :class="[
           viewMode === '3days' ? 'w-[84vw] sm:w-auto shrink-0 snap-start' : 'w-full',
-          'bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 space-y-4 shadow-2xs'
+          'bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 sm:p-5 flex flex-col h-full shadow-2xs overflow-hidden'
         ]"
       >
         <!-- Day Card Header -->
-        <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 shrink-0">
           <div class="flex items-center gap-2.5">
             <span
               :class="[
@@ -574,7 +579,7 @@
         </div>
 
         <!-- Day Card Sections -->
-        <div class="space-y-4">
+        <div class="flex-1 space-y-4 overflow-y-auto min-h-0 pr-0.5 no-scrollbar pt-1">
           <!-- 固定日程 -->
           <div class="space-y-2">
             <div class="flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider">
@@ -1051,6 +1056,10 @@ const currentPeriodTitle = computed(() => {
 
 const displayDays = computed(() => {
   return getViewDays(viewMode.value, currentBaseDate.value)
+})
+
+const monthRowCount = computed(() => {
+  return Math.max(1, Math.ceil(displayDays.value.length / 7))
 })
 
 function prevPeriod() {
