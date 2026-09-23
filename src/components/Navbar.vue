@@ -62,6 +62,19 @@
           </button>
 
           <button
+            @click="$emit('update:activeTab', 'schedules')"
+            :class="[
+              'flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-all',
+              activeTab === 'schedules'
+                ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-white shadow-sm font-semibold'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+            ]"
+          >
+            <CalendarDays class="w-4 h-4" />
+            <span>日程</span>
+          </button>
+
+          <button
             @click="$emit('update:activeTab', 'todos')"
             :class="[
               'flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-all',
@@ -144,80 +157,95 @@
     <nav
       class="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 pb-safe shadow-[0_-4px_16px_rgba(0,0,0,0.04)] dark:shadow-[0_-4px_16px_rgba(0,0,0,0.3)] transition-colors"
     >
-      <div class="grid grid-cols-5 h-13 sm:h-14 items-center px-1">
+      <div class="grid grid-cols-6 h-13 sm:h-14 items-center px-0.5">
         <button
           @click="$emit('update:activeTab', 'calendar')"
           :class="[
-            'flex flex-col items-center justify-center py-1 transition-all rounded-lg active:scale-95',
+            'flex flex-col items-center justify-center py-1 px-0.5 transition-all rounded-lg active:scale-95',
             activeTab === 'calendar'
               ? 'text-blue-600 dark:text-blue-400 font-semibold'
               : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
           ]"
         >
           <div :class="['p-1 rounded-md transition-colors', activeTab === 'calendar' ? 'bg-blue-50 dark:bg-blue-950/60' : '']">
-            <Calendar class="w-4.5 h-4.5" />
+            <Calendar class="w-4 h-4 sm:w-4.5 sm:h-4.5" />
           </div>
-          <span class="text-[10px] mt-0.5 leading-none">日历</span>
+          <span class="text-[10px] mt-0.5 leading-none truncate whitespace-nowrap">日历</span>
         </button>
 
         <button
           @click="$emit('update:activeTab', 'projects')"
           :class="[
-            'flex flex-col items-center justify-center py-1 transition-all rounded-lg active:scale-95',
+            'flex flex-col items-center justify-center py-1 px-0.5 transition-all rounded-lg active:scale-95',
             activeTab === 'projects'
               ? 'text-blue-600 dark:text-blue-400 font-semibold'
               : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
           ]"
         >
           <div :class="['p-1 rounded-md transition-colors', activeTab === 'projects' ? 'bg-blue-50 dark:bg-blue-950/60' : '']">
-            <FolderKanban class="w-4.5 h-4.5" />
+            <FolderKanban class="w-4 h-4 sm:w-4.5 sm:h-4.5" />
           </div>
-          <span class="text-[10px] mt-0.5 leading-none">项目</span>
+          <span class="text-[10px] mt-0.5 leading-none truncate whitespace-nowrap">项目</span>
+        </button>
+
+        <button
+          @click="$emit('update:activeTab', 'schedules')"
+          :class="[
+            'flex flex-col items-center justify-center py-1 px-0.5 transition-all rounded-lg active:scale-95',
+            activeTab === 'schedules'
+              ? 'text-blue-600 dark:text-blue-400 font-semibold'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+          ]"
+        >
+          <div :class="['p-1 rounded-md transition-colors', activeTab === 'schedules' ? 'bg-blue-50 dark:bg-blue-950/60' : '']">
+            <CalendarDays class="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+          </div>
+          <span class="text-[10px] mt-0.5 leading-none truncate whitespace-nowrap">日程</span>
         </button>
 
         <button
           @click="$emit('update:activeTab', 'todos')"
           :class="[
-            'flex flex-col items-center justify-center py-1 transition-all rounded-lg active:scale-95',
+            'flex flex-col items-center justify-center py-1 px-0.5 transition-all rounded-lg active:scale-95',
             activeTab === 'todos'
               ? 'text-blue-600 dark:text-blue-400 font-semibold'
               : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
           ]"
         >
           <div :class="['p-1 rounded-md transition-colors', activeTab === 'todos' ? 'bg-blue-50 dark:bg-blue-950/60' : '']">
-            <CheckSquare class="w-4.5 h-4.5" />
+            <CheckSquare class="w-4 h-4 sm:w-4.5 sm:h-4.5" />
           </div>
-          <span class="text-[10px] mt-0.5 leading-none">待办</span>
+          <span class="text-[10px] mt-0.5 leading-none truncate whitespace-nowrap">待办</span>
         </button>
 
         <button
           @click="$emit('update:activeTab', 'habits')"
           :class="[
-            'flex flex-col items-center justify-center py-1 transition-all rounded-lg active:scale-95',
+            'flex flex-col items-center justify-center py-1 px-0.5 transition-all rounded-lg active:scale-95',
             activeTab === 'habits'
               ? 'text-blue-600 dark:text-blue-400 font-semibold'
               : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
           ]"
         >
           <div :class="['p-1 rounded-md transition-colors', activeTab === 'habits' ? 'bg-blue-50 dark:bg-blue-950/60' : '']">
-            <Sparkles class="w-4.5 h-4.5" />
+            <Sparkles class="w-4 h-4 sm:w-4.5 sm:h-4.5" />
           </div>
-          <span class="text-[10px] mt-0.5 leading-none">习惯</span>
+          <span class="text-[10px] mt-0.5 leading-none truncate whitespace-nowrap">习惯</span>
         </button>
 
         <button
           @click="$emit('update:activeTab', 'journal')"
           :class="[
-            'flex flex-col items-center justify-center py-1 transition-all rounded-lg active:scale-95',
+            'flex flex-col items-center justify-center py-1 px-0.5 transition-all rounded-lg active:scale-95',
             activeTab === 'journal'
               ? 'text-blue-600 dark:text-blue-400 font-semibold'
               : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
           ]"
         >
           <div :class="['p-1 rounded-md transition-colors', activeTab === 'journal' ? 'bg-blue-50 dark:bg-blue-950/60' : '']">
-            <BookOpen class="w-4.5 h-4.5" />
+            <BookOpen class="w-4 h-4 sm:w-4.5 sm:h-4.5" />
           </div>
-          <span class="text-[10px] mt-0.5 leading-none">日记</span>
+          <span class="text-[10px] mt-0.5 leading-none truncate whitespace-nowrap">日记</span>
         </button>
       </div>
     </nav>
@@ -227,6 +255,7 @@
 <script setup lang="ts">
 import {
   Calendar,
+  CalendarDays,
   FolderKanban,
   CheckSquare,
   Sparkles,

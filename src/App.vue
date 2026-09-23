@@ -49,6 +49,14 @@
         @delete-todo="handleDeleteTodo"
       />
 
+      <ScheduleView
+        v-else-if="activeTab === 'schedules'"
+        :schedules="schedules"
+        :projects="projects"
+        @save-schedule="handleSaveSchedule"
+        @delete-schedule="handleDeleteSchedule"
+      />
+
       <TodoView
         v-else-if="activeTab === 'todos'"
         :todos="todos"
@@ -124,6 +132,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import Navbar from '@/components/Navbar.vue'
 import CalendarView from '@/components/CalendarView.vue'
 import ProjectView from '@/components/ProjectView.vue'
+import ScheduleView from '@/components/ScheduleView.vue'
 import TodoView from '@/components/TodoView.vue'
 import HabitsView from '@/components/HabitsView.vue'
 import JournalView from '@/components/JournalView.vue'
@@ -261,7 +270,7 @@ function handleSearchSelectTodo(todo: TodoItem) {
 }
 
 function handleSearchSelectSchedule(_schedule: ScheduleItem) {
-  activeTab.value = 'calendar'
+  activeTab.value = 'schedules'
 }
 
 function handleSearchSelectHabit(_habit: Habit) {

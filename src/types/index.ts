@@ -93,7 +93,7 @@ export interface JournalEntry {
   tags?: string[]
 }
 
-export type ActiveTab = 'calendar' | 'projects' | 'todos' | 'habits' | 'journal'
+export type ActiveTab = 'calendar' | 'projects' | 'schedules' | 'todos' | 'habits' | 'journal'
 export type CalendarViewMode = 'day' | '2days' | '3days' | 'week' | '2weeks' | 'month'
 export type FontSize = 'small' | 'standard' | 'large' | 'xlarge'
 export type FontFamily = 'wenkai' | 'system' | 'serif'
