@@ -592,6 +592,8 @@ async function handleSaveHabit(habitData: Partial<Habit>) {
       targetCount: habitData.targetCount || 1,
       targetDaysOfWeek: habitData.targetDaysOfWeek,
       anchorDate: habitData.anchorDate || formatDate(new Date()),
+      cycleWeeks: habitData.cycleWeeks,
+      weekPatterns: habitData.weekPatterns,
       color: habitData.color || '#2563eb',
       createdAt: new Date().toISOString(),
       updatedAt: now,

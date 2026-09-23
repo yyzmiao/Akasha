@@ -227,7 +227,7 @@
                 >
                   <option value="daily">每日习惯</option>
                   <option value="weekly">每周习惯</option>
-                  <option value="biweekly">每两周 (双周)</option>
+                  <option value="rotating">多周轮换循环</option>
                   <option value="monthly">每月习惯</option>
                 </select>
                 <select
@@ -258,25 +258,52 @@
                 :key="h.id"
                 @click="$emit('toggle-habit', { habitId: h.id, date: todayStr })"
                 class="group flex items-center justify-between p-2 rounded-lg border border-slate-200 dark:border-slate-800 hover:border-slate-300 transition-colors cursor-pointer select-none text-xs"
+                :class="[
+                  (h.frequency === 'rotating' || h.frequency === 'biweekly') && !isHabitScheduledForDay(h, todayStr)
+                    ? 'opacity-80 hover:opacity-100 bg-slate-50/40 dark:bg-slate-900/20'
+                    : ''
+                ]"
               >
-                <div class="flex items-center gap-2.5">
+                <div class="flex items-center gap-2 flex-wrap min-w-0">
                   <div
                     :class="[
-                      'w-4 h-4 rounded border flex items-center justify-center transition-all',
-                      isHabitDoneToday(h.id) ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-slate-300 dark:border-slate-600'
+                      'w-4 h-4 rounded flex items-center justify-center transition-all shrink-0',
+                      isHabitDoneToday(h.id)
+                        ? 'bg-emerald-600 border border-emerald-600 text-white'
+                        : (h.frequency === 'rotating' || h.frequency === 'biweekly') && !isHabitScheduledForDay(h, todayStr)
+                          ? 'border border-dashed border-slate-300 dark:border-slate-600 bg-slate-100/50 dark:bg-slate-800/50 text-slate-400'
+                          : 'border border-slate-300 dark:border-slate-600'
                     ]"
+                    :title="(h.frequency === 'rotating' || h.frequency === 'biweekly') && !isHabitScheduledForDay(h, todayStr) ? '今日非排期日，点击仍可记录' : ''"
                   >
                     <Check v-if="isHabitDoneToday(h.id)" class="w-3 h-3 stroke-[3]" />
                   </div>
-                  <span :class="['font-medium', isHabitDoneToday(h.id) ? 'line-through text-slate-400' : 'text-slate-800 dark:text-slate-200']">
+                  <span :class="['font-medium truncate', isHabitDoneToday(h.id) ? 'line-through text-slate-400' : 'text-slate-800 dark:text-slate-200']">
                     {{ h.title }}
                   </span>
-                  <span class="text-[10px] px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">
+                  <span class="text-[10px] px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 shrink-0">
                     {{ formatFrequency(h.frequency) }}
                   </span>
+                  <template v-if="h.frequency === 'rotating' || h.frequency === 'biweekly'">
+                    <span class="text-[10px] px-1.5 py-0.2 rounded bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 font-mono shrink-0">
+                      第{{ getCycleWeekNumber(todayStr, h.anchorDate, h.cycleWeeks || 2) }}/{{ h.cycleWeeks || 2 }}周
+                    </span>
+                    <span
+                      v-if="isHabitScheduledForDay(h, todayStr)"
+                      class="text-[10px] px-1.5 py-0.2 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 shrink-0"
+                    >
+                      🎯 今日排期
+                    </span>
+                    <span
+                      v-else
+                      class="text-[10px] px-1.5 py-0.2 rounded bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 shrink-0"
+                    >
+                      🏖️ 今日休息
+                    </span>
+                  </template>
                 </div>
 
-                <div class="flex items-center gap-1 shrink-0">
+                <div class="flex items-center gap-1 shrink-0 ml-2">
                   <button
                     @click.stop="openEditHabit(h)"
                     class="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 sm:p-1 rounded-md text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-all"
@@ -691,7 +718,7 @@
       @keydown.esc="editingProjectHabit = null"
     >
       <div
-        class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-md p-5 shadow-xl space-y-4 animate-in zoom-in-95 duration-150"
+        class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-md p-5 shadow-xl space-y-4 max-h-[88vh] overflow-y-auto animate-in zoom-in-95 duration-150"
         role="dialog"
         aria-modal="true"
       >
@@ -746,7 +773,7 @@
             >
               <option value="daily">每日习惯</option>
               <option value="weekly">每周习惯</option>
-              <option value="biweekly">每两周 (双周)</option>
+              <option value="rotating">多周轮换循环 (高级)</option>
               <option value="monthly">每月习惯</option>
             </select>
           </div>
@@ -764,7 +791,7 @@
             </select>
           </div>
 
-          <div v-if="editingProjectHabit.frequency === 'weekly' || editingProjectHabit.frequency === 'biweekly'" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div v-if="editingProjectHabit.frequency === 'weekly'" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">触发时机</label>
               <select
@@ -775,7 +802,7 @@
                 <option value="weekend">仅限周末</option>
               </select>
             </div>
-            <div v-if="editingProjectHabit.frequency === 'weekly'">
+            <div>
               <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">目标频次</label>
               <div class="flex items-center gap-1.5">
                 <input
@@ -786,6 +813,129 @@
                   class="w-full px-2.5 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100"
                 />
                 <span class="text-xs text-slate-500 shrink-0">次 / 周</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 多周轮换循环配置 -->
+          <div v-if="editingProjectHabit.frequency === 'rotating' || editingProjectHabit.frequency === 'biweekly'" class="space-y-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">循环周期长度</label>
+                <select
+                  v-model.number="editingProjectHabit.cycleWeeks"
+                  class="w-full px-2.5 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100"
+                >
+                  <option :value="2">2 周轮换（隔周排期）</option>
+                  <option :value="3">3 周轮换</option>
+                  <option :value="4">4 周轮换</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  基准起始日 (Anchor)
+                </label>
+                <input
+                  v-model="editingProjectHabit.anchorDate"
+                  type="date"
+                  class="w-full px-2.5 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100"
+                />
+              </div>
+            </div>
+
+            <!-- 自然语言实时预览条 -->
+            <div class="p-2.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 text-xs space-y-1">
+              <div class="flex items-center justify-between font-medium text-indigo-900 dark:text-indigo-200">
+                <span class="flex items-center gap-1.5">
+                  <span>🔄 规则实时预览:</span>
+                  <span>{{ editProjectRotatingPreview.summary }}</span>
+                </span>
+                <span class="text-[11px] px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 font-mono">
+                  当前处于第 {{ editProjectRotatingPreview.currentWeek }} 周
+                </span>
+              </div>
+              <div class="text-[11px] flex items-center justify-between text-indigo-700 dark:text-indigo-300/80">
+                <span>{{ editProjectRotatingPreview.currentWeekDesc }}</span>
+                <span
+                  :class="[
+                    'font-medium px-1.5 py-0.5 rounded text-[10px]',
+                    editProjectRotatingPreview.isTodayScheduled
+                      ? 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300'
+                      : 'bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300'
+                  ]"
+                >
+                  {{ editProjectRotatingPreview.isTodayScheduled ? '🎯 今日排期打卡' : '🏖️ 今日轮换休息' }}
+                </span>
+              </div>
+            </div>
+
+            <!-- 各周卡片选择 -->
+            <div class="space-y-2">
+              <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">各周执行日排期配置</label>
+              <div class="space-y-2">
+                <div
+                  v-for="w in (editingProjectHabit.cycleWeeks || 2)"
+                  :key="w"
+                  class="p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 space-y-2"
+                >
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                      <span class="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-300 flex items-center justify-center text-[10px] font-mono">
+                        {{ w }}
+                      </span>
+                      <span>第 {{ w }} 周</span>
+                      <span
+                        v-if="editProjectRotatingPreview.currentWeek === w"
+                        class="text-[10px] px-1 py-0.2 rounded bg-blue-500 text-white font-normal"
+                      >
+                        本周生效
+                      </span>
+                    </span>
+
+                    <div class="flex items-center gap-1 text-[11px]">
+                      <button
+                        type="button"
+                        @click="setProjectEditPatternPreset(w, 'weekdays')"
+                        class="px-1.5 py-0.5 rounded text-slate-500 hover:text-blue-600 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
+                      >
+                        工作日
+                      </button>
+                      <span class="text-slate-300 dark:text-slate-700">|</span>
+                      <button
+                        type="button"
+                        @click="setProjectEditPatternPreset(w, 'weekend')"
+                        class="px-1.5 py-0.5 rounded text-slate-500 hover:text-blue-600 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
+                      >
+                        周末
+                      </button>
+                      <span class="text-slate-300 dark:text-slate-700">|</span>
+                      <button
+                        type="button"
+                        @click="setProjectEditPatternPreset(w, 'clear')"
+                        class="px-1.5 py-0.5 rounded text-slate-500 hover:text-rose-600 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
+                      >
+                        清空
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-7 gap-1.5">
+                    <button
+                      v-for="d in WEEKDAY_ORDER"
+                      :key="d"
+                      type="button"
+                      @click="toggleProjectEditPatternDay(w, d)"
+                      :class="[
+                        'h-7 rounded text-xs font-medium transition-all flex items-center justify-center',
+                        editingProjectHabit.weekPatterns[w]?.includes(d)
+                          ? 'bg-blue-600 text-white shadow-sm font-semibold'
+                          : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                      ]"
+                    >
+                      {{ WEEKDAY_SHORT_NAMES[d] }}
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -837,11 +987,20 @@ import type {
   TodoItem,
   HabitFrequency,
   TimeSlot,
+  TimingType,
   ScheduleRecurringType,
 } from '@/types'
 import { getPriorityStyle, normalizePriority } from '@/utils/priority'
 import { buildTodoTree } from '@/utils/tree'
 import { formatDate } from '@/utils/date'
+import {
+  WEEKDAY_ORDER,
+  WEEKDAY_SHORT_NAMES,
+  sortDays,
+  getRotatingHabitNaturalDescription,
+  isHabitScheduledForDay,
+  getCycleWeekNumber,
+} from '@/utils/habit'
 
 const props = defineProps<{
   areas: Area[]
@@ -949,8 +1108,9 @@ function formatFrequency(freq: HabitFrequency): string {
   const map: Record<HabitFrequency, string> = {
     daily: '每日',
     weekly: '每周',
-    biweekly: '双周',
+    biweekly: '多周轮换',
     monthly: '每月',
+    rotating: '多周轮换',
   }
   return map[freq] || freq
 }
@@ -984,6 +1144,9 @@ function handleCreateProjectHabit() {
     frequency: newHabitFrequency.value,
     timeSlot: newHabitSlot.value,
     timingType: 'anytime',
+    cycleWeeks: newHabitFrequency.value === 'rotating' ? 2 : undefined,
+    anchorDate: newHabitFrequency.value === 'rotating' ? todayStr : undefined,
+    weekPatterns: newHabitFrequency.value === 'rotating' ? { 1: [1, 2, 3, 4, 5], 2: [1, 2, 3, 4, 5] } : undefined,
   })
   newHabitTitle.value = ''
   showAddHabitInline.value = false
@@ -997,19 +1160,84 @@ const editingProjectHabit = ref<{
   timeSlot: TimeSlot
   timingType: TimingType
   targetCount: number
+  anchorDate?: string
+  cycleWeeks?: number
+  weekPatterns: Record<number, number[]>
 } | null>(null)
 
 function openEditHabit(habit: Habit) {
+  const cycle = habit.cycleWeeks || 2
+  const initialPatterns: Record<number, number[]> = {}
+  for (let w = 1; w <= cycle; w++) {
+    initialPatterns[w] = habit.weekPatterns && habit.weekPatterns[w] ? [...habit.weekPatterns[w]] : [1, 2, 3, 4, 5]
+  }
+
   editingProjectHabit.value = {
     id: habit.id,
     title: habit.title,
     projectId: habit.projectId || null,
-    frequency: habit.frequency || 'daily',
+    frequency: habit.frequency === 'biweekly' ? 'rotating' : (habit.frequency || 'daily'),
     timeSlot: habit.timeSlot || 'morning',
     timingType: habit.timingType || 'anytime',
     targetCount: habit.targetCount || 1,
+    anchorDate: habit.anchorDate || todayStr,
+    cycleWeeks: cycle,
+    weekPatterns: habit.weekPatterns ? JSON.parse(JSON.stringify(habit.weekPatterns)) : initialPatterns,
   }
 }
+
+watch(
+  () => editingProjectHabit.value?.cycleWeeks,
+  (weeks) => {
+    if (!editingProjectHabit.value || !weeks) return
+    const current = { ...(editingProjectHabit.value.weekPatterns || {}) }
+    for (let w = 1; w <= weeks; w++) {
+      if (!current[w]) current[w] = []
+    }
+    for (const k of Object.keys(current)) {
+      if (Number(k) > weeks) {
+        delete current[Number(k)]
+      }
+    }
+    editingProjectHabit.value.weekPatterns = current
+  }
+)
+
+function toggleProjectEditPatternDay(weekNum: number, day: number) {
+  if (!editingProjectHabit.value) return
+  const current = [...(editingProjectHabit.value.weekPatterns[weekNum] || [])]
+  const idx = current.indexOf(day)
+  if (idx > -1) {
+    current.splice(idx, 1)
+  } else {
+    current.push(day)
+  }
+  editingProjectHabit.value.weekPatterns = {
+    ...editingProjectHabit.value.weekPatterns,
+    [weekNum]: sortDays(current),
+  }
+}
+
+function setProjectEditPatternPreset(weekNum: number, preset: 'weekdays' | 'weekend' | 'clear') {
+  if (!editingProjectHabit.value) return
+  let days: number[] = []
+  if (preset === 'weekdays') days = [1, 2, 3, 4, 5]
+  else if (preset === 'weekend') days = [6, 0]
+  editingProjectHabit.value.weekPatterns = {
+    ...editingProjectHabit.value.weekPatterns,
+    [weekNum]: days,
+  }
+}
+
+const editProjectRotatingPreview = computed(() => {
+  if (!editingProjectHabit.value) return { summary: '', currentWeekDesc: '', isTodayScheduled: false, currentWeek: 1 }
+  return getRotatingHabitNaturalDescription(
+    editingProjectHabit.value.cycleWeeks || 2,
+    editingProjectHabit.value.weekPatterns || {},
+    editingProjectHabit.value.anchorDate,
+    todayStr
+  )
+})
 
 function saveProjectHabitEdit() {
   if (!editingProjectHabit.value || !editingProjectHabit.value.title.trim()) return
@@ -1021,6 +1249,9 @@ function saveProjectHabitEdit() {
     timeSlot: editingProjectHabit.value.timeSlot,
     timingType: editingProjectHabit.value.timingType,
     targetCount: editingProjectHabit.value.targetCount,
+    anchorDate: editingProjectHabit.value.anchorDate,
+    cycleWeeks: editingProjectHabit.value.frequency === 'rotating' ? (editingProjectHabit.value.cycleWeeks || 2) : undefined,
+    weekPatterns: editingProjectHabit.value.frequency === 'rotating' ? editingProjectHabit.value.weekPatterns : undefined,
   })
   editingProjectHabit.value = null
 }

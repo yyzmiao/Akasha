@@ -1,4 +1,4 @@
-export type HabitFrequency = 'daily' | 'weekly' | 'biweekly' | 'monthly'
+export type HabitFrequency = 'daily' | 'weekly' | 'monthly' | 'rotating' | 'biweekly'
 export type TimeSlot = 'morning' | 'afternoon' | 'evening' | 'anytime'
 export type TimingType = 'anytime' | 'weekend' | 'specific_days'
 
@@ -46,6 +46,8 @@ export interface Habit {
   targetDaysOfWeek?: number[]
   targetCount?: number
   anchorDate?: string
+  cycleWeeks?: number
+  weekPatterns?: Record<number, number[]>
   icon?: string
   color?: string
   description?: string

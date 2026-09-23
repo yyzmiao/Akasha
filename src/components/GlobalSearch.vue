@@ -259,6 +259,7 @@ const allIndexItems = computed<SearchResultItem[]>(() => {
   const freqMap: Record<string, string> = {
     daily: '每日习惯',
     weekly: '每周习惯',
+    rotating: '多周轮换',
     biweekly: '双周习惯',
     monthly: '每月习惯',
   }
