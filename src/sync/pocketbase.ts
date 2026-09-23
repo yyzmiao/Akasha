@@ -20,12 +20,14 @@ function getDefaultServerUrl(): string {
 export const serverUrl = ref(getDefaultServerUrl())
 export const pb = new PocketBase(serverUrl.value)
 
-// Reactive auth state
-export const currentUser = ref(pb.authStore.record)
-export const isAuthenticated = computed(() => pb.authStore.isValid && !!currentUser.value)
+// Truly reactive auth state tracked by Vue
+export const authToken = ref<string>(pb.authStore.token)
+export const currentUser = ref<any>(pb.authStore.record || pb.authStore.model)
+export const isAuthenticated = computed(() => !!authToken.value && !!currentUser.value)
 
-// Listen to auth changes
-pb.authStore.onChange((_token, model) => {
+// Listen to auth changes from PocketBase SDK
+pb.authStore.onChange((token, model) => {
+  authToken.value = token
   currentUser.value = model
 })
 
@@ -91,7 +93,8 @@ export function formatAuthErrorMessage(err: any): string {
 export async function loginUser(account: string, password: string): Promise<any> {
   const normalizedEmail = normalizeAccount(account)
   const authData = await pb.collection('users').authWithPassword(normalizedEmail, password)
-  currentUser.value = authData.record
+  authToken.value = authData.token
+  currentUser.value = authData.record || authData.model
   return authData
 }
 
@@ -108,6 +111,7 @@ export async function registerUser(account: string, password: string): Promise<a
 
 export function logoutUser(): void {
   pb.authStore.clear()
+  authToken.value = ''
   currentUser.value = null
 }
 

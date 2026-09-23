@@ -537,10 +537,12 @@ async function handleAuthSubmit() {
     } else {
       await registerUser(trimmedAccount, authPassword.value)
     }
+    const successMode = authMode.value
     // Perform initial bidirectional sync
     await syncAll()
     authPassword.value = ''
     emit('reload-data')
+    alert(successMode === 'login' ? '🎉 登录成功！已成功连接云端实时同步。' : '🎉 注册成功！已成功开启云端实时同步。')
   } catch (err: any) {
     console.error('Auth error:', err)
     authErrorMessage.value = formatAuthErrorMessage(err)
