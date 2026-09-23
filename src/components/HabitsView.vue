@@ -186,12 +186,22 @@
                 </span>
               </div>
 
-              <button
-                @click.stop="handleDelete(h.id)"
-                class="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 sm:p-1 text-slate-400 hover:text-rose-600 transition-opacity"
-              >
-                <Trash2 class="w-3.5 h-3.5" />
-              </button>
+              <div class="flex items-center gap-1 shrink-0">
+                <button
+                  @click.stop="openEditHabit(h)"
+                  class="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 sm:p-1 rounded-md text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-all"
+                  title="修改习惯"
+                >
+                  <Pencil class="w-3.5 h-3.5" />
+                </button>
+                <button
+                  @click.stop="handleDelete(h.id)"
+                  class="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 sm:p-1 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-all"
+                  title="删除习惯"
+                >
+                  <Trash2 class="w-3.5 h-3.5" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -257,12 +267,22 @@
                   </div>
                 </div>
 
-                <button
-                  @click.stop="handleDelete(h.id)"
-                  class="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 sm:p-1 text-slate-400 hover:text-rose-600 transition-opacity"
-                >
-                  <Trash2 class="w-3.5 h-3.5" />
-                </button>
+                <div class="flex items-center gap-1 shrink-0">
+                  <button
+                    @click.stop="openEditHabit(h)"
+                    class="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 sm:p-1 rounded-md text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-all"
+                    title="修改习惯"
+                  >
+                    <Pencil class="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    @click.stop="handleDelete(h.id)"
+                    class="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 sm:p-1 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-all"
+                    title="删除习惯"
+                  >
+                    <Trash2 class="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -316,15 +336,150 @@
                   </div>
                 </div>
 
-                <button
-                  @click.stop="handleDelete(h.id)"
-                  class="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 sm:p-1 text-slate-400 hover:text-rose-600 transition-opacity"
-                >
-                  <Trash2 class="w-3.5 h-3.5" />
-                </button>
+                <div class="flex items-center gap-1 shrink-0">
+                  <button
+                    @click.stop="openEditHabit(h)"
+                    class="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 sm:p-1 rounded-md text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-all"
+                    title="修改习惯"
+                  >
+                    <Pencil class="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    @click.stop="handleDelete(h.id)"
+                    class="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 sm:p-1 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-all"
+                    title="删除习惯"
+                  >
+                    <Trash2 class="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 习惯修改弹窗 (Edit Habit Modal) -->
+    <div
+      v-if="isEditModalOpen && editingHabit"
+      class="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
+      @click.self="closeEditModal"
+      @keydown.esc="closeEditModal"
+    >
+      <div
+        class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-md p-5 shadow-xl space-y-4 animate-in zoom-in-95 duration-150"
+        role="dialog"
+        aria-modal="true"
+      >
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+          <div class="flex items-center gap-2">
+            <div class="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400">
+              <Pencil class="w-4 h-4" />
+            </div>
+            <div>
+              <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-200">修改习惯</h3>
+              <p class="text-[11px] text-slate-400">调整习惯属性与循环规则</p>
+            </div>
+          </div>
+          <button
+            @click="closeEditModal"
+            class="p-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+          >
+            <X class="w-4 h-4" />
+          </button>
+        </div>
+
+        <div class="space-y-3.5 text-xs sm:text-sm">
+          <div>
+            <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+              习惯名称 <span class="text-rose-500">*</span>
+            </label>
+            <input
+              v-model="editingHabit.title"
+              type="text"
+              placeholder="习惯名称..."
+              class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 focus:outline-none focus:border-blue-500 text-slate-800 dark:text-slate-100"
+              @keyup.enter="handleSaveEdit"
+            />
+          </div>
+
+          <div v-if="projects && projects.length > 0">
+            <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">所属项目</label>
+            <select
+              v-model="editingHabit.projectId"
+              class="w-full px-2.5 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100"
+            >
+              <option :value="null">无项目 (独立习惯)</option>
+              <option v-for="p in projects" :key="p.id" :value="p.id">{{ p.title }}</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">循环周期</label>
+            <select
+              v-model="editingHabit.frequency"
+              class="w-full px-2.5 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100"
+            >
+              <option value="daily">每日习惯</option>
+              <option value="weekly">每周习惯</option>
+              <option value="biweekly">每两周 (双周)</option>
+              <option value="monthly">每月习惯</option>
+            </select>
+          </div>
+
+          <div v-if="editingHabit.frequency === 'daily'">
+            <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">时段归集</label>
+            <select
+              v-model="editingHabit.timeSlot"
+              class="w-full px-2.5 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100"
+            >
+              <option value="morning">早晨</option>
+              <option value="afternoon">下午</option>
+              <option value="evening">晚上</option>
+              <option value="anytime">全天</option>
+            </select>
+          </div>
+
+          <div v-if="editingHabit.frequency === 'weekly' || editingHabit.frequency === 'biweekly'" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">触发时机</label>
+              <select
+                v-model="editingHabit.timingType"
+                class="w-full px-2.5 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100"
+              >
+                <option value="anytime">任意一天</option>
+                <option value="weekend">仅限周末</option>
+              </select>
+            </div>
+            <div v-if="editingHabit.frequency === 'weekly'">
+              <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">目标频次</label>
+              <div class="flex items-center gap-1.5">
+                <input
+                  v-model.number="editingHabit.targetCount"
+                  type="number"
+                  min="1"
+                  max="7"
+                  class="w-full px-2.5 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100"
+                />
+                <span class="text-xs text-slate-500 shrink-0">次 / 周</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+          <button
+            @click="closeEditModal"
+            class="px-4 py-2 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          >
+            取消
+          </button>
+          <button
+            @click="handleSaveEdit"
+            class="px-5 py-2 rounded-lg text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-colors"
+          >
+            保存修改
+          </button>
         </div>
       </div>
     </div>
@@ -333,7 +488,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { Sparkles, Plus, X, Check, Trash2 } from 'lucide-vue-next'
+import { Sparkles, Plus, X, Check, Trash2, Pencil } from 'lucide-vue-next'
 import type { Habit, HabitLog, HabitFrequency, TimeSlot, TimingType, Project } from '@/types'
 import { formatDate, getWeekKey } from '@/utils/date'
 import confetti from 'canvas-confetti'
@@ -347,6 +502,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'toggle-log', payload: { habitId: string; date: string }): void
   (e: 'create-habit', habit: Partial<Habit>): void
+  (e: 'save-habit', habit: Partial<Habit>): void
   (e: 'delete-habit', id: string): void
 }>()
 
@@ -360,6 +516,51 @@ const newFrequency = ref<HabitFrequency>('daily')
 const newSlot = ref<TimeSlot>('morning')
 const newTiming = ref<TimingType>('anytime')
 const newTargetCount = ref(1)
+
+// 修改习惯状态
+const isEditModalOpen = ref(false)
+const editingHabit = ref<{
+  id: string
+  title: string
+  projectId: string | null
+  frequency: HabitFrequency
+  timeSlot: TimeSlot
+  timingType: TimingType
+  targetCount: number
+} | null>(null)
+
+function openEditHabit(habit: Habit) {
+  editingHabit.value = {
+    id: habit.id,
+    title: habit.title,
+    projectId: habit.projectId || null,
+    frequency: habit.frequency || 'daily',
+    timeSlot: habit.timeSlot || 'morning',
+    timingType: habit.timingType || 'anytime',
+    targetCount: habit.targetCount || 1,
+  }
+  isEditModalOpen.value = true
+}
+
+function closeEditModal() {
+  isEditModalOpen.value = false
+  editingHabit.value = null
+}
+
+function handleSaveEdit() {
+  if (!editingHabit.value || !editingHabit.value.title.trim()) return
+  const payload: Partial<Habit> = {
+    id: editingHabit.value.id,
+    title: editingHabit.value.title.trim(),
+    projectId: editingHabit.value.projectId || null,
+    frequency: editingHabit.value.frequency,
+    timeSlot: editingHabit.value.timeSlot,
+    timingType: editingHabit.value.timingType,
+    targetCount: editingHabit.value.targetCount,
+  }
+  emit('save-habit', payload)
+  closeEditModal()
+}
 
 const timeSlotConfigs: { key: TimeSlot; title: string }[] = [
   { key: 'morning', title: '早晨' },
@@ -434,7 +635,7 @@ function toggleMonthly(habitId: string) {
 
 function handleCreate() {
   if (!newTitle.value.trim()) return
-  emit('create-habit', {
+  const payload: Partial<Habit> = {
     title: newTitle.value.trim(),
     projectId: newProjectId.value || null,
     frequency: newFrequency.value,
@@ -442,7 +643,9 @@ function handleCreate() {
     timingType: newTiming.value,
     targetCount: newTargetCount.value,
     anchorDate: todayStr.value,
-  })
+  }
+  emit('save-habit', payload)
+  emit('create-habit', payload)
   newTitle.value = ''
   newProjectId.value = null
   showAddForm.value = false

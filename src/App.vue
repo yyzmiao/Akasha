@@ -39,7 +39,7 @@
         @delete-project="handleDeleteProject"
         @save-schedule="handleSaveSchedule"
         @delete-schedule="handleDeleteSchedule"
-        @save-habit="handleCreateHabit"
+        @save-habit="handleSaveHabit"
         @delete-habit="handleDeleteHabit"
         @toggle-habit="handleToggleHabitLog"
         @save-todo="handleSaveTodo"
@@ -63,7 +63,8 @@
         :habit-logs="habitLogs"
         :projects="projects"
         @toggle-log="handleToggleHabitLog"
-        @create-habit="handleCreateHabit"
+        @create-habit="handleSaveHabit"
+        @save-habit="handleSaveHabit"
         @delete-habit="handleDeleteHabit"
       />
 
@@ -566,26 +567,41 @@ async function handleToggleHabitLog({ habitId, date }: { habitId: string; date: 
   habitLogs.value = await db.habitLogs.toArray()
 }
 
-async function handleCreateHabit(habitData: Partial<Habit>) {
+async function handleSaveHabit(habitData: Partial<Habit>) {
   const now = Date.now()
-  const newHabit: Habit = {
-    id: 'h-' + Date.now(),
-    projectId: habitData.projectId,
-    title: habitData.title || '新习惯',
-    frequency: habitData.frequency || 'daily',
-    timeSlot: habitData.timeSlot || 'morning',
-    timingType: habitData.timingType || 'anytime',
-    targetCount: habitData.targetCount || 1,
-    targetDaysOfWeek: habitData.targetDaysOfWeek,
-    anchorDate: habitData.anchorDate || formatDate(new Date()),
-    color: habitData.color || '#2563eb',
-    createdAt: new Date().toISOString(),
-    updatedAt: now,
+  if (habitData.id) {
+    const existing = await db.habits.get(habitData.id)
+    if (existing) {
+      const updated: Habit = {
+        ...existing,
+        ...habitData,
+        updatedAt: now,
+      }
+      await db.habits.update(habitData.id, updated)
+      const saved = await db.habits.get(habitData.id)
+      if (saved) enqueueChange('habit', saved.id, saved)
+    }
+  } else {
+    const newHabit: Habit = {
+      id: 'h-' + Date.now(),
+      projectId: habitData.projectId,
+      title: habitData.title || '新习惯',
+      frequency: habitData.frequency || 'daily',
+      timeSlot: habitData.timeSlot || 'morning',
+      timingType: habitData.timingType || 'anytime',
+      targetCount: habitData.targetCount || 1,
+      targetDaysOfWeek: habitData.targetDaysOfWeek,
+      anchorDate: habitData.anchorDate || formatDate(new Date()),
+      color: habitData.color || '#2563eb',
+      createdAt: new Date().toISOString(),
+      updatedAt: now,
+    }
+    await db.habits.add(newHabit)
+    enqueueChange('habit', newHabit.id, newHabit)
   }
-  await db.habits.add(newHabit)
-  enqueueChange('habit', newHabit.id, newHabit)
   habits.value = await db.habits.toArray()
 }
+const handleCreateHabit = handleSaveHabit
 
 async function handleDeleteHabit(id: string) {
   const logs = await db.habitLogs.where('habitId').equals(id).toArray()
