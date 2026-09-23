@@ -13,6 +13,8 @@ services:
     container_name: akasha_pb
     restart: always
     command:
+      - serve
+      - --http=0.0.0.0:8090
       - --dir=/pb_data
       - --migrationsDir=/pb_migrations
     ports:
