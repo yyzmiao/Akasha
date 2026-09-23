@@ -1,23 +1,24 @@
 <template>
   <div class="space-y-3.5 sm:space-y-4">
     <!-- Calendar Top Control Bar -->
-    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 sm:p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-2xs">
+      <!-- Left: Period Navigation & Today Button -->
       <div class="flex items-center justify-between sm:justify-start gap-2.5">
         <div class="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5 border border-slate-200/80 dark:border-slate-700">
           <button
-            @click="prevMonth"
+            @click="prevPeriod"
             class="p-1.5 rounded-md text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-700 transition-colors"
-            title="上个月"
+            title="上个周期"
           >
             <ChevronLeft class="w-4 h-4" />
           </button>
-          <span class="px-2.5 sm:px-3 text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-100 min-w-[100px] sm:min-w-[120px] text-center">
-            {{ currentYear }}年 {{ currentMonth + 1 }}月
+          <span class="px-2.5 sm:px-3 text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-100 min-w-[130px] sm:min-w-[180px] text-center select-none truncate">
+            {{ currentPeriodTitle }}
           </span>
           <button
-            @click="nextMonth"
+            @click="nextPeriod"
             class="p-1.5 rounded-md text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-700 transition-colors"
-            title="下个月"
+            title="下个周期"
           >
             <ChevronRight class="w-4 h-4" />
           </button>
@@ -25,41 +26,67 @@
 
         <button
           @click="goToToday"
-          class="px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-medium text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-all active:scale-95"
+          class="px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-medium text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-all active:scale-95 shrink-0"
         >
           今天
         </button>
       </div>
 
-      <div class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar">
-        <button
-          @click="$emit('switch-tab', 'projects')"
-          class="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 text-xs font-medium transition-all shrink-0"
-        >
-          <FolderKanban class="w-3.5 h-3.5 text-blue-600" />
-          <span>项目 ({{ projects.length }})</span>
-        </button>
+      <!-- Right: View Mode Segmented Tabs + Quick Navigation Buttons -->
+      <div class="flex items-center justify-between md:justify-end gap-2 overflow-x-auto no-scrollbar">
+        <!-- Segmented Tabs -->
+        <div class="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200/80 dark:border-slate-700 shrink-0">
+          <button
+            v-for="tab in viewTabs"
+            :key="tab.mode"
+            @click="setViewMode(tab.mode)"
+            :class="[
+              'px-2 sm:px-2.5 py-1 text-xs rounded-md transition-all whitespace-nowrap select-none',
+              viewMode === tab.mode
+                ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 font-semibold shadow-2xs'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 font-medium'
+            ]"
+          >
+            {{ tab.label }}
+          </button>
+        </div>
 
-        <button
-          @click="$emit('switch-tab', 'todos')"
-          class="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 text-xs font-medium transition-all shrink-0"
-        >
-          <CheckSquare class="w-3.5 h-3.5 text-emerald-600" />
-          <span>待办 ({{ datedTodos.length }})</span>
-        </button>
+        <!-- Quick Filter Tabs -->
+        <div class="flex items-center gap-1 sm:gap-1.5 shrink-0">
+          <button
+            @click="$emit('switch-tab', 'projects')"
+            class="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 text-xs font-medium transition-all shrink-0"
+          >
+            <FolderKanban class="w-3.5 h-3.5 text-blue-600" />
+            <span class="hidden sm:inline">项目</span>
+            <span>({{ projects.length }})</span>
+          </button>
 
-        <button
-          @click="$emit('switch-tab', 'habits')"
-          class="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 text-xs font-medium transition-all shrink-0"
-        >
-          <Sparkles class="w-3.5 h-3.5 text-amber-500" />
-          <span>习惯</span>
-        </button>
+          <button
+            @click="$emit('switch-tab', 'todos')"
+            class="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 text-xs font-medium transition-all shrink-0"
+          >
+            <CheckSquare class="w-3.5 h-3.5 text-emerald-600" />
+            <span class="hidden sm:inline">待办</span>
+            <span>({{ datedTodos.length }})</span>
+          </button>
+
+          <button
+            @click="$emit('switch-tab', 'habits')"
+            class="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 text-xs font-medium transition-all shrink-0"
+          >
+            <Sparkles class="w-3.5 h-3.5 text-amber-500" />
+            <span class="hidden sm:inline">习惯</span>
+          </button>
+        </div>
       </div>
     </div>
 
-    <!-- Monthly Grid Container -->
-    <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xs">
+    <!-- VIEW 1: Month View & Two-Week View (7 columns grid) -->
+    <div
+      v-if="viewMode === 'month' || viewMode === '2weeks'"
+      class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xs"
+    >
       <div class="grid grid-cols-7 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 text-center py-2 text-xs font-semibold text-slate-600 dark:text-slate-400">
         <div>周一</div>
         <div>周二</div>
@@ -72,12 +99,15 @@
 
       <div class="grid grid-cols-7 auto-rows-auto divide-x divide-y divide-slate-200 dark:divide-slate-800">
         <div
-          v-for="day in calendarDays"
+          v-for="day in displayDays"
           :key="day.dateStr"
           @click="handleDayCellClick(day.dateStr)"
           :class="[
-            'min-h-[50px] sm:min-h-[68px] p-1 sm:p-2 flex flex-col transition-all duration-200 group relative cursor-pointer select-none',
-            day.isCurrentMonth ? 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/40' : 'bg-slate-50/60 dark:bg-slate-950/40 text-slate-400 opacity-60',
+            viewMode === '2weeks' ? 'min-h-[64px] sm:min-h-[96px]' : 'min-h-[50px] sm:min-h-[68px]',
+            'p-1 sm:p-2 flex flex-col transition-all duration-200 group relative cursor-pointer select-none',
+            viewMode === 'month' && !day.isCurrentMonth
+              ? 'bg-slate-50/60 dark:bg-slate-950/40 text-slate-400 opacity-60'
+              : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/40',
             selectedMobileDate === day.dateStr ? 'ring-2 ring-blue-500 bg-blue-50/40 dark:bg-blue-950/40 z-10' : '',
             day.isToday && isTodayPulsing
               ? 'bg-blue-100/70 dark:bg-blue-900/50 ring-2 ring-blue-500 shadow-md scale-[1.01] z-10'
@@ -114,7 +144,7 @@
             </button>
           </div>
 
-          <!-- Mobile Only: Clean Category Dots -->
+          <!-- Mobile Only: Category Dots -->
           <div class="sm:hidden flex items-center justify-center gap-1 mt-auto py-1">
             <span
               v-if="getSchedulesForDay(day.dateStr).length > 0"
@@ -173,7 +203,7 @@
                   ? 'opacity-60 line-through bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900 text-emerald-800 dark:text-emerald-300'
                   : 'bg-amber-50/80 dark:bg-amber-950/40 border-amber-200 dark:border-amber-900/60 hover:border-amber-400 text-amber-900 dark:text-amber-200'
               ]"
-              :title="`习惯: ${h.title} (点击${isHabitDoneOnDate(h.id, day.dateStr) ? '取消打卡' : '打卡'})`"
+              :title="`习惯: ${h.title}`"
             >
               <div class="flex items-center gap-1 min-w-0 truncate">
                 <button
@@ -193,7 +223,7 @@
             </div>
 
             <div
-              v-for="todo in getTodosForDay(day.dateStr)"
+              v-for="todo in getTodosForDay(day.dateStr, 5)"
               :key="todo.id"
               @click.stop="$emit('open-todo', todo)"
               :class="[
@@ -224,10 +254,10 @@
             </div>
 
             <div
-              v-if="getExtraCount(day.dateStr) > 0"
+              v-if="getExtraCount(day.dateStr, 5) > 0"
               class="text-[10px] text-slate-400 text-center font-medium"
             >
-              +{{ getExtraCount(day.dateStr) }} 项
+              +{{ getExtraCount(day.dateStr, 5) }} 项
             </div>
           </div>
 
@@ -244,9 +274,420 @@
       </div>
     </div>
 
-    <!-- Mobile Only: Selected Day Agenda Details Card -->
+    <!-- VIEW 2: Week View (7 Days Desktop Grid / Mobile Horizontal Swipeable Cards) -->
     <div
-      v-if="selectedMobileDate"
+      v-else-if="viewMode === 'week'"
+      class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xs"
+    >
+      <!-- Desktop Weekday Header Bar -->
+      <div class="hidden sm:grid sm:grid-cols-7 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 text-center py-2.5 text-xs font-semibold text-slate-600 dark:text-slate-400 divide-x divide-slate-200 dark:divide-slate-800">
+        <div
+          v-for="day in displayDays"
+          :key="day.dateStr"
+          :class="[
+            'px-2 flex items-center justify-center gap-1.5',
+            day.isToday ? 'text-blue-600 dark:text-blue-400 font-bold' : day.isWeekend ? 'text-blue-600/80 dark:text-blue-400/80' : ''
+          ]"
+        >
+          <span>{{ day.weekdayName }}</span>
+          <span
+            :class="[
+              'text-xs w-5 h-5 flex items-center justify-center rounded-full',
+              day.isToday ? 'bg-blue-600 text-white font-bold' : ''
+            ]"
+          >
+            {{ day.dayNumber }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Week Columns: Horizontal swipe cards on mobile, 7 columns on desktop -->
+      <div class="flex sm:grid sm:grid-cols-7 overflow-x-auto no-scrollbar sm:divide-x divide-slate-200 dark:divide-slate-800 p-2.5 sm:p-0 gap-2.5 sm:gap-0 min-h-[460px]">
+        <div
+          v-for="day in displayDays"
+          :key="day.dateStr"
+          :class="[
+            'w-[78vw] max-w-[280px] sm:w-auto shrink-0 sm:shrink flex flex-col p-2.5 sm:p-2.5 transition-colors',
+            'bg-slate-50/50 sm:bg-white dark:bg-slate-800/30 sm:dark:bg-slate-900 rounded-xl sm:rounded-none border sm:border-0 border-slate-200 dark:border-slate-800',
+            day.isToday ? 'ring-1 ring-blue-500/50 bg-blue-50/20 dark:bg-blue-950/20' : ''
+          ]"
+        >
+          <!-- Mobile Column Header -->
+          <div class="sm:hidden flex items-center justify-between pb-2 mb-2 border-b border-slate-200/80 dark:border-slate-800">
+            <div class="flex items-center gap-1.5">
+              <span
+                :class="[
+                  'text-xs font-bold w-6 h-6 flex items-center justify-center rounded-md',
+                  day.isToday ? 'bg-blue-600 text-white' : day.isWeekend ? 'text-blue-600 dark:text-blue-400' : 'text-slate-700 dark:text-slate-300'
+                ]"
+              >
+                {{ day.dayNumber }}
+              </span>
+              <span class="text-xs font-semibold text-slate-800 dark:text-slate-100">
+                {{ day.weekdayName }}
+              </span>
+              <span v-if="day.isToday" class="text-[10px] font-medium text-blue-600 dark:text-blue-400">
+                今日
+              </span>
+            </div>
+            <div class="flex items-center gap-1">
+              <button
+                @click="quickAddTodo(day.dateStr)"
+                class="p-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+                title="添加代办"
+              >
+                <Plus class="w-3.5 h-3.5" />
+              </button>
+              <button
+                @click="$emit('open-journal', day.dateStr)"
+                class="p-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+                title="随笔日记"
+              >
+                <BookOpen class="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+
+          <!-- Desktop Column Subheader with Quick Actions -->
+          <div class="hidden sm:flex items-center justify-between mb-2 pb-1 border-b border-slate-100 dark:border-slate-800">
+            <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+              {{ day.date.getMonth() + 1 }}月{{ day.dayNumber }}日
+            </span>
+            <button
+              @click.stop="quickAddTodo(day.dateStr)"
+              class="opacity-60 hover:opacity-100 p-0.5 rounded text-slate-500 hover:text-blue-600 transition-opacity"
+              title="添加代办"
+            >
+              <Plus class="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <!-- Column Content Sections -->
+          <div class="flex-1 space-y-2.5 overflow-y-auto max-h-[560px] pr-0.5 no-scrollbar">
+            <!-- Schedules -->
+            <div v-if="getSchedulesForDay(day.dateStr).length > 0" class="space-y-1">
+              <div class="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400">固定日程</div>
+              <div
+                v-for="s in getSchedulesForDay(day.dateStr)"
+                :key="s.id"
+                @click="handleOpenSchedule(s)"
+                class="px-2 py-1 rounded bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900 hover:border-indigo-400 text-indigo-900 dark:text-indigo-200 text-xs flex items-center justify-between gap-1 cursor-pointer transition-colors shadow-2xs"
+                :title="`${s.title} (${getProjectName(s.projectId)})`"
+              >
+                <div class="flex items-center gap-1.5 min-w-0 truncate">
+                  <CalendarDays class="w-3 h-3 text-indigo-600 shrink-0" />
+                  <span v-if="s.time" class="font-mono text-[10px] font-semibold text-indigo-700 dark:text-indigo-300 shrink-0">{{ s.time }}</span>
+                  <span class="truncate font-medium">{{ s.title }}</span>
+                </div>
+                <span
+                  v-if="getProjectColor(s.projectId)"
+                  class="w-1.5 h-1.5 rounded-full shrink-0"
+                  :style="{ backgroundColor: getProjectColor(s.projectId) }"
+                ></span>
+              </div>
+            </div>
+
+            <!-- Habits -->
+            <div v-if="getHabitsForDay(day.dateStr).length > 0" class="space-y-1">
+              <div class="text-[10px] font-semibold text-amber-600 dark:text-amber-400">打卡习惯</div>
+              <div
+                v-for="h in getHabitsForDay(day.dateStr)"
+                :key="h.id"
+                @click.stop="$emit('toggle-habit', { habitId: h.id, date: day.dateStr })"
+                :class="[
+                  'px-2 py-1 rounded border text-xs flex items-center justify-between gap-1 select-none cursor-pointer transition-colors shadow-2xs',
+                  isHabitDoneOnDate(h.id, day.dateStr)
+                    ? 'opacity-60 line-through bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900 text-emerald-800 dark:text-emerald-300'
+                    : 'bg-amber-50/80 dark:bg-amber-950/40 border-amber-200 dark:border-amber-900/60 hover:border-amber-400 text-amber-900 dark:text-amber-200'
+                ]"
+                :title="`习惯: ${h.title}`"
+              >
+                <div class="flex items-center gap-1.5 min-w-0 truncate">
+                  <button
+                    type="button"
+                    class="w-3.5 h-3.5 rounded flex items-center justify-center shrink-0 border transition-colors"
+                    :class="[
+                      isHabitDoneOnDate(h.id, day.dateStr)
+                        ? 'bg-emerald-600 border-emerald-600 text-white'
+                        : 'border-amber-400 dark:border-amber-600 bg-white/50 dark:bg-slate-900/50'
+                    ]"
+                  >
+                    <Check v-if="isHabitDoneOnDate(h.id, day.dateStr)" class="w-2.5 h-2.5 stroke-[3]" />
+                  </button>
+                  <span class="truncate font-medium">{{ h.title }}</span>
+                </div>
+                <Sparkles class="w-3 h-3 text-amber-500 shrink-0" />
+              </div>
+            </div>
+
+            <!-- Todos -->
+            <div v-if="getTodosForDay(day.dateStr).length > 0" class="space-y-1">
+              <div class="text-[10px] font-semibold text-slate-500 dark:text-slate-400">待办事项</div>
+              <div
+                v-for="todo in getTodosForDay(day.dateStr)"
+                :key="todo.id"
+                @click.stop="$emit('open-todo', todo)"
+                :class="[
+                  'px-2 py-1 rounded border text-xs transition-all cursor-pointer select-none flex items-center justify-between gap-1 shadow-2xs',
+                  todo.completed
+                    ? 'opacity-50 line-through bg-slate-100 dark:bg-slate-800 border-slate-200 text-slate-500'
+                    : todo.importance && todo.importance >= 8
+                    ? 'bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-950/30 dark:text-rose-300 dark:border-rose-900'
+                    : 'bg-slate-50 text-slate-800 border-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700'
+                ]"
+                :title="`${todo.title} (${getProjectName(todo.projectId)})`"
+              >
+                <div class="flex items-center gap-1.5 min-w-0 truncate">
+                  <button
+                    @click.stop="$emit('toggle-todo', todo.id)"
+                    class="w-3.5 h-3.5 rounded border border-slate-400 flex items-center justify-center shrink-0 hover:bg-slate-200"
+                  >
+                    <Check v-if="todo.completed" class="w-2.5 h-2.5 stroke-[3]" />
+                  </button>
+                  <span class="truncate font-medium">{{ todo.title }}</span>
+                </div>
+                <span
+                  v-if="todo.dueDate === day.dateStr"
+                  class="text-[9px] px-1 rounded bg-white/80 dark:bg-slate-700 font-bold shrink-0 text-blue-600"
+                >
+                  截止
+                </span>
+              </div>
+            </div>
+
+            <!-- Empty state -->
+            <div
+              v-if="getSchedulesForDay(day.dateStr).length === 0 && getHabitsForDay(day.dateStr).length === 0 && getTodosForDay(day.dateStr).length === 0"
+              class="py-8 text-center text-slate-300 dark:text-slate-600 text-xs"
+            >
+              暂无事项
+            </div>
+          </div>
+
+          <!-- Journal footer link -->
+          <div
+            v-if="hasJournalOnDate(day.dateStr)"
+            @click.stop="$emit('open-journal', day.dateStr)"
+            class="mt-2 pt-1.5 border-t border-slate-100 dark:border-slate-800 flex items-center gap-1 text-[11px] text-amber-600 dark:text-amber-400 hover:underline cursor-pointer truncate"
+          >
+            <BookOpen class="w-3 h-3 shrink-0" />
+            <span class="truncate">已写随笔</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW 3: Day / 2-Days / 3-Days Multi-Column Executive Boards -->
+    <div
+      v-else
+      :class="[
+        viewMode === 'day' ? 'grid grid-cols-1 max-w-3xl mx-auto' :
+        viewMode === '2days' ? 'grid grid-cols-1 md:grid-cols-2 gap-3.5' :
+        'flex sm:grid sm:grid-cols-3 overflow-x-auto no-scrollbar snap-x gap-3 pb-2 sm:pb-0'
+      ]"
+    >
+      <div
+        v-for="day in displayDays"
+        :key="day.dateStr"
+        :class="[
+          viewMode === '3days' ? 'w-[84vw] sm:w-auto shrink-0 snap-start' : 'w-full',
+          'bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 space-y-4 shadow-2xs'
+        ]"
+      >
+        <!-- Day Card Header -->
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+          <div class="flex items-center gap-2.5">
+            <span
+              :class="[
+                'text-base font-bold px-2 py-0.5 rounded-lg flex items-center justify-center',
+                day.isToday
+                  ? 'bg-blue-600 text-white'
+                  : day.isWeekend
+                  ? 'bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400'
+                  : 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-100'
+              ]"
+            >
+              {{ day.dayNumber }}
+            </span>
+            <div>
+              <div class="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                <span>{{ day.weekdayName }}</span>
+                <span v-if="day.isToday" class="text-xs font-medium text-blue-600 dark:text-blue-400">
+                  (今日)
+                </span>
+              </div>
+              <div class="text-xs text-slate-400 font-mono">
+                {{ day.dateStr }}
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-1.5">
+            <button
+              @click="quickAddTodo(day.dateStr)"
+              class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 text-xs font-medium hover:bg-blue-100 active:scale-95 transition-all"
+            >
+              <Plus class="w-3.5 h-3.5" />
+              <span>加待办</span>
+            </button>
+            <button
+              @click="$emit('open-journal', day.dateStr)"
+              class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 text-xs font-medium hover:bg-amber-100 active:scale-95 transition-all"
+            >
+              <BookOpen class="w-3.5 h-3.5" />
+              <span>{{ hasJournalOnDate(day.dateStr) ? '随笔' : '记随笔' }}</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Day Card Sections -->
+        <div class="space-y-4">
+          <!-- 固定日程 -->
+          <div class="space-y-2">
+            <div class="flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider">
+              <div class="flex items-center gap-1.5">
+                <CalendarDays class="w-3.5 h-3.5 text-indigo-600" />
+                <span>固定日程 ({{ getSchedulesForDay(day.dateStr).length }})</span>
+              </div>
+            </div>
+
+            <div v-if="getSchedulesForDay(day.dateStr).length > 0" class="space-y-1.5">
+              <div
+                v-for="s in getSchedulesForDay(day.dateStr)"
+                :key="s.id"
+                @click="handleOpenSchedule(s)"
+                class="flex items-center justify-between p-2.5 rounded-lg bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200/80 dark:border-indigo-900 text-xs hover:border-indigo-400 active:scale-[0.99] cursor-pointer transition-all"
+              >
+                <div class="flex items-center gap-2 min-w-0">
+                  <span v-if="s.time" class="font-mono font-semibold text-indigo-700 dark:text-indigo-300 text-xs shrink-0">{{ s.time }}</span>
+                  <span class="font-medium text-slate-800 dark:text-slate-100 truncate">{{ s.title }}</span>
+                </div>
+                <div class="flex items-center gap-1.5 shrink-0">
+                  <span class="text-[11px] text-slate-400">{{ getProjectName(s.projectId) }}</span>
+                  <span
+                    v-if="getProjectColor(s.projectId)"
+                    class="w-2 h-2 rounded-full"
+                    :style="{ backgroundColor: getProjectColor(s.projectId) }"
+                  ></span>
+                </div>
+              </div>
+            </div>
+            <div v-else class="text-xs text-slate-400 py-1.5 pl-1">
+              暂无固定日程
+            </div>
+          </div>
+
+          <!-- 打卡习惯 -->
+          <div class="space-y-2">
+            <div class="flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider">
+              <div class="flex items-center gap-1.5">
+                <Sparkles class="w-3.5 h-3.5 text-amber-500" />
+                <span>打卡习惯 ({{ getHabitsForDay(day.dateStr).length }})</span>
+              </div>
+            </div>
+
+            <div v-if="getHabitsForDay(day.dateStr).length > 0" class="space-y-1.5">
+              <div
+                v-for="h in getHabitsForDay(day.dateStr)"
+                :key="h.id"
+                @click="$emit('toggle-habit', { habitId: h.id, date: day.dateStr })"
+                :class="[
+                  'flex items-center justify-between p-2.5 rounded-lg border text-xs cursor-pointer transition-all active:scale-[0.99]',
+                  isHabitDoneOnDate(h.id, day.dateStr)
+                    ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-900/60 text-emerald-800 dark:text-emerald-300'
+                    : 'bg-amber-50/50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900/60 text-amber-900 dark:text-amber-200'
+                ]"
+              >
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <button
+                    type="button"
+                    class="w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors"
+                    :class="[
+                      isHabitDoneOnDate(h.id, day.dateStr)
+                        ? 'bg-emerald-600 border-emerald-600 text-white'
+                        : 'border-amber-400 dark:border-amber-600'
+                    ]"
+                  >
+                    <Check v-if="isHabitDoneOnDate(h.id, day.dateStr)" class="w-3 h-3 stroke-[3]" />
+                  </button>
+                  <span :class="['font-medium truncate', isHabitDoneOnDate(h.id, day.dateStr) ? 'line-through text-slate-400' : 'text-slate-800 dark:text-slate-100']">
+                    {{ h.title }}
+                  </span>
+                </div>
+                <span
+                  :class="[
+                    'text-[10px] px-1.5 py-0.5 rounded font-medium shrink-0',
+                    isHabitDoneOnDate(h.id, day.dateStr)
+                      ? 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300'
+                      : 'bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300'
+                  ]"
+                >
+                  {{ isHabitDoneOnDate(h.id, day.dateStr) ? '已打卡' : '打卡' }}
+                </span>
+              </div>
+            </div>
+            <div v-else class="text-xs text-slate-400 py-1.5 pl-1">
+              暂无习惯排期
+            </div>
+          </div>
+
+          <!-- 待办事项 -->
+          <div class="space-y-2">
+            <div class="flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider">
+              <div class="flex items-center gap-1.5">
+                <CheckSquare class="w-3.5 h-3.5 text-emerald-600" />
+                <span>待办事项 ({{ getTodosForDay(day.dateStr).length }})</span>
+              </div>
+            </div>
+
+            <div v-if="getTodosForDay(day.dateStr).length > 0" class="space-y-1.5">
+              <div
+                v-for="todo in getTodosForDay(day.dateStr)"
+                :key="todo.id"
+                @click="$emit('open-todo', todo)"
+                :class="[
+                  'flex items-center justify-between p-2.5 rounded-lg border text-xs cursor-pointer active:scale-[0.99] transition-all',
+                  todo.completed
+                    ? 'opacity-60 line-through bg-slate-50 dark:bg-slate-800/40 border-slate-200 text-slate-500'
+                    : todo.importance && todo.importance >= 8
+                    ? 'bg-rose-50/60 text-rose-800 border-rose-200 dark:bg-rose-950/30 dark:text-rose-300 dark:border-rose-900'
+                    : 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-800'
+                ]"
+              >
+                <div class="flex items-center gap-2 min-w-0">
+                  <button
+                    @click.stop="$emit('toggle-todo', todo.id)"
+                    class="w-4 h-4 rounded border border-slate-400 flex items-center justify-center shrink-0 hover:bg-slate-200"
+                  >
+                    <Check v-if="todo.completed" class="w-3 h-3 stroke-[3]" />
+                  </button>
+                  <span class="font-medium truncate">{{ todo.title }}</span>
+                  <span
+                    v-if="todo.importance"
+                    :class="['text-[10px] font-mono font-bold px-1.5 py-0.2 rounded border shrink-0', getPriorityStyle(todo.importance).badgeClass]"
+                  >
+                    P{{ todo.importance }}
+                  </span>
+                </div>
+                <span
+                  v-if="todo.dueDate === day.dateStr"
+                  class="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 font-bold shrink-0"
+                >
+                  截止
+                </span>
+              </div>
+            </div>
+            <div v-else class="text-xs text-slate-400 py-1.5 pl-1">
+              暂无待办事项
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Only: Selected Day Agenda Details Card (Active in Month and 2Weeks views) -->
+    <div
+      v-if="(viewMode === 'month' || viewMode === '2weeks') && selectedMobileDate"
       class="sm:hidden bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-3.5 space-y-3 shadow-xs"
     >
       <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
@@ -467,8 +908,16 @@ import {
   X,
   Trash2,
 } from 'lucide-vue-next'
-import type { TodoItem, JournalEntry, ScheduleItem, Project, Habit, HabitLog } from '@/types'
-import { getCalendarDays, parseDate, isDateInRange, formatDate, formatDisplayDate } from '@/utils/date'
+import type { TodoItem, JournalEntry, ScheduleItem, Project, Habit, HabitLog, CalendarViewMode } from '@/types'
+import {
+  getViewDays,
+  formatPeriodTitle,
+  addDays,
+  parseDate,
+  isDateInRange,
+  formatDate,
+  formatDisplayDate,
+} from '@/utils/date'
 import { getPriorityStyle } from '@/utils/priority'
 import { isHabitScheduledForDay } from '@/utils/habit'
 
@@ -491,6 +940,105 @@ const emit = defineEmits<{
   (e: 'toggle-habit', payload: { habitId: string; date: string }): void
 }>()
 
+const VIEW_STORAGE_KEY = 'akasha_calendar_view_mode'
+
+const viewTabs: { mode: CalendarViewMode; label: string }[] = [
+  { mode: 'day', label: '日' },
+  { mode: '2days', label: '2日' },
+  { mode: '3days', label: '3日' },
+  { mode: 'week', label: '周' },
+  { mode: '2weeks', label: '2周' },
+  { mode: 'month', label: '月' },
+]
+
+function getInitialViewMode(): CalendarViewMode {
+  if (typeof window === 'undefined') return 'month'
+  const saved = localStorage.getItem(VIEW_STORAGE_KEY) as CalendarViewMode
+  const valid: CalendarViewMode[] = ['day', '2days', '3days', 'week', '2weeks', 'month']
+  return valid.includes(saved) ? saved : 'month'
+}
+
+const viewMode = ref<CalendarViewMode>(getInitialViewMode())
+
+function setViewMode(mode: CalendarViewMode) {
+  viewMode.value = mode
+  try {
+    localStorage.setItem(VIEW_STORAGE_KEY, mode)
+  } catch {
+    // ignore
+  }
+}
+
+const today = new Date()
+const currentBaseDate = ref<Date>(new Date(today.getFullYear(), today.getMonth(), today.getDate()))
+const isTodayPulsing = ref(false)
+const selectedSchedule = ref<ScheduleItem | null>(null)
+const selectedMobileDate = ref(formatDate(today))
+
+const currentPeriodTitle = computed(() => {
+  return formatPeriodTitle(viewMode.value, currentBaseDate.value)
+})
+
+const displayDays = computed(() => {
+  return getViewDays(viewMode.value, currentBaseDate.value)
+})
+
+function prevPeriod() {
+  const d = new Date(currentBaseDate.value)
+  if (viewMode.value === 'day') {
+    currentBaseDate.value = addDays(d, -1)
+  } else if (viewMode.value === '2days') {
+    currentBaseDate.value = addDays(d, -2)
+  } else if (viewMode.value === '3days') {
+    currentBaseDate.value = addDays(d, -3)
+  } else if (viewMode.value === 'week') {
+    currentBaseDate.value = addDays(d, -7)
+  } else if (viewMode.value === '2weeks') {
+    currentBaseDate.value = addDays(d, -14)
+  } else if (viewMode.value === 'month') {
+    d.setMonth(d.getMonth() - 1)
+    currentBaseDate.value = d
+  }
+  selectedMobileDate.value = formatDate(currentBaseDate.value)
+}
+
+function nextPeriod() {
+  const d = new Date(currentBaseDate.value)
+  if (viewMode.value === 'day') {
+    currentBaseDate.value = addDays(d, 1)
+  } else if (viewMode.value === '2days') {
+    currentBaseDate.value = addDays(d, 2)
+  } else if (viewMode.value === '3days') {
+    currentBaseDate.value = addDays(d, 3)
+  } else if (viewMode.value === 'week') {
+    currentBaseDate.value = addDays(d, 7)
+  } else if (viewMode.value === '2weeks') {
+    currentBaseDate.value = addDays(d, 14)
+  } else if (viewMode.value === 'month') {
+    d.setMonth(d.getMonth() + 1)
+    currentBaseDate.value = d
+  }
+  selectedMobileDate.value = formatDate(currentBaseDate.value)
+}
+
+function goToToday() {
+  const now = new Date()
+  currentBaseDate.value = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  selectedMobileDate.value = formatDate(now)
+  isTodayPulsing.value = true
+  setTimeout(() => {
+    isTodayPulsing.value = false
+  }, 1600)
+}
+
+function handleDayCellClick(dateStr: string) {
+  selectedMobileDate.value = dateStr
+  currentBaseDate.value = parseDate(dateStr)
+  if (typeof window !== 'undefined' && window.innerWidth >= 640) {
+    emit('open-journal', dateStr)
+  }
+}
+
 function getHabitsForDay(dateStr: string): Habit[] {
   if (!props.habits) return []
   return props.habits.filter((h) => {
@@ -504,22 +1052,8 @@ function isHabitDoneOnDate(habitId: string, dateStr: string): boolean {
   return props.habitLogs.some((l) => l.habitId === habitId && l.date === dateStr && l.completed)
 }
 
-const today = new Date()
-const currentYear = ref(today.getFullYear())
-const currentMonth = ref(today.getMonth())
-const isTodayPulsing = ref(false)
-const selectedSchedule = ref<ScheduleItem | null>(null)
-const selectedMobileDate = ref(formatDate(today))
-
 function hasIncompleteTodos(dateStr: string): boolean {
   return getTodosForDay(dateStr).some((t) => !t.completed)
-}
-
-function handleDayCellClick(dateStr: string) {
-  selectedMobileDate.value = dateStr
-  if (typeof window !== 'undefined' && window.innerWidth >= 640) {
-    emit('open-journal', dateStr)
-  }
 }
 
 function handleOpenSchedule(s: ScheduleItem) {
@@ -538,7 +1072,7 @@ function formatScheduleDetailTiming(s: ScheduleItem): string {
   let timing = ''
   if (s.recurringType === 'weekly' && s.recurringDayOfWeek !== undefined) {
     timing = `每周${weekdays[s.recurringDayOfWeek]}`
-  } else if (s.recurringType === 'monthly' && s.recurringDayOfMonth !== undefined) {
+  } else if (s.recurringType === 'monthly' && s.recurringDayOfWeek !== undefined) {
     timing = `每月${s.recurringDayOfMonth}号`
   } else if (s.date) {
     timing = s.date
@@ -547,38 +1081,6 @@ function formatScheduleDetailTiming(s: ScheduleItem): string {
     timing += ` ${s.time}`
   }
   return timing || '无固定时间'
-}
-
-const calendarDays = computed(() => {
-  return getCalendarDays(currentYear.value, currentMonth.value)
-})
-
-function prevMonth() {
-  if (currentMonth.value === 0) {
-    currentMonth.value = 11
-    currentYear.value -= 1
-  } else {
-    currentMonth.value -= 1
-  }
-}
-
-function nextMonth() {
-  if (currentMonth.value === 11) {
-    currentMonth.value = 0
-    currentYear.value += 1
-  } else {
-    currentMonth.value += 1
-  }
-}
-
-function goToToday() {
-  const d = new Date()
-  currentYear.value = d.getFullYear()
-  currentMonth.value = d.getMonth()
-  isTodayPulsing.value = true
-  setTimeout(() => {
-    isTodayPulsing.value = false
-  }, 1600)
 }
 
 function getProjectName(projectId?: string | null): string {
@@ -614,7 +1116,7 @@ const datedTodos = computed(() => {
   return props.todos.filter((t) => !!t.dueDate || !!t.startDate)
 })
 
-function getTodosForDay(dateStr: string): TodoItem[] {
+function getTodosForDay(dateStr: string, limit?: number): TodoItem[] {
   const list = datedTodos.value.filter((t) => {
     if (t.startDate && t.dueDate) {
       return isDateInRange(dateStr, t.startDate, t.dueDate)
@@ -627,11 +1129,10 @@ function getTodosForDay(dateStr: string): TodoItem[] {
     return (b.importance || 5) - (a.importance || 5)
   })
 
-  return list.slice(0, 6)
+  return typeof limit === 'number' ? list.slice(0, limit) : list
 }
 
-function getExtraCount(dateStr: string): number {
-  const totalSchedules = getSchedulesForDay(dateStr).length
+function getExtraCount(dateStr: string, limit = 5): number {
   const totalTodos = datedTodos.value.filter((t) => {
     if (t.startDate && t.dueDate) {
       return isDateInRange(dateStr, t.startDate, t.dueDate)
@@ -639,16 +1140,11 @@ function getExtraCount(dateStr: string): number {
     return t.dueDate === dateStr || t.startDate === dateStr
   }).length
 
-  const shownTodos = getTodosForDay(dateStr).length
-  return Math.max(0, totalTodos - shownTodos)
+  return Math.max(0, totalTodos - limit)
 }
 
 function hasJournalOnDate(dateStr: string): boolean {
   return props.journals.some((j) => j.date === dateStr && !!j.content)
-}
-
-function handleDayClick(dateStr: string) {
-  emit('open-journal', dateStr)
 }
 
 function quickAddTodo(dateStr: string) {

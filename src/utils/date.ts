@@ -88,13 +88,80 @@ export function formatDaysRemaining(dueDateStr: string): { text: string; urgentL
   }
 }
 
+import type { CalendarViewMode } from '@/types'
+
+export function addDays(date: Date, days: number): Date {
+  const result = new Date(date)
+  result.setDate(result.getDate() + days)
+  return result
+}
+
+export function getISOWeekNumber(d: Date): number {
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()))
+  date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7))
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1))
+  return Math.ceil((((date.getTime() - yearStart.getTime()) / 86400000) + 1) / 7)
+}
+
 export interface CalendarDay {
   date: Date
   dateStr: string
   dayNumber: number
+  dayOfWeek: number
+  weekdayName: string
   isCurrentMonth: boolean
   isToday: boolean
   isWeekend: boolean
+}
+
+const WEEKDAY_NAMES_MAP = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
+
+export function formatPeriodTitle(mode: CalendarViewMode, baseDate: Date): string {
+  if (mode === 'day') {
+    const y = baseDate.getFullYear()
+    const m = baseDate.getMonth() + 1
+    const d = baseDate.getDate()
+    const w = WEEKDAY_NAMES_MAP[baseDate.getDay()]
+    return `${y}年${m}月${d}日 ${w}`
+  }
+
+  if (mode === 'month') {
+    return `${baseDate.getFullYear()}年 ${baseDate.getMonth() + 1}月`
+  }
+
+  let startD: Date
+  let endD: Date
+  let suffix = ''
+
+  if (mode === '2days') {
+    startD = baseDate
+    endD = addDays(baseDate, 1)
+  } else if (mode === '3days') {
+    startD = baseDate
+    endD = addDays(baseDate, 2)
+  } else if (mode === 'week') {
+    startD = getMonday(baseDate)
+    endD = addDays(startD, 6)
+    suffix = ` (第${getISOWeekNumber(startD)}周)`
+  } else if (mode === '2weeks') {
+    startD = getMonday(baseDate)
+    endD = addDays(startD, 13)
+  } else {
+    return `${baseDate.getFullYear()}年 ${baseDate.getMonth() + 1}月`
+  }
+
+  const y1 = startD.getFullYear()
+  const m1 = startD.getMonth() + 1
+  const d1 = startD.getDate()
+
+  const y2 = endD.getFullYear()
+  const m2 = endD.getMonth() + 1
+  const d2 = endD.getDate()
+
+  if (y1 === y2) {
+    return `${y1}年${m1}月${d1}日 - ${m2}月${d2}日${suffix}`
+  }
+  return `${y1}年${m1}月${d1}日 - ${y2}年${m2}月${d2}日${suffix}`
 }
 
 export function getCalendarDays(year: number, month: number): CalendarDay[] {
@@ -111,26 +178,32 @@ export function getCalendarDays(year: number, month: number): CalendarDay[] {
   for (let i = startDayOfWeek - 1; i >= 0; i--) {
     const d = new Date(year, month - 1, prevMonthLastDay - i)
     const dateStr = formatDate(d)
+    const dayOfWeek = d.getDay()
     days.push({
       date: d,
       dateStr,
       dayNumber: d.getDate(),
+      dayOfWeek,
+      weekdayName: WEEKDAY_NAMES_MAP[dayOfWeek],
       isCurrentMonth: false,
       isToday: dateStr === todayStr,
-      isWeekend: d.getDay() === 0 || d.getDay() === 6,
+      isWeekend: dayOfWeek === 0 || dayOfWeek === 6,
     })
   }
 
   for (let day = 1; day <= lastDayOfMonth.getDate(); day++) {
     const d = new Date(year, month, day)
     const dateStr = formatDate(d)
+    const dayOfWeek = d.getDay()
     days.push({
       date: d,
       dateStr,
       dayNumber: day,
+      dayOfWeek,
+      weekdayName: WEEKDAY_NAMES_MAP[dayOfWeek],
       isCurrentMonth: true,
       isToday: dateStr === todayStr,
-      isWeekend: d.getDay() === 0 || d.getDay() === 6,
+      isWeekend: dayOfWeek === 0 || dayOfWeek === 6,
     })
   }
 
@@ -139,15 +212,68 @@ export function getCalendarDays(year: number, month: number): CalendarDay[] {
     for (let day = 1; day <= remaining; day++) {
       const d = new Date(year, month + 1, day)
       const dateStr = formatDate(d)
+      const dayOfWeek = d.getDay()
       days.push({
         date: d,
         dateStr,
         dayNumber: day,
+        dayOfWeek,
+        weekdayName: WEEKDAY_NAMES_MAP[dayOfWeek],
         isCurrentMonth: false,
         isToday: dateStr === todayStr,
-        isWeekend: d.getDay() === 0 || d.getDay() === 6,
+        isWeekend: dayOfWeek === 0 || dayOfWeek === 6,
       })
     }
+  }
+
+  return days
+}
+
+export function getViewDays(mode: CalendarViewMode, baseDate: Date): CalendarDay[] {
+  const todayStr = formatDate(new Date())
+
+  if (mode === 'month') {
+    return getCalendarDays(baseDate.getFullYear(), baseDate.getMonth())
+  }
+
+  let startDate: Date
+  let dayCount: number
+
+  if (mode === 'day') {
+    startDate = new Date(baseDate)
+    dayCount = 1
+  } else if (mode === '2days') {
+    startDate = new Date(baseDate)
+    dayCount = 2
+  } else if (mode === '3days') {
+    startDate = new Date(baseDate)
+    dayCount = 3
+  } else if (mode === 'week') {
+    startDate = getMonday(baseDate)
+    dayCount = 7
+  } else if (mode === '2weeks') {
+    startDate = getMonday(baseDate)
+    dayCount = 14
+  } else {
+    return getCalendarDays(baseDate.getFullYear(), baseDate.getMonth())
+  }
+
+  const days: CalendarDay[] = []
+  for (let i = 0; i < dayCount; i++) {
+    const d = addDays(startDate, i)
+    const dateStr = formatDate(d)
+    const dayOfWeek = d.getDay()
+    days.push({
+      date: d,
+      dateStr,
+      dayNumber: d.getDate(),
+      dayOfWeek,
+      weekdayName: WEEKDAY_NAMES_MAP[dayOfWeek],
+      // 注意：非月视图下所有日子均是该视角的有效排期日，跨月绝不判为半透明灰色
+      isCurrentMonth: true,
+      isToday: dateStr === todayStr,
+      isWeekend: dayOfWeek === 0 || dayOfWeek === 6,
+    })
   }
 
   return days
