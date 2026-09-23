@@ -3,46 +3,44 @@ migrate((app) => {
   const collection = new Collection({
     name: "sync_items",
     type: "base",
-    schema: [
+    fields: [
       {
         name: "entityType",
         type: "text",
         required: true,
-        options: { min: 1, max: 64 }
+        min: 1,
+        max: 64
       },
       {
         name: "entityId",
         type: "text",
         required: true,
-        options: { min: 1, max: 128 }
+        min: 1,
+        max: 128
       },
       {
         name: "payload",
         type: "json",
         required: false,
-        options: { maxSize: 5000000 }
+        maxSize: 5000000
       },
       {
         name: "clientUpdatedAt",
         type: "number",
-        required: true,
-        options: {}
+        required: true
       },
       {
         name: "isDeleted",
         type: "bool",
-        required: false,
-        options: {}
+        required: false
       },
       {
         name: "user",
         type: "relation",
         required: true,
-        options: {
-          collectionId: "_pb_users_auth_",
-          cascadeDelete: true,
-          maxSelect: 1
-        }
+        collectionId: "_pb_users_auth_",
+        cascadeDelete: true,
+        maxSelect: 1
       }
     ],
     indexes: [
