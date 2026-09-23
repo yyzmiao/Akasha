@@ -32,23 +32,56 @@
         </button>
       </div>
 
-      <!-- Right: View Mode Segmented Tabs + Quick Navigation Buttons -->
-      <div class="flex items-center justify-between md:justify-end gap-2 overflow-x-auto no-scrollbar">
-        <!-- Segmented Tabs -->
-        <div class="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200/80 dark:border-slate-700 shrink-0">
+      <!-- Right: View Mode Dropdown + Quick Navigation Buttons -->
+      <div class="flex items-center justify-between md:justify-end gap-2 overflow-visible">
+        <!-- View Mode Dropdown -->
+        <div ref="dropdownRef" class="relative shrink-0">
           <button
-            v-for="tab in viewTabs"
-            :key="tab.mode"
-            @click="setViewMode(tab.mode)"
-            :class="[
-              'px-2 sm:px-2.5 py-1 text-xs rounded-md transition-all whitespace-nowrap select-none',
-              viewMode === tab.mode
-                ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 font-semibold shadow-2xs'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 font-medium'
-            ]"
+            @click="toggleDropdown"
+            class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-medium text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-all active:scale-95 select-none shadow-2xs"
+            :aria-expanded="isDropdownOpen"
+            title="选择日历视角"
           >
-            {{ tab.label }}
+            <Calendar class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
+            <span class="font-semibold">{{ currentViewOption.label }}</span>
+            <ChevronDown
+              class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0"
+              :class="isDropdownOpen ? 'rotate-180 text-blue-600 dark:text-blue-400' : ''"
+            />
           </button>
+
+          <!-- Dropdown Menu -->
+          <Transition
+            enter-active-class="transition duration-100 ease-out"
+            enter-from-class="transform scale-95 opacity-0 -translate-y-1"
+            enter-to-class="transform scale-100 opacity-100 translate-y-0"
+            leave-active-class="transition duration-75 ease-in"
+            leave-from-class="transform scale-100 opacity-100 translate-y-0"
+            leave-to-class="transform scale-95 opacity-0 -translate-y-1"
+          >
+            <div
+              v-if="isDropdownOpen"
+              class="absolute right-0 top-full mt-1.5 w-48 sm:w-52 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg p-1.5 z-40 space-y-0.5"
+            >
+              <button
+                v-for="opt in viewOptions"
+                :key="opt.mode"
+                @click="selectViewMode(opt.mode)"
+                :class="[
+                  'w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs transition-colors select-none text-left',
+                  viewMode === opt.mode
+                    ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 font-semibold'
+                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80 font-medium'
+                ]"
+              >
+                <div class="flex items-center gap-1.5 min-w-0">
+                  <span class="truncate">{{ opt.label }}</span>
+                  <span class="text-[10px] text-slate-400 dark:text-slate-500 font-normal shrink-0">({{ opt.desc }})</span>
+                </div>
+                <Check v-if="viewMode === opt.mode" class="w-3.5 h-3.5 stroke-[2.5] text-blue-600 dark:text-blue-400 shrink-0 ml-1.5" />
+              </button>
+            </div>
+          </Transition>
         </div>
 
         <!-- Quick Filter Tabs -->
@@ -893,10 +926,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import {
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   FolderKanban,
   CheckSquare,
   Sparkles,
@@ -942,13 +976,19 @@ const emit = defineEmits<{
 
 const VIEW_STORAGE_KEY = 'akasha_calendar_view_mode'
 
-const viewTabs: { mode: CalendarViewMode; label: string }[] = [
-  { mode: 'day', label: '日' },
-  { mode: '2days', label: '2日' },
-  { mode: '3days', label: '3日' },
-  { mode: 'week', label: '周' },
-  { mode: '2weeks', label: '2周' },
-  { mode: 'month', label: '月' },
+interface ViewOption {
+  mode: CalendarViewMode
+  label: string
+  desc: string
+}
+
+const viewOptions: ViewOption[] = [
+  { mode: 'day', label: '单日视图', desc: '1天' },
+  { mode: '2days', label: '双日聚焦', desc: '2天' },
+  { mode: '3days', label: '三日看板', desc: '3天' },
+  { mode: 'week', label: '周视图', desc: '7天自然周' },
+  { mode: '2weeks', label: '两周中程', desc: '14天' },
+  { mode: 'month', label: '月历全景', desc: '完整月份' },
 ]
 
 function getInitialViewMode(): CalendarViewMode {
@@ -960,6 +1000,22 @@ function getInitialViewMode(): CalendarViewMode {
 
 const viewMode = ref<CalendarViewMode>(getInitialViewMode())
 
+const currentViewOption = computed(() => {
+  return viewOptions.find((o) => o.mode === viewMode.value) || viewOptions[5]
+})
+
+const isDropdownOpen = ref(false)
+const dropdownRef = ref<HTMLElement | null>(null)
+
+function toggleDropdown() {
+  isDropdownOpen.value = !isDropdownOpen.value
+}
+
+function selectViewMode(mode: CalendarViewMode) {
+  setViewMode(mode)
+  isDropdownOpen.value = false
+}
+
 function setViewMode(mode: CalendarViewMode) {
   viewMode.value = mode
   try {
@@ -968,6 +1024,20 @@ function setViewMode(mode: CalendarViewMode) {
     // ignore
   }
 }
+
+function handleClickOutside(event: MouseEvent) {
+  if (dropdownRef.value && !dropdownRef.value.contains(event.target as Node)) {
+    isDropdownOpen.value = false
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('pointerdown', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('pointerdown', handleClickOutside)
+})
 
 const today = new Date()
 const currentBaseDate = ref<Date>(new Date(today.getFullYear(), today.getMonth(), today.getDate()))
