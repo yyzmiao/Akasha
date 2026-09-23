@@ -425,13 +425,12 @@
           </div>
         </div>
 
-        <!-- 多周轮换循环 -->
+        <!-- 多周轮换习惯 -->
         <div class="space-y-3">
           <div class="flex items-center justify-between">
             <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-              <Sparkles class="w-4 h-4 text-blue-600 dark:text-blue-400" />
               <span>多周轮换习惯</span>
-              <span class="text-[10px] px-1.5 py-0.2 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 font-mono font-medium">
+              <span class="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono">
                 {{ rotatingHabits.length }}
               </span>
             </h3>
@@ -548,10 +547,16 @@
           </div>
         </div>
 
+        <!-- 每月习惯 -->
         <div class="space-y-3">
-          <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">
-            每月习惯
-          </h3>
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+              <span>每月习惯</span>
+              <span class="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono">
+                {{ monthlyHabits.length }}
+              </span>
+            </h3>
+          </div>
 
           <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-3 shadow-sm">
             <div v-if="monthlyHabits.length === 0" class="text-center py-4 text-xs text-slate-400">
