@@ -119,10 +119,18 @@
 
             <span
               v-if="item.dueDate"
-              class="px-1.5 py-0.2 rounded text-[10px] font-mono bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 shrink-0"
-              :title="`截止日期: ${item.dueDate}`"
+              class="px-1.5 py-0.2 rounded text-[10px] font-mono bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 shrink-0 flex items-center gap-1"
+              :title="`截止日期: ${item.dueDate}${item.dueTime ? ' ' + item.dueTime : ''}`"
             >
-              📅 {{ item.dueDate.slice(5) }}
+              <span>📅 {{ item.dueDate.slice(5) }}</span>
+              <span v-if="item.dueTime" class="font-bold text-indigo-600 dark:text-indigo-400">{{ item.dueTime }}</span>
+            </span>
+            <span
+              v-else-if="item.dueTime"
+              class="px-1.5 py-0.2 rounded text-[10px] font-mono bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300 shrink-0"
+              :title="`时间点: ${item.dueTime}`"
+            >
+              🕒 {{ item.dueTime }}
             </span>
           </div>
         </div>

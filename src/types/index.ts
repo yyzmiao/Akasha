@@ -42,6 +42,7 @@ export interface Habit {
   title: string
   frequency: HabitFrequency
   timeSlot?: TimeSlot
+  time?: string
   timingType?: TimingType
   targetDaysOfWeek?: number[]
   targetCount?: number
@@ -75,6 +76,7 @@ export interface TodoItem {
   importance?: number
   startDate?: string
   dueDate?: string
+  dueTime?: string
   notes?: string
   order: number
   collapsed?: boolean

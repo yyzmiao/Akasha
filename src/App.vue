@@ -514,9 +514,12 @@ async function handleSaveTodo(itemData: Partial<TodoItem>) {
   const { children, ...cleanData } = itemData
   if (itemData.id) {
     const importanceVal = itemData.importance !== undefined ? Number(itemData.importance) : 5
+    const existing = await db.todos.get(itemData.id)
     const updated = {
+      ...(existing || {}),
       ...cleanData,
       importance: importanceVal,
+      dueTime: itemData.dueTime !== undefined ? (itemData.dueTime?.trim() || undefined) : existing?.dueTime,
       updatedAt: now,
     }
     await db.todos.update(itemData.id, updated)
@@ -532,6 +535,7 @@ async function handleSaveTodo(itemData: Partial<TodoItem>) {
       importance: itemData.importance !== undefined ? Number(itemData.importance) : 5,
       startDate: itemData.startDate,
       dueDate: itemData.dueDate,
+      dueTime: itemData.dueTime?.trim() || undefined,
       notes: itemData.notes || '',
       order: itemData.order || 0,
       collapsed: false,
@@ -583,7 +587,7 @@ function handleOpenSchedule(schedule: ScheduleItem) {
   activeTab.value = 'schedules'
 }
 
-function handleQuickCreateTodo(payload: string | { date: string; title?: string }) {
+function handleQuickCreateTodo(payload: string | { date: string; time?: string; title?: string; projectId?: string | null; importance?: number }) {
   const dateStr = typeof payload === 'string' ? payload : payload.date
   let title = typeof payload === 'object' && payload.title ? payload.title.trim() : ''
   if (!title) {
@@ -596,7 +600,9 @@ function handleQuickCreateTodo(payload: string | { date: string; title?: string 
     title,
     dueDate: dateStr,
     startDate: dateStr,
-    importance: 5,
+    dueTime: typeof payload === 'object' && payload.time ? payload.time.trim() : undefined,
+    projectId: typeof payload === 'object' ? payload.projectId : undefined,
+    importance: typeof payload === 'object' && payload.importance !== undefined ? payload.importance : 5,
   })
 }
 
@@ -652,6 +658,7 @@ async function handleSaveHabit(habitData: Partial<Habit>) {
       title: habitData.title || '新习惯',
       frequency: habitData.frequency || 'daily',
       timeSlot: habitData.timeSlot || 'morning',
+      time: habitData.time?.trim() || undefined,
       timingType: habitData.timingType || 'anytime',
       targetCount: habitData.targetCount || 1,
       targetDaysOfWeek: habitData.targetDaysOfWeek,

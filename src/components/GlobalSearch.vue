@@ -231,7 +231,7 @@ const allIndexItems = computed<SearchResultItem[]>(() => {
       type: 'todo',
       categoryLabel: '待办',
       title: t.title,
-      subtitle: t.notes || (t.dueDate ? `截止: ${t.dueDate}` : undefined),
+      subtitle: t.notes || (t.dueDate ? `截止: ${t.dueDate}${t.dueTime ? ' ' + t.dueTime : ''}` : (t.dueTime ? `时间: ${t.dueTime}` : undefined)),
       tag: t.completed ? '已完成' : (t.projectId ? projectMap.get(t.projectId) : undefined),
       icon: CheckSquare,
       badgeBg: t.completed
@@ -272,7 +272,9 @@ const allIndexItems = computed<SearchResultItem[]>(() => {
 
   props.habits.forEach((h) => {
     let sub = freqMap[h.frequency] || h.frequency
-    if (h.timeSlot && slotMap[h.timeSlot]) {
+    if (h.time) {
+      sub += ` · 🕒 ${h.time}`
+    } else if (h.timeSlot && slotMap[h.timeSlot]) {
       sub += ` · ${slotMap[h.timeSlot]}`
     } else if (h.targetCount && h.targetCount > 1) {
       sub += ` · 目标 ${h.targetCount} 次`

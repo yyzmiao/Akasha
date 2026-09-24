@@ -238,6 +238,26 @@
           </div>
 
           <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">具体时间点 (可选，几点几分)</label>
+              <button
+                v-if="editingItem.dueTime"
+                type="button"
+                @click="editingItem.dueTime = ''"
+                class="text-[10px] text-slate-400 hover:text-rose-500 cursor-pointer"
+              >
+                清除时间
+              </button>
+            </div>
+            <input
+              v-model="editingItem.dueTime"
+              type="time"
+              placeholder="留空代表全天"
+              class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500 font-mono"
+            />
+          </div>
+
+          <div>
             <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">备注信息</label>
             <textarea
               v-model="editingItem.notes"
@@ -361,7 +381,9 @@ const treeData = computed(() => {
       if (!a.dueDate && !b.dueDate) return a.order - b.order
       if (!a.dueDate) return 1
       if (!b.dueDate) return -1
-      return a.dueDate.localeCompare(b.dueDate)
+      const keyA = `${a.dueDate} ${a.dueTime || '23:59'}`
+      const keyB = `${b.dueDate} ${b.dueTime || '23:59'}`
+      return keyA.localeCompare(keyB)
     }
     return a.order - b.order
   }
@@ -484,6 +506,7 @@ function handleOpenCreateModal() {
     importance: 5,
     startDate: '',
     dueDate: '',
+    dueTime: '',
     notes: '',
     createdAt: new Date().toISOString(),
   }
@@ -494,6 +517,7 @@ function handleOpenDetails(item: TodoItem) {
   const { children, ...cleanItem } = item
   editingItem.value = {
     ...JSON.parse(JSON.stringify(cleanItem)),
+    dueTime: cleanItem.dueTime || '',
     importance: normalizePriority(item.importance),
   }
 }
@@ -512,10 +536,12 @@ function saveDetails() {
   }
 
   const { children, ...cleanItem } = editingItem.value
+  const cleanDueTime = cleanItem.dueTime?.trim() || undefined
   if (isCreatingNew.value) {
     emit('save-todo', {
       ...cleanItem,
       title: cleanItem.title.trim(),
+      dueTime: cleanDueTime,
       parentId: cleanItem.parentId || null,
       completed: false,
       order: props.todos.filter((t) => t.parentId === (cleanItem.parentId || null)).length,
@@ -525,6 +551,7 @@ function saveDetails() {
     emit('save-todo', {
       ...cleanItem,
       title: cleanItem.title.trim(),
+      dueTime: cleanDueTime,
       importance: normalizePriority(cleanItem.importance),
     })
   }

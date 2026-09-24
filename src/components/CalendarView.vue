@@ -292,6 +292,7 @@
                   >
                     <Check v-if="isHabitDoneOnDate(item.id, day.dateStr)" class="w-2.5 h-2.5 stroke-[3]" />
                   </button>
+                  <span v-if="item.data?.time" class="font-mono text-[9px] font-semibold text-amber-700 dark:text-amber-300 shrink-0">{{ item.data.time }}</span>
                   <span class="truncate font-medium">{{ item.title }}</span>
                 </div>
                 <Sparkles class="w-3 h-3 text-amber-500 shrink-0" />
@@ -318,13 +319,14 @@
                   >
                     <Check v-if="item.completed" class="w-2.5 h-2.5 stroke-[3]" />
                   </button>
+                  <span v-if="item.data?.dueTime" class="font-mono text-[9px] font-semibold text-emerald-700 dark:text-emerald-300 shrink-0">{{ item.data.dueTime }}</span>
                   <span class="truncate font-medium">{{ item.title }}</span>
                 </div>
                 <span
                   v-if="item.data.dueDate === day.dateStr"
-                  class="text-[9px] px-1 rounded bg-white/80 dark:bg-slate-700 font-bold shrink-0"
+                  class="text-[9px] px-1 rounded bg-white/80 dark:bg-slate-700 font-bold shrink-0 text-blue-600"
                 >
-                  截止
+                  {{ item.data.dueTime || '截止' }}
                 </span>
               </div>
             </template>
@@ -513,13 +515,14 @@
                   >
                     <Check v-if="todo.completed" class="w-2.5 h-2.5 stroke-[3]" />
                   </button>
+                  <span v-if="todo.dueTime" class="font-mono text-[9px] font-semibold text-emerald-700 dark:text-emerald-300 shrink-0">{{ todo.dueTime }}</span>
                   <span class="truncate font-medium">{{ todo.title }}</span>
                 </div>
                 <span
                   v-if="todo.dueDate === day.dateStr"
                   class="text-[9px] px-1 rounded bg-white/80 dark:bg-slate-700 font-bold shrink-0 text-blue-600"
                 >
-                  截止
+                  {{ todo.dueTime || '截止' }}
                 </span>
               </div>
             </div>
@@ -746,6 +749,12 @@
                 >
                   <Check v-if="todo.completed" class="w-3 h-3 stroke-[3]" />
                 </button>
+                <span
+                  v-if="todo.dueTime"
+                  class="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 shrink-0"
+                >
+                  🕒 {{ todo.dueTime }}
+                </span>
                 <span :class="['font-medium truncate', todo.completed ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100']">
                   {{ todo.title }}
                 </span>
@@ -765,7 +774,7 @@
                   v-if="todo.dueDate === displayDays[0].dateStr"
                   class="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400 font-bold"
                 >
-                  今日截止
+                  {{ todo.dueTime ? `今日 ${todo.dueTime}` : '今日截止' }}
                 </span>
               </div>
             </div>
@@ -1349,6 +1358,12 @@
             >
               <Check v-if="todo.completed" class="w-3 h-3 stroke-[3]" />
             </button>
+            <span
+              v-if="todo.dueTime"
+              class="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 shrink-0"
+            >
+              🕒 {{ todo.dueTime }}
+            </span>
             <span class="font-medium truncate">{{ todo.title }}</span>
             <span
               v-if="todo.importance"
@@ -1361,7 +1376,7 @@
             v-if="todo.dueDate === selectedMobileDate"
             class="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 font-bold shrink-0"
           >
-            截止
+            {{ todo.dueTime || '截止' }}
           </span>
         </div>
       </div>
@@ -1392,6 +1407,12 @@
             >
               <Check v-if="isHabitDoneOnDate(h.id, selectedMobileDate)" class="w-3 h-3 stroke-[3]" />
             </button>
+            <span
+              v-if="h.time"
+              class="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 shrink-0"
+            >
+              🕒 {{ h.time }}
+            </span>
             <span :class="['font-medium truncate', isHabitDoneOnDate(h.id, selectedMobileDate) ? 'line-through text-slate-400' : '']">
               {{ h.title }}
             </span>
@@ -1591,6 +1612,148 @@
       </div>
     </div>
 
+    <!-- Quick Create Todo Modal -->
+    <div
+      v-if="showQuickTodoModal"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs"
+      @click.self="closeQuickTodoModal"
+    >
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-6 w-full max-w-md shadow-xl space-y-4">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+          <div class="flex items-center gap-2">
+            <CheckSquare class="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            <h3 class="text-base font-bold text-slate-900 dark:text-slate-100">
+              新建待办事项
+            </h3>
+          </div>
+          <button
+            @click="closeQuickTodoModal"
+            class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+          >
+            <X class="w-4 h-4" />
+          </button>
+        </div>
+
+        <div class="space-y-3.5">
+          <!-- Title -->
+          <div class="space-y-1">
+            <label class="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              待办名称 <span class="text-rose-500">*</span>
+            </label>
+            <input
+              v-model="quickTodoTitle"
+              type="text"
+              placeholder="例如：下午2点团队评审、周四体检..."
+              class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+              @keydown.enter="handleSaveQuickTodoSubmit"
+            />
+          </div>
+
+          <!-- Date -->
+          <div class="space-y-1">
+            <label class="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              截止日期 <span class="text-rose-500">*</span>
+            </label>
+            <input
+              v-model="quickTodoDate"
+              type="date"
+              class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+            />
+          </div>
+
+          <!-- Time Picker (几点几分) -->
+          <div class="space-y-1">
+            <div class="flex items-center justify-between">
+              <label class="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                具体时间点 (几点几分，可选)
+              </label>
+              <button
+                v-if="quickTodoTime"
+                type="button"
+                @click="quickTodoTime = ''"
+                class="text-[10px] text-slate-400 hover:text-rose-500 cursor-pointer"
+              >
+                清除时间 (设为全天)
+              </button>
+            </div>
+            <input
+              v-model="quickTodoTime"
+              type="time"
+              placeholder="留空代表全天"
+              class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 font-mono"
+            />
+          </div>
+
+          <!-- Project Select -->
+          <div class="space-y-1">
+            <label class="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              所属项目 (可选)
+            </label>
+            <select
+              v-model="quickTodoProjectId"
+              class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer"
+            >
+              <option :value="null">无项目 (公共日常)</option>
+              <option
+                v-for="p in projects"
+                :key="p.id"
+                :value="p.id"
+              >
+                {{ p.title }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Priority Select -->
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between">
+              <label class="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                优先级
+              </label>
+              <span :class="['text-[11px] font-mono font-bold px-1.5 py-0.2 rounded border', getPriorityStyle(quickTodoImportance).badgeClass]">
+                {{ getPriorityStyle(quickTodoImportance).label }}
+              </span>
+            </div>
+            <div class="grid grid-cols-5 gap-1">
+              <button
+                v-for="p in 10"
+                :key="p"
+                type="button"
+                @click="quickTodoImportance = p"
+                :class="[
+                  'py-1 rounded text-xs font-mono transition-all border text-center cursor-pointer',
+                  getPriorityStyle(p).badgeClass,
+                  quickTodoImportance === p
+                    ? 'ring-2 ring-emerald-500 dark:ring-emerald-400 font-bold scale-105 shadow-xs'
+                    : 'opacity-70 hover:opacity-100'
+                ]"
+              >
+                P{{ p }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+          <button
+            type="button"
+            @click="closeQuickTodoModal"
+            class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+          >
+            取消
+          </button>
+          <button
+            type="button"
+            @click="handleSaveQuickTodoSubmit"
+            class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-semibold transition-all shadow-xs cursor-pointer"
+          >
+            立即添加
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Day Overview Modal (for clicking +N items or exploring all items of a day) -->
     <div
       v-if="selectedDayOverview"
@@ -1652,6 +1815,12 @@
                 >
                   <Check v-if="todo.completed" class="w-3 h-3 stroke-[3]" />
                 </button>
+                <span
+                  v-if="todo.dueTime"
+                  class="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 shrink-0"
+                >
+                  🕒 {{ todo.dueTime }}
+                </span>
                 <span :class="['font-medium truncate', todo.completed ? 'line-through text-slate-400' : 'text-slate-800 dark:text-slate-200']">
                   {{ todo.title }}
                 </span>
@@ -1663,7 +1832,7 @@
                 </span>
               </div>
               <span v-if="todo.dueDate === selectedDayOverview" class="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 font-bold shrink-0">
-                截止
+                {{ todo.dueTime || '截止' }}
               </span>
             </div>
           </div>
@@ -1697,6 +1866,12 @@
                 >
                   <Check v-if="isHabitDoneOnDate(h.id, selectedDayOverview)" class="w-3 h-3 stroke-[3]" />
                 </button>
+                <span
+                  v-if="h.time"
+                  class="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 shrink-0"
+                >
+                  🕒 {{ h.time }}
+                </span>
                 <span
                   @click="$emit('switch-tab', 'habits'); closeDayOverview()"
                   :class="[
@@ -1811,7 +1986,7 @@ const emit = defineEmits<{
   (e: 'switch-tab', tab: string): void
   (e: 'open-todo', todo: TodoItem): void
   (e: 'open-schedule', schedule: ScheduleItem): void
-  (e: 'quick-create-todo', payload: { date: string; title: string } | string): void
+  (e: 'quick-create-todo', payload: { date: string; title: string; time?: string; projectId?: string | null; importance?: number } | string): void
   (e: 'open-journal', date: string): void
   (e: 'toggle-todo', id: string): void
   (e: 'delete-schedule', id: string): void
@@ -2229,10 +2404,39 @@ function hasJournalOnDate(dateStr: string): boolean {
   return props.journals.some((j) => j.date === dateStr && !!j.content)
 }
 
+const showQuickTodoModal = ref(false)
+const quickTodoDate = ref('')
+const quickTodoTitle = ref('')
+const quickTodoTime = ref('')
+const quickTodoProjectId = ref<string | null>(null)
+const quickTodoImportance = ref(5)
+
 function quickAddTodo(dateStr: string) {
-  const title = prompt(`添加 ${dateStr} 的待办事项：`)
-  if (!title || !title.trim()) return
-  emit('quick-create-todo', { date: dateStr, title: title.trim() })
+  quickTodoDate.value = dateStr
+  quickTodoTitle.value = ''
+  quickTodoTime.value = ''
+  quickTodoProjectId.value = null
+  quickTodoImportance.value = 5
+  showQuickTodoModal.value = true
+}
+
+function closeQuickTodoModal() {
+  showQuickTodoModal.value = false
+}
+
+function handleSaveQuickTodoSubmit() {
+  if (!quickTodoTitle.value.trim()) {
+    alert('请输入待办事项名称')
+    return
+  }
+  emit('quick-create-todo', {
+    date: quickTodoDate.value,
+    title: quickTodoTitle.value.trim(),
+    time: quickTodoTime.value ? quickTodoTime.value.trim() : undefined,
+    projectId: quickTodoProjectId.value || null,
+    importance: quickTodoImportance.value,
+  })
+  closeQuickTodoModal()
 }
 
 // --- 单日视角时间轴辅助函数 ---
@@ -2280,7 +2484,7 @@ function getDayTimelineItems(dateStr: string, isToday: boolean): TimelineItem[] 
     }
   }
 
-  // 2. 习惯打卡
+  // 2. 习惯打卡 (若有具体时间点则使用具体时间，否则依时间段分配)
   if (typeFilters.value.habits) {
     const habitsList = getHabitsForDay(dateStr)
     for (const h of habitsList) {
@@ -2288,7 +2492,14 @@ function getDayTimelineItems(dateStr: string, isToday: boolean): TimelineItem[] 
       let timeStr = '10:00'
       let slotLabel = '习惯打卡'
 
-      if (h.timeSlot === 'morning') {
+      if (h.time) {
+        const parts = h.time.split(':').map(Number)
+        if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+          sortMinutes = parts[0] * 60 + parts[1]
+          timeStr = h.time
+          slotLabel = '定时习惯'
+        }
+      } else if (h.timeSlot === 'morning') {
         sortMinutes = 8 * 60
         timeStr = '08:00'
         slotLabel = '晨间习惯'
@@ -2322,16 +2533,44 @@ function getDayTimelineItems(dateStr: string, isToday: boolean): TimelineItem[] 
     }
   }
 
-  // 3. 高优截止待办 (仅限未完成的紧急高优里程碑 P9/P8，避免与上方全天待办重复堆叠)
+  // 3. 待办事项 (包含设定了具体时间的定时待办，以及未设置时间的高优截止里程碑)
   if (typeFilters.value.todos) {
-    const dueTodos = getTodosForDay(dateStr).filter((t) => !t.completed && t.importance && t.importance >= 8).slice(0, 2)
-    for (const t of dueTodos) {
+    const dayTodos = getTodosForDay(dateStr)
+
+    // 3.1 设定了具体时间点 (HH:mm) 的所有待办
+    const timedTodos = dayTodos.filter((t) => !!t.dueTime)
+    for (const t of timedTodos) {
+      let sortMinutes = 12 * 60
+      const parts = t.dueTime!.split(':').map(Number)
+      if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+        sortMinutes = parts[0] * 60 + parts[1]
+      }
+      items.push({
+        id: `todo-${t.id}`,
+        type: 'todo',
+        time: t.dueTime!,
+        timeLabel: t.dueTime!,
+        timeSlotLabel: '定时待办',
+        sortMinutes,
+        title: t.title,
+        completed: t.completed,
+        projectColor: getProjectColor(t.projectId),
+        projectName: getProjectName(t.projectId),
+        data: t,
+      })
+    }
+
+    // 3.2 未设定具体时间的紧急高优待办 (P9/P8) 默认作为 18:00 里程碑
+    const untimedHighPriority = dayTodos
+      .filter((t) => !t.dueTime && !t.completed && t.importance && t.importance >= 8)
+      .slice(0, 2)
+    for (const t of untimedHighPriority) {
       items.push({
         id: `todo-${t.id}`,
         type: 'todo',
         time: '18:00',
         timeLabel: '18:00',
-        timeSlotLabel: '重要待办',
+        timeSlotLabel: '重点待办',
         sortMinutes: 18 * 60,
         title: t.title,
         completed: t.completed,

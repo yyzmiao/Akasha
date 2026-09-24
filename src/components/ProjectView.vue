@@ -318,6 +318,13 @@
                   <option value="evening">晚上</option>
                   <option value="anytime">全天</option>
                 </select>
+                <input
+                  v-model="newHabitTime"
+                  type="time"
+                  placeholder="留空按时段"
+                  class="px-2 py-1 text-xs rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 font-mono"
+                  title="具体打卡时间点 (几点几分，可选)"
+                />
                 <button
                   @click="handleCreateProjectHabit"
                   class="ml-auto px-3 py-1 bg-blue-600 text-white rounded font-medium"
@@ -358,6 +365,12 @@
                   </div>
                   <span :class="['font-medium truncate', isHabitDoneToday(h.id) ? 'line-through text-slate-400' : 'text-slate-800 dark:text-slate-200']">
                     {{ h.title }}
+                  </span>
+                  <span
+                    v-if="h.time"
+                    class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 shrink-0 font-semibold"
+                  >
+                    🕒 {{ h.time }}
                   </span>
                   <span class="text-[10px] px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 shrink-0">
                     {{ formatFrequency(h.frequency) }}
@@ -738,6 +751,26 @@
           </div>
 
           <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">具体时间点 (可选，几点几分)</label>
+              <button
+                v-if="editingProjectTodo.dueTime"
+                type="button"
+                @click="editingProjectTodo.dueTime = ''"
+                class="text-[10px] text-slate-400 hover:text-rose-500 cursor-pointer"
+              >
+                清除时间
+              </button>
+            </div>
+            <input
+              v-model="editingProjectTodo.dueTime"
+              type="time"
+              placeholder="留空代表全天"
+              class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500 font-mono"
+            />
+          </div>
+
+          <div>
             <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">备注信息</label>
             <textarea
               v-model="editingProjectTodo.notes"
@@ -844,6 +877,26 @@
               <option value="evening">晚上</option>
               <option value="anytime">全天</option>
             </select>
+          </div>
+
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">具体打卡时间 (可选，几点几分)</label>
+              <button
+                v-if="editingProjectHabit.time"
+                type="button"
+                @click="editingProjectHabit.time = ''"
+                class="text-[10px] text-slate-400 hover:text-rose-500 cursor-pointer"
+              >
+                清除时间
+              </button>
+            </div>
+            <input
+              v-model="editingProjectHabit.time"
+              type="time"
+              placeholder="留空按时间段排期"
+              class="w-full px-2.5 py-1.5 text-xs sm:text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-mono"
+            />
           </div>
 
           <div v-if="editingProjectHabit.frequency === 'weekly'" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1303,6 +1356,7 @@ const showAddHabitInline = ref(false)
 const newHabitTitle = ref('')
 const newHabitFrequency = ref<HabitFrequency>('daily')
 const newHabitSlot = ref<TimeSlot>('anytime')
+const newHabitTime = ref('')
 
 function handleCreateProjectHabit() {
   if (!activeProject.value || !newHabitTitle.value.trim()) return
@@ -1311,12 +1365,14 @@ function handleCreateProjectHabit() {
     title: newHabitTitle.value.trim(),
     frequency: newHabitFrequency.value,
     timeSlot: newHabitSlot.value,
+    time: newHabitTime.value ? newHabitTime.value.trim() : undefined,
     timingType: 'anytime',
     cycleWeeks: newHabitFrequency.value === 'rotating' ? 2 : undefined,
     anchorDate: newHabitFrequency.value === 'rotating' ? todayStr : undefined,
     weekPatterns: newHabitFrequency.value === 'rotating' ? { 1: [1, 2, 3, 4, 5], 2: [1, 2, 3, 4, 5] } : undefined,
   })
   newHabitTitle.value = ''
+  newHabitTime.value = ''
   showAddHabitInline.value = false
 }
 
@@ -1326,6 +1382,7 @@ const editingProjectHabit = ref<{
   projectId: string | null
   frequency: HabitFrequency
   timeSlot: TimeSlot
+  time?: string
   timingType: TimingType
   targetCount: number
   anchorDate?: string
@@ -1354,6 +1411,7 @@ function openEditHabit(habit: Habit) {
     projectId: habit.projectId || null,
     frequency: habit.frequency === 'biweekly' ? 'rotating' : (habit.frequency || 'daily'),
     timeSlot: habit.timeSlot || 'morning',
+    time: habit.time || '',
     timingType: habit.timingType || 'anytime',
     targetCount: habit.targetCount || 1,
     anchorDate: habit.anchorDate || todayStr,
@@ -1424,6 +1482,7 @@ function saveProjectHabitEdit() {
     projectId: editingProjectHabit.value.projectId || null,
     frequency: editingProjectHabit.value.frequency,
     timeSlot: editingProjectHabit.value.timeSlot,
+    time: editingProjectHabit.value.time ? editingProjectHabit.value.time.trim() : undefined,
     timingType: editingProjectHabit.value.timingType,
     targetCount: editingProjectHabit.value.targetCount,
     anchorDate: editingProjectHabit.value.anchorDate,
@@ -1539,6 +1598,7 @@ function saveProjectTodoDetails() {
     const { children, ...cleanItem } = editingProjectTodo.value
     emit('save-todo', {
       ...cleanItem,
+      dueTime: cleanItem.dueTime?.trim() || undefined,
       importance: normalizePriority(cleanItem.importance),
     })
     editingProjectTodo.value = null

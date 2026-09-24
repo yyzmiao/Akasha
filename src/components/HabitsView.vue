@@ -75,6 +75,16 @@
             </select>
           </div>
 
+          <div>
+            <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">具体时间点 (可选)</label>
+            <input
+              v-model="newTime"
+              type="time"
+              placeholder="留空按时段"
+              class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 focus:outline-none focus:border-blue-500 text-slate-800 dark:text-slate-100 font-mono"
+            />
+          </div>
+
           <div v-if="newFrequency === 'weekly'">
             <label class="block text-[11px] text-slate-500 mb-1">触发时机</label>
             <select
@@ -288,6 +298,12 @@
                   {{ h.title }}
                 </span>
                 <span
+                  v-if="h.time"
+                  class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 shrink-0 font-semibold"
+                >
+                  🕒 {{ h.time }}
+                </span>
+                <span
                   v-if="getProject(h.projectId)"
                   class="px-1.5 py-0.2 rounded text-[10px] font-medium shrink-0"
                   :style="{
@@ -377,6 +393,12 @@
                     <div class="flex items-center gap-1.5 flex-wrap">
                       <span :class="['text-xs font-medium', isWeeklyDone(h) ? 'line-through text-slate-400' : 'text-slate-800 dark:text-slate-200']">
                         {{ h.title }}
+                      </span>
+                      <span
+                        v-if="h.time"
+                        class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 shrink-0 font-semibold"
+                      >
+                        🕒 {{ h.time }}
                       </span>
                       <span
                         v-if="getProject(h.projectId)"
@@ -482,6 +504,12 @@
                     <div class="flex items-center gap-1.5 flex-wrap">
                       <span :class="['text-xs font-medium truncate', isDoneToday(h.id) ? 'line-through text-slate-400' : 'text-slate-800 dark:text-slate-200']">
                         {{ h.title }}
+                      </span>
+                      <span
+                        v-if="h.time"
+                        class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 shrink-0 font-semibold"
+                      >
+                        🕒 {{ h.time }}
                       </span>
                       <span
                         v-if="getProject(h.projectId)"
@@ -726,6 +754,26 @@
             </select>
           </div>
 
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">具体打卡时间 (可选，几点几分)</label>
+              <button
+                v-if="editingHabit.time"
+                type="button"
+                @click="editingHabit.time = ''"
+                class="text-[10px] text-slate-400 hover:text-rose-500 cursor-pointer"
+              >
+                清除时间
+              </button>
+            </div>
+            <input
+              v-model="editingHabit.time"
+              type="time"
+              placeholder="留空按时间段排期"
+              class="w-full px-2.5 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-mono"
+            />
+          </div>
+
           <div v-if="editingHabit.frequency === 'weekly'" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">触发时机</label>
@@ -968,6 +1016,7 @@ const newTitle = ref('')
 const newProjectId = ref<string | null>(null)
 const newFrequency = ref<HabitFrequency>('daily')
 const newSlot = ref<TimeSlot>('morning')
+const newTime = ref('')
 const newTiming = ref<TimingType>('anytime')
 const newTargetCount = ref(1)
 
@@ -1033,6 +1082,7 @@ interface EditingHabitState {
   projectId: string | null
   frequency: HabitFrequency
   timeSlot: TimeSlot
+  time?: string
   timingType: TimingType
   targetCount: number
   anchorDate: string
@@ -1069,6 +1119,7 @@ function openEditHabit(habit: Habit) {
     projectId: habit.projectId || null,
     frequency: isRotating ? 'rotating' : habit.frequency,
     timeSlot: habit.timeSlot || 'morning',
+    time: habit.time || '',
     timingType: habit.timingType || 'anytime',
     targetCount: habit.targetCount || 1,
     anchorDate: habit.anchorDate || formatDate(getMonday(new Date())),
@@ -1145,6 +1196,7 @@ function handleSaveEdit() {
     projectId: editingHabit.value.projectId || null,
     frequency: editingHabit.value.frequency,
     timeSlot: editingHabit.value.timeSlot,
+    time: editingHabit.value.time ? editingHabit.value.time.trim() : undefined,
     timingType: editingHabit.value.timingType,
     targetCount: editingHabit.value.targetCount,
     anchorDate: editingHabit.value.anchorDate,
@@ -1248,6 +1300,7 @@ function handleCreate() {
     projectId: newProjectId.value || null,
     frequency: newFrequency.value,
     timeSlot: newSlot.value,
+    time: newTime.value ? newTime.value.trim() : undefined,
     timingType: newTiming.value,
     targetCount: newTargetCount.value,
     anchorDate: newFrequency.value === 'rotating' ? newAnchorDate.value : todayStr.value,
@@ -1256,6 +1309,7 @@ function handleCreate() {
   }
   emit('save-habit', payload)
   newTitle.value = ''
+  newTime.value = ''
   newProjectId.value = null
   showAddForm.value = false
 }
