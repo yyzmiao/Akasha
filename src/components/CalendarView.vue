@@ -798,25 +798,9 @@
             <!-- Timeline Items -->
             <div class="space-y-4 sm:space-y-5">
               <template
-                v-for="(item, idx) in getDayTimelineItems(displayDays[0].dateStr, displayDays[0].isToday)"
+                v-for="item in getDayTimelineItems(displayDays[0].dateStr, displayDays[0].isToday)"
                 :key="item.id"
               >
-                <!-- Soft Gap Indicator (if long interval between events) -->
-                <div
-                  v-if="shouldShowGap(item, getDayTimelineItems(displayDays[0].dateStr, displayDays[0].isToday)[idx + 1])"
-                  class="relative flex items-center py-2 my-1"
-                >
-                  <div class="w-16 sm:w-18 pr-3 sm:pr-4 text-right shrink-0">
-                    <span class="text-[10px] text-slate-300 dark:text-slate-600 font-mono">···</span>
-                  </div>
-                  <div class="relative flex items-center justify-center shrink-0 w-3.5 h-3.5 -ml-[7px] z-10">
-                    <div class="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700"></div>
-                  </div>
-                  <div class="ml-3 sm:ml-4 text-[11px] text-slate-400 dark:text-slate-500 font-medium bg-slate-50 dark:bg-slate-800/40 px-2.5 py-1 rounded-lg border border-slate-100 dark:border-slate-800">
-                    自由专注时段 (间隔约 {{ getGapHours(item, getDayTimelineItems(displayDays[0].dateStr, displayDays[0].isToday)[idx + 1]) }} 小时)
-                  </div>
-                </div>
-
                 <!-- Item Row -->
                 <div class="relative flex items-start group">
                   <!-- Left Timestamp -->
@@ -873,45 +857,42 @@
                       </span>
                     </div>
 
-                    <!-- 2. Schedule Card -->
+                    <!-- 2. Schedule Card (与习惯卡片完全统一的高质感结构) -->
                     <div
                       v-else-if="item.type === 'schedule'"
                       @click="handleOpenSchedule(item.data)"
-                      class="p-3 sm:p-3.5 rounded-xl border border-indigo-200/80 dark:border-indigo-900/70 bg-indigo-50/50 dark:bg-indigo-950/30 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:border-indigo-300 dark:hover:border-indigo-800 transition-all cursor-pointer shadow-2xs group-hover:shadow-xs group/sch"
+                      class="p-3 sm:p-3.5 rounded-xl border border-indigo-200/80 dark:border-indigo-900/70 bg-indigo-50/40 dark:bg-indigo-950/20 hover:bg-indigo-50/80 dark:hover:bg-indigo-950/40 hover:border-indigo-300 dark:hover:border-indigo-800 transition-all cursor-pointer shadow-2xs hover:shadow-xs flex items-center justify-between gap-3 group/sch"
                       title="点击查看或编辑日程"
                     >
-                      <div class="flex items-center justify-between gap-2">
-                        <div class="flex items-center gap-2 min-w-0">
-                          <CalendarDays class="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
-                          <span class="font-semibold text-xs sm:text-sm text-slate-800 dark:text-slate-100 truncate">
-                            {{ item.title }}
-                          </span>
-                          <span
-                            v-if="item.data.recurringType !== 'none'"
-                            class="text-[10px] px-1.5 py-0.2 rounded bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 shrink-0 font-medium"
-                          >
-                            {{ item.data.recurringType === 'weekly' ? '每周' : '每月' }}
-                          </span>
+                      <div class="flex items-center gap-3 min-w-0">
+                        <div class="w-5 h-5 sm:w-5.5 sm:h-5.5 rounded-md bg-indigo-100 dark:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 shadow-2xs border border-indigo-200/80 dark:border-indigo-800">
+                          <CalendarDays class="w-3.5 h-3.5" />
                         </div>
-                        <div class="flex items-center gap-2 shrink-0">
-                          <span v-if="item.projectName" class="text-[11px] text-slate-500 dark:text-slate-400">
-                            {{ item.projectName }}
-                          </span>
-                          <span
-                            v-if="item.projectColor"
-                            class="w-2.5 h-2.5 rounded-full ring-2 ring-white dark:ring-slate-900"
-                            :style="{ backgroundColor: item.projectColor }"
-                          ></span>
-                          <button
-                            type="button"
-                            @click.stop="openEditScheduleModal(item.data)"
-                            class="p-1 rounded-md text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-colors cursor-pointer"
-                            title="编辑日程"
-                          >
-                            <Pencil class="w-3.5 h-3.5" />
-                          </button>
+                        <div class="min-w-0">
+                          <div class="flex items-center gap-1.5">
+                            <span class="font-semibold text-xs sm:text-sm text-slate-800 dark:text-slate-100 truncate group-hover/sch:text-indigo-700 dark:group-hover/sch:text-indigo-300 transition-colors">
+                              {{ item.title }}
+                            </span>
+                            <span
+                              class="text-[10px] px-1.5 py-0.2 rounded font-medium shrink-0 bg-indigo-100/80 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300"
+                            >
+                              {{ item.data.recurringType === 'weekly' ? '每周' : item.data.recurringType === 'monthly' ? '每月' : '固定日程' }}
+                            </span>
+                          </div>
+                          <div v-if="item.projectName" class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1.5">
+                            <span
+                              v-if="item.projectColor"
+                              class="w-1.5 h-1.5 rounded-full shrink-0"
+                              :style="{ backgroundColor: item.projectColor }"
+                            ></span>
+                            <span class="truncate">{{ item.projectName }}</span>
+                          </div>
                         </div>
                       </div>
+
+                      <span class="text-[10px] px-2.5 py-1 rounded-full font-semibold shrink-0 select-none border border-indigo-200 dark:border-indigo-800 bg-indigo-100/70 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300">
+                        日程
+                      </span>
                     </div>
 
                     <!-- 3. Habit Card -->
@@ -978,33 +959,30 @@
                       </button>
                     </div>
 
-                    <!-- 4. Due / High Priority Todo Milestone Card -->
+                    <!-- 4. Due / High Priority Todo Milestone Card (与日程习惯完全统一的结构) -->
                     <div
                       v-else-if="item.type === 'todo'"
                       @click="$emit('open-todo', item.data)"
                       :class="[
-                        'p-3 sm:p-3.5 rounded-xl border transition-all cursor-pointer shadow-2xs group-hover:shadow-xs flex items-center justify-between gap-3',
+                        'p-3 sm:p-3.5 rounded-xl border transition-all cursor-pointer shadow-2xs hover:shadow-xs flex items-center justify-between gap-3 group/todo',
                         item.completed
                           ? 'opacity-60 bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800'
-                          : 'bg-rose-50/50 dark:bg-rose-950/20 border-rose-200 dark:border-rose-900/60 hover:border-rose-300'
+                          : 'bg-rose-50/40 dark:bg-rose-950/20 border-rose-200 dark:border-rose-900/60 hover:border-rose-300'
                       ]"
                     >
-                      <div class="flex items-center gap-2.5 min-w-0">
+                      <div class="flex items-center gap-3 min-w-0">
                         <button
                           type="button"
                           @click.stop="$emit('toggle-todo', item.data.id)"
-                          class="w-5 h-5 rounded-md border border-slate-400 dark:border-slate-600 flex items-center justify-center shrink-0 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-                          :class="item.completed ? 'bg-emerald-600 border-emerald-600 text-white' : ''"
+                          class="w-5 h-5 sm:w-5.5 sm:h-5.5 rounded-md border-1.5 flex items-center justify-center shrink-0 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors shadow-2xs cursor-pointer"
+                          :class="item.completed ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-slate-400 dark:border-slate-600'"
                         >
                           <Check v-if="item.completed" class="w-3.5 h-3.5 stroke-[3]" />
                         </button>
                         <div class="min-w-0">
                           <div class="flex items-center gap-1.5">
-                            <span :class="['font-semibold text-xs sm:text-sm truncate', item.completed ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100']">
+                            <span :class="['font-semibold text-xs sm:text-sm truncate transition-colors', item.completed ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100 group-hover/todo:text-rose-700 dark:group-hover/todo:text-rose-300']">
                               {{ item.title }}
-                            </span>
-                            <span class="text-[10px] px-1.5 py-0.2 rounded bg-rose-100/80 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300 font-semibold shrink-0">
-                              {{ item.timeSlotLabel }}
                             </span>
                             <span
                               v-if="item.data.importance"
@@ -1013,11 +991,24 @@
                               P{{ item.data.importance }}
                             </span>
                           </div>
+                          <div v-if="item.projectName" class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1.5">
+                            <span
+                              v-if="item.projectColor"
+                              class="w-1.5 h-1.5 rounded-full shrink-0"
+                              :style="{ backgroundColor: item.projectColor }"
+                            ></span>
+                            <span class="truncate">{{ item.projectName }}</span>
+                          </div>
                         </div>
                       </div>
 
-                      <span v-if="item.projectName" class="text-[11px] text-slate-400 shrink-0">
-                        {{ item.projectName }}
+                      <span
+                        class="text-[10px] px-2.5 py-1 rounded-full font-semibold shrink-0 select-none border"
+                        :class="item.completed
+                          ? 'border-slate-200 dark:border-slate-700 text-slate-400 bg-slate-100 dark:bg-slate-800'
+                          : 'border-rose-200 dark:border-rose-800 bg-rose-100/70 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300'"
+                      >
+                        {{ item.completed ? '已截止' : '重要待办' }}
                       </span>
                     </div>
                   </div>
@@ -2420,16 +2411,16 @@ function getDayTimelineItems(dateStr: string, isToday: boolean): TimelineItem[] 
     }
   }
 
-  // 3. 高优截止待办 (截止今日或重要程度>=8)
+  // 3. 高优截止待办 (仅限未完成的紧急高优里程碑 P9/P8，避免与上方全天待办重复堆叠)
   if (typeFilters.value.todos) {
-    const dueTodos = getTodosForDay(dateStr).filter((t) => t.dueDate === dateStr || (t.importance && t.importance >= 8))
+    const dueTodos = getTodosForDay(dateStr).filter((t) => !t.completed && t.importance && t.importance >= 8).slice(0, 2)
     for (const t of dueTodos) {
       items.push({
         id: `todo-${t.id}`,
         type: 'todo',
         time: '18:00',
         timeLabel: '18:00',
-        timeSlotLabel: t.dueDate === dateStr ? '截止里程碑' : '高优待办',
+        timeSlotLabel: '重要待办',
         sortMinutes: 18 * 60,
         title: t.title,
         completed: t.completed,
@@ -2471,7 +2462,7 @@ function getDayTimelineItems(dateStr: string, isToday: boolean): TimelineItem[] 
 function hasTimelineEvents(dateStr: string): boolean {
   const hasSched = typeFilters.value.schedules && getSchedulesForDay(dateStr).length > 0
   const hasHabit = typeFilters.value.habits && getHabitsForDay(dateStr).length > 0
-  const hasDueTodo = typeFilters.value.todos && getTodosForDay(dateStr).some((t) => t.dueDate === dateStr || (t.importance && t.importance >= 8))
+  const hasDueTodo = typeFilters.value.todos && getTodosForDay(dateStr).some((t) => !t.completed && t.importance && t.importance >= 8)
   return hasSched || hasHabit || hasDueTodo
 }
 
