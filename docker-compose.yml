@@ -1,6 +1,7 @@
 services:
   akasha:
     build: .
+    image: akasha:latest
     container_name: akasha
     restart: always
     ports:
