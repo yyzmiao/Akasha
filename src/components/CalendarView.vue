@@ -697,82 +697,85 @@
               + 记随笔
             </span>
           </div>
+        </div>
 
-          <!-- 全天待办事项列表 -->
-          <div v-if="typeFilters.todos" class="space-y-2 pt-1">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-1.5">
-                <CheckSquare class="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                <span class="text-xs font-bold text-slate-800 dark:text-slate-200">
-                  全天待办事项 ({{ getTodosForDay(displayDays[0].dateStr).length }})
-                </span>
-                <span class="text-[10px] text-slate-400 font-normal">
-                  (按重要程度 P9-P1 排列)
-                </span>
-              </div>
-              <button
-                @click="$emit('switch-tab', 'todos')"
-                class="text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-0.5 cursor-pointer"
-              >
-                <span>前往待办</span>
-                <ChevronRight class="w-3.5 h-3.5" />
-              </button>
+        <!-- 全天待办事项独立卡片 -->
+        <div
+          v-if="typeFilters.todos"
+          class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 sm:p-5 shadow-2xs space-y-3"
+        >
+          <div class="flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-slate-800">
+            <div class="flex items-center gap-1.5">
+              <CheckSquare class="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              <span class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">
+                全天待办事项 ({{ getTodosForDay(displayDays[0].dateStr).length }})
+              </span>
+              <span class="text-[10px] text-slate-400 font-normal">
+                (按重要程度 P9-P1 排列)
+              </span>
             </div>
-
-            <div v-if="getTodosForDay(displayDays[0].dateStr).length > 0" class="space-y-1.5">
-              <div
-                v-for="todo in getTodosForDay(displayDays[0].dateStr)"
-                :key="todo.id"
-                @click="$emit('open-todo', todo)"
-                :class="[
-                  'flex items-center justify-between p-2.5 rounded-xl border text-xs cursor-pointer active:scale-[0.99] transition-all',
-                  todo.completed
-                    ? 'opacity-60 bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800 text-slate-500'
-                    : todo.importance && todo.importance >= 8
-                    ? 'bg-rose-50/60 text-rose-800 border-rose-200 dark:bg-rose-950/30 dark:text-rose-300 dark:border-rose-900'
-                    : 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-800 hover:border-slate-300'
-                ]"
-              >
-                <div class="flex items-center gap-2.5 min-w-0">
-                  <button
-                    type="button"
-                    @click.stop="$emit('toggle-todo', todo.id)"
-                    class="w-4 h-4 rounded border border-slate-400 dark:border-slate-600 flex items-center justify-center shrink-0 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-                    :class="todo.completed ? 'bg-emerald-600 border-emerald-600 text-white' : ''"
-                  >
-                    <Check v-if="todo.completed" class="w-3 h-3 stroke-[3]" />
-                  </button>
-                  <span :class="['font-medium truncate', todo.completed ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100']">
-                    {{ todo.title }}
-                  </span>
-                  <span
-                    v-if="todo.importance"
-                    :class="['text-[10px] font-mono font-bold px-1.5 py-0.2 rounded border shrink-0', getPriorityStyle(todo.importance).badgeClass]"
-                  >
-                    {{ getPriorityStyle(todo.importance).shortLabel ? `P${todo.importance} · ${getPriorityStyle(todo.importance).shortLabel}` : `P${todo.importance}` }}
-                  </span>
-                </div>
-
-                <div class="flex items-center gap-2 shrink-0">
-                  <span v-if="getProjectName(todo.projectId)" class="text-[11px] text-slate-400">
-                    {{ getProjectName(todo.projectId) }}
-                  </span>
-                  <span
-                    v-if="todo.dueDate === displayDays[0].dateStr"
-                    class="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400 font-bold"
-                  >
-                    今日截止
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div
-              v-else
+            <button
               @click="$emit('switch-tab', 'todos')"
-              class="text-xs text-slate-400 py-3 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-xl hover:border-emerald-300 dark:hover:border-emerald-700/60 hover:text-emerald-600 dark:hover:text-emerald-400 cursor-pointer transition-all"
+              class="text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-0.5 cursor-pointer"
             >
-              本日暂无待办事项，点击前往待办管理
+              <span>前往待办</span>
+              <ChevronRight class="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <div v-if="getTodosForDay(displayDays[0].dateStr).length > 0" class="space-y-1.5">
+            <div
+              v-for="todo in getTodosForDay(displayDays[0].dateStr)"
+              :key="todo.id"
+              @click="$emit('open-todo', todo)"
+              :class="[
+                'flex items-center justify-between p-2.5 rounded-xl border text-xs cursor-pointer active:scale-[0.99] transition-all',
+                todo.completed
+                  ? 'opacity-60 bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800 text-slate-500'
+                  : todo.importance && todo.importance >= 8
+                  ? 'bg-rose-50/60 text-rose-800 border-rose-200 dark:bg-rose-950/30 dark:text-rose-300 dark:border-rose-900'
+                  : 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-800 hover:border-slate-300'
+              ]"
+            >
+              <div class="flex items-center gap-2.5 min-w-0">
+                <button
+                  type="button"
+                  @click.stop="$emit('toggle-todo', todo.id)"
+                  class="w-4 h-4 rounded border border-slate-400 dark:border-slate-600 flex items-center justify-center shrink-0 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                  :class="todo.completed ? 'bg-emerald-600 border-emerald-600 text-white' : ''"
+                >
+                  <Check v-if="todo.completed" class="w-3 h-3 stroke-[3]" />
+                </button>
+                <span :class="['font-medium truncate', todo.completed ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100']">
+                  {{ todo.title }}
+                </span>
+                <span
+                  v-if="todo.importance"
+                  :class="['text-[10px] font-mono font-bold px-1.5 py-0.2 rounded border shrink-0', getPriorityStyle(todo.importance).badgeClass]"
+                >
+                  {{ getPriorityStyle(todo.importance).shortLabel ? `P${todo.importance} · ${getPriorityStyle(todo.importance).shortLabel}` : `P${todo.importance}` }}
+                </span>
+              </div>
+
+              <div class="flex items-center gap-2 shrink-0">
+                <span v-if="getProjectName(todo.projectId)" class="text-[11px] text-slate-400">
+                  {{ getProjectName(todo.projectId) }}
+                </span>
+                <span
+                  v-if="todo.dueDate === displayDays[0].dateStr"
+                  class="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400 font-bold"
+                >
+                  今日截止
+                </span>
+              </div>
             </div>
+          </div>
+          <div
+            v-else
+            @click="$emit('switch-tab', 'todos')"
+            class="text-xs text-slate-400 py-3.5 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-xl hover:border-emerald-300 dark:hover:border-emerald-700/60 hover:text-emerald-600 dark:hover:text-emerald-400 cursor-pointer transition-all"
+          >
+            本日暂无待办事项，点击前往待办管理
           </div>
         </div>
 
@@ -1276,8 +1279,16 @@
 
         <div class="flex items-center gap-1.5">
           <button
+            @click="openCreateScheduleModal(selectedMobileDate)"
+            class="flex items-center gap-1 px-2.5 py-1 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 text-[11px] font-medium active:scale-95 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors"
+          >
+            <CalendarDays class="w-3 h-3" />
+            <span>加日程</span>
+          </button>
+
+          <button
             @click="quickAddTodo(selectedMobileDate)"
-            class="flex items-center gap-1 px-2.5 py-1 rounded-md bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 text-[11px] font-medium active:scale-95"
+            class="flex items-center gap-1 px-2.5 py-1 rounded-md bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 text-[11px] font-medium active:scale-95 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors"
           >
             <Plus class="w-3 h-3" />
             <span>加待办</span>
@@ -1285,7 +1296,7 @@
 
           <button
             @click="$emit('open-journal', selectedMobileDate)"
-            class="flex items-center gap-1 px-2.5 py-1 rounded-md bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 text-[11px] font-medium active:scale-95"
+            class="flex items-center gap-1 px-2.5 py-1 rounded-md bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 text-[11px] font-medium active:scale-95 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors"
           >
             <BookOpen class="w-3 h-3" />
             <span>{{ hasJournalOnDate(selectedMobileDate) ? '读随笔' : '写随笔' }}</span>
@@ -1485,9 +1496,9 @@
         <!-- Modal Header -->
         <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
           <div class="flex items-center gap-2">
-            <CalendarDays class="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            <CalendarDays class="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
             <h3 class="text-base font-bold text-slate-900 dark:text-slate-100">
-              编辑日程
+              {{ scheduleEditId ? '编辑日程' : '新建日程' }}
             </h3>
           </div>
           <button
@@ -1508,9 +1519,21 @@
             <input
               v-model="scheduleFormTitle"
               type="text"
-              placeholder="例如：周一团队例会、发薪日、季度总结..."
-              class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              placeholder="例如：团队周会、客户面谈、重要里程碑..."
+              class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
               @keydown.enter="handleSaveScheduleSubmit"
+            />
+          </div>
+
+          <!-- Date Picker -->
+          <div class="space-y-1">
+            <label class="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              日程日期 <span class="text-rose-500">*</span>
+            </label>
+            <input
+              v-model="scheduleFormDate"
+              type="date"
+              class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
             />
           </div>
 
@@ -1521,7 +1544,7 @@
             </label>
             <select
               v-model="scheduleFormProjectId"
-              class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
+              class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
             >
               <option :value="null">无归属项目 (公共日常)</option>
               <option
@@ -1532,105 +1555,6 @@
                 {{ p.title }}
               </option>
             </select>
-          </div>
-
-          <!-- Recurring Type -->
-          <div class="space-y-1.5">
-            <label class="text-xs font-semibold text-slate-700 dark:text-slate-300">
-              重复方式
-            </label>
-            <div class="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                @click="scheduleFormRecurringType = 'weekly'"
-                :class="[
-                  'py-2 px-1 text-center rounded-xl border text-xs font-medium transition-all cursor-pointer',
-                  scheduleFormRecurringType === 'weekly'
-                    ? 'bg-indigo-50 dark:bg-indigo-950/60 border-indigo-500 text-indigo-700 dark:text-indigo-300 font-bold'
-                    : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
-                ]"
-              >
-                每周规律
-              </button>
-
-              <button
-                type="button"
-                @click="scheduleFormRecurringType = 'none'"
-                :class="[
-                  'py-2 px-1 text-center rounded-xl border text-xs font-medium transition-all cursor-pointer',
-                  scheduleFormRecurringType === 'none'
-                    ? 'bg-teal-50 dark:bg-teal-950/60 border-teal-500 text-teal-700 dark:text-teal-300 font-bold'
-                    : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
-                ]"
-              >
-                单次特定
-              </button>
-
-              <button
-                type="button"
-                @click="scheduleFormRecurringType = 'monthly'"
-                :class="[
-                  'py-2 px-1 text-center rounded-xl border text-xs font-medium transition-all cursor-pointer',
-                  scheduleFormRecurringType === 'monthly'
-                    ? 'bg-amber-50 dark:bg-amber-950/60 border-amber-500 text-amber-700 dark:text-amber-300 font-bold'
-                    : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
-                ]"
-              >
-                每月固定
-              </button>
-            </div>
-          </div>
-
-          <!-- Dynamic Field: Weekly Day Picker -->
-          <div v-if="scheduleFormRecurringType === 'weekly'" class="space-y-1.5">
-            <label class="text-xs font-semibold text-slate-700 dark:text-slate-300">
-              触发星期
-            </label>
-            <div class="grid grid-cols-7 gap-1">
-              <button
-                v-for="opt in scheduleWeekdayOptions"
-                :key="opt.value"
-                type="button"
-                @click="scheduleFormDayOfWeek = opt.value"
-                :class="[
-                  'py-1.5 text-center rounded-lg border text-xs font-medium transition-all cursor-pointer',
-                  scheduleFormDayOfWeek === opt.value
-                    ? 'bg-indigo-600 border-indigo-600 text-white font-bold'
-                    : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
-                ]"
-              >
-                {{ opt.label }}
-              </button>
-            </div>
-          </div>
-
-          <!-- Dynamic Field: Once Specific Date Picker -->
-          <div v-else-if="scheduleFormRecurringType === 'none'" class="space-y-1">
-            <label class="text-xs font-semibold text-slate-700 dark:text-slate-300">
-              发生日期
-            </label>
-            <input
-              v-model="scheduleFormDate"
-              type="date"
-              class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-            />
-          </div>
-
-          <!-- Dynamic Field: Monthly Day Picker -->
-          <div v-else-if="scheduleFormRecurringType === 'monthly'" class="space-y-1">
-            <label class="text-xs font-semibold text-slate-700 dark:text-slate-300">
-              每月几号
-            </label>
-            <div class="flex items-center gap-2">
-              <input
-                v-model.number="scheduleFormDayOfMonth"
-                type="number"
-                min="1"
-                max="31"
-                class="w-24 px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs sm:text-sm text-center focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-              />
-              <span class="text-xs text-slate-500">日触发</span>
-            </div>
           </div>
 
           <!-- Time Picker -->
@@ -2187,14 +2111,22 @@ const scheduleWeekdayOptions = [
   { value: 0, label: '周日' },
 ]
 
+function openCreateScheduleModal(dateStr?: string) {
+  scheduleEditId.value = null
+  scheduleFormTitle.value = ''
+  scheduleFormProjectId.value = null
+  scheduleFormRecurringType.value = 'none'
+  scheduleFormDate.value = dateStr || formatDate(new Date())
+  scheduleFormTime.value = ''
+  showScheduleEditModal.value = true
+}
+
 function openEditScheduleModal(s: ScheduleItem) {
   scheduleEditId.value = s.id
   scheduleFormTitle.value = s.title
   scheduleFormProjectId.value = s.projectId || null
-  scheduleFormRecurringType.value = s.recurringType || 'none'
+  scheduleFormRecurringType.value = 'none'
   scheduleFormDate.value = s.date || formatDate(new Date())
-  scheduleFormDayOfWeek.value = s.recurringDayOfWeek !== undefined ? s.recurringDayOfWeek : 1
-  scheduleFormDayOfMonth.value = s.recurringDayOfMonth !== undefined ? s.recurringDayOfMonth : 1
   scheduleFormTime.value = s.time || ''
   showScheduleEditModal.value = true
 }
@@ -2209,27 +2141,19 @@ function handleSaveScheduleSubmit() {
     alert('请输入日程名称')
     return
   }
+  if (!scheduleFormDate.value) {
+    alert('请选择日程日期')
+    return
+  }
   const payload: Partial<ScheduleItem> = {
     title: scheduleFormTitle.value.trim(),
     projectId: scheduleFormProjectId.value,
-    recurringType: scheduleFormRecurringType.value,
+    recurringType: 'none',
+    date: scheduleFormDate.value,
     time: scheduleFormTime.value.trim() || undefined,
   }
   if (scheduleEditId.value) {
     payload.id = scheduleEditId.value
-  }
-  if (scheduleFormRecurringType.value === 'none') {
-    payload.date = scheduleFormDate.value
-    payload.recurringDayOfWeek = undefined
-    payload.recurringDayOfMonth = undefined
-  } else if (scheduleFormRecurringType.value === 'weekly') {
-    payload.date = undefined
-    payload.recurringDayOfWeek = scheduleFormDayOfWeek.value
-    payload.recurringDayOfMonth = undefined
-  } else if (scheduleFormRecurringType.value === 'monthly') {
-    payload.date = undefined
-    payload.recurringDayOfWeek = undefined
-    payload.recurringDayOfMonth = scheduleFormDayOfMonth.value
   }
 
   emit('save-schedule', payload)

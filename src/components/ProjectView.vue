@@ -30,6 +30,51 @@
       </div>
     </div>
 
+    <!-- 领域标签栏（可点击筛选、可拖动换排序） -->
+    <div v-if="areas.length > 0" class="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800/80 p-1.5 rounded-xl border border-slate-200/80 dark:border-slate-700/80 overflow-x-auto no-scrollbar select-none">
+      <button
+        @click="selectedAreaId = 'all'"
+        :class="[
+          'px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all shrink-0 flex items-center gap-1.5 cursor-pointer',
+          selectedAreaId === 'all'
+            ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-300 shadow-2xs font-semibold'
+            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+        ]"
+      >
+        <span>全部领域</span>
+        <span class="text-[10px] px-1.5 py-0.2 rounded-full font-mono" :class="selectedAreaId === 'all' ? 'bg-blue-50 dark:bg-blue-900/60 text-blue-600 dark:text-blue-300' : 'bg-slate-200/60 dark:bg-slate-800 text-slate-500'">
+          {{ projects.length }}
+        </span>
+      </button>
+
+      <div
+        v-for="(area, index) in sortedAreas"
+        :key="area.id"
+        draggable="true"
+        @dragstart="handleAreaTabDragStart($event, index)"
+        @dragover.prevent="handleAreaTabDragOver($event, index)"
+        @dragleave="handleAreaTabDragLeave($event, index)"
+        @drop="handleAreaTabDrop($event, index)"
+        @dragend="handleAreaTabDragEnd"
+        :class="[
+          'px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all shrink-0 flex items-center gap-1.5 cursor-grab active:cursor-grabbing border border-transparent',
+          selectedAreaId === area.id
+            ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-300 shadow-2xs font-semibold'
+            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200',
+          draggedTabAreaIndex === index ? 'opacity-40 scale-95 border-dashed border-blue-400' : '',
+          dragOverTabAreaIndex === index && draggedTabAreaIndex !== index ? 'ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-950/40' : ''
+        ]"
+        @click="selectedAreaId = area.id"
+        :title="`拖动此标签可调整领域顺序 (当前第 ${index + 1} 位)`"
+      >
+        <GripVertical class="w-3 h-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 shrink-0" />
+        <span>{{ area.title }}</span>
+        <span class="text-[10px] px-1.5 py-0.2 rounded-full font-mono" :class="selectedAreaId === area.id ? 'bg-blue-50 dark:bg-blue-900/60 text-blue-600 dark:text-blue-300' : 'bg-slate-200/60 dark:bg-slate-800 text-slate-500'">
+          {{ getProjectsByArea(area.id).length }}
+        </span>
+      </div>
+    </div>
+
     <div v-if="areas.length === 0" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-8 sm:p-12 text-center space-y-3 shadow-sm">
       <div class="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center mx-auto">
         <FolderPlus class="w-6 h-6" />
@@ -51,17 +96,50 @@
 
     <div v-else class="space-y-4 sm:space-y-6">
       <div
-        v-for="area in sortedAreas"
+        v-for="(area, index) in displayAreas"
         :key="area.id"
-        class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 sm:p-5 space-y-3 sm:space-y-4 shadow-sm"
+        draggable="true"
+        @dragstart="handleAreaCardDragStart($event, index)"
+        @dragover.prevent="handleAreaCardDragOver($event, index)"
+        @dragleave="handleAreaCardDragLeave($event, index)"
+        @drop="handleAreaCardDrop($event, index)"
+        @dragend="handleAreaCardDragEnd"
+        :class="[
+          'bg-white dark:bg-slate-900 border rounded-xl p-3.5 sm:p-5 space-y-3 sm:space-y-4 shadow-sm transition-all',
+          draggedCardAreaIndex === index ? 'opacity-40 border-dashed border-blue-400' : 'border-slate-200 dark:border-slate-800',
+          dragOverCardAreaIndex === index && draggedCardAreaIndex !== index ? 'ring-2 ring-blue-500 border-blue-500 bg-blue-50/20 dark:bg-blue-950/20' : ''
+        ]"
       >
         <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
           <div class="flex items-center gap-2">
+            <div
+              class="cursor-grab active:cursor-grabbing p-1 -ml-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded"
+              title="按住拖动调整领域次序"
+            >
+              <GripVertical class="w-4 h-4" />
+            </div>
             <span class="text-sm font-bold text-slate-800 dark:text-slate-100">{{ area.title }}</span>
             <span class="text-xs text-slate-400">({{ getProjectsByArea(area.id).length }})</span>
           </div>
 
           <div class="flex items-center gap-1">
+            <!-- 移动顺序按钮 (方便触屏微调) -->
+            <button
+              v-if="index > 0"
+              @click.stop="moveArea(index, index - 1)"
+              class="p-1 rounded text-slate-400 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              title="上移领域"
+            >
+              <ArrowUp class="w-3.5 h-3.5" />
+            </button>
+            <button
+              v-if="index < displayAreas.length - 1"
+              @click.stop="moveArea(index, index + 1)"
+              class="p-1 rounded text-slate-400 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              title="下移领域"
+            >
+              <ArrowDown class="w-3.5 h-3.5" />
+            </button>
             <button
               @click="openNewProjectModal(area.id)"
               class="p-1 rounded text-slate-400 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
@@ -970,6 +1048,9 @@ import {
   CalendarOff,
   CheckSquare,
   Check,
+  GripVertical,
+  ArrowUp,
+  ArrowDown,
 } from 'lucide-vue-next'
 import TodoTreeItem from '@/components/TodoTreeItem.vue'
 import type {
@@ -1009,6 +1090,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'save-area', area: Partial<Area>): void
   (e: 'delete-area', id: string): void
+  (e: 'reorder-areas', areas: Area[]): void
   (e: 'save-project', project: Partial<Project>): void
   (e: 'delete-project', id: string): void
   (e: 'save-schedule', schedule: Partial<ScheduleItem>): void
@@ -1023,9 +1105,100 @@ const emit = defineEmits<{
 
 const todayStr = formatDate(new Date())
 
+const selectedAreaId = ref<string>('all')
+
 const sortedAreas = computed(() => {
   return [...props.areas].sort((a, b) => a.order - b.order)
 })
+
+const displayAreas = computed(() => {
+  if (selectedAreaId.value === 'all') return sortedAreas.value
+  return sortedAreas.value.filter((a) => a.id === selectedAreaId.value)
+})
+
+// Drag & drop state for Area Tabs and Area Cards
+const draggedTabAreaIndex = ref<number | null>(null)
+const dragOverTabAreaIndex = ref<number | null>(null)
+const draggedCardAreaIndex = ref<number | null>(null)
+const dragOverCardAreaIndex = ref<number | null>(null)
+
+function moveArea(fromIndex: number, toIndex: number) {
+  if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0) return
+  if (fromIndex >= sortedAreas.value.length || toIndex >= sortedAreas.value.length) return
+
+  const list = [...sortedAreas.value]
+  const [moved] = list.splice(fromIndex, 1)
+  list.splice(toIndex, 0, moved)
+
+  const updated = list.map((a, idx) => ({
+    ...a,
+    order: idx,
+  }))
+
+  emit('reorder-areas', updated)
+}
+
+function handleAreaTabDragStart(e: DragEvent, index: number) {
+  draggedTabAreaIndex.value = index
+  if (e.dataTransfer) {
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', String(index))
+  }
+}
+
+function handleAreaTabDragOver(e: DragEvent, index: number) {
+  if (draggedTabAreaIndex.value === null) return
+  dragOverTabAreaIndex.value = index
+}
+
+function handleAreaTabDragLeave(e: DragEvent, index: number) {
+  if (dragOverTabAreaIndex.value === index) {
+    dragOverTabAreaIndex.value = null
+  }
+}
+
+function handleAreaTabDrop(e: DragEvent, toIndex: number) {
+  if (draggedTabAreaIndex.value !== null) {
+    moveArea(draggedTabAreaIndex.value, toIndex)
+  }
+  handleAreaTabDragEnd()
+}
+
+function handleAreaTabDragEnd() {
+  draggedTabAreaIndex.value = null
+  dragOverTabAreaIndex.value = null
+}
+
+function handleAreaCardDragStart(e: DragEvent, index: number) {
+  draggedCardAreaIndex.value = index
+  if (e.dataTransfer) {
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', String(index))
+  }
+}
+
+function handleAreaCardDragOver(e: DragEvent, index: number) {
+  if (draggedCardAreaIndex.value === null) return
+  dragOverCardAreaIndex.value = index
+}
+
+function handleAreaCardDragLeave(e: DragEvent, index: number) {
+  if (dragOverCardAreaIndex.value === index) {
+    dragOverCardAreaIndex.value = null
+  }
+}
+
+function handleAreaCardDrop(e: DragEvent, toIndex: number) {
+  if (draggedCardAreaIndex.value !== null) {
+    moveArea(draggedCardAreaIndex.value, toIndex)
+  }
+  handleAreaCardDragEnd()
+}
+
+function handleAreaCardDragEnd() {
+  draggedCardAreaIndex.value = null
+  dragOverCardAreaIndex.value = null
+}
 
 function getProjectsByArea(areaId: string): Project[] {
   return props.projects.filter((p) => p.areaId === areaId).sort((a, b) => a.order - b.order)

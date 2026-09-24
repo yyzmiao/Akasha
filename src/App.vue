@@ -40,6 +40,7 @@
         :target-project-id="targetProjectId"
         @save-area="handleSaveArea"
         @delete-area="handleDeleteArea"
+        @reorder-areas="handleReorderAreas"
         @save-project="handleSaveProject"
         @delete-project="handleDeleteProject"
         @save-schedule="handleSaveSchedule"
@@ -370,6 +371,16 @@ async function handleSaveArea(areaData: Partial<Area>) {
     }
     await db.areas.add(newArea)
     enqueueChange('area', newArea.id, newArea)
+  }
+  areas.value = await db.areas.toArray()
+}
+
+async function handleReorderAreas(reorderedAreas: Area[]) {
+  const now = Date.now()
+  for (const a of reorderedAreas) {
+    await db.areas.update(a.id, { order: a.order, updatedAt: now })
+    const saved = await db.areas.get(a.id)
+    if (saved) enqueueChange('area', saved.id, saved)
   }
   areas.value = await db.areas.toArray()
 }
