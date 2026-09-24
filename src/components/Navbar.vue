@@ -1,9 +1,12 @@
 <template>
   <div>
-    <!-- Top Header (智能伸缩顶栏：上滑自动收回，下滑又弹出保留) -->
+    <!-- 占位占高，防止 fixed 顶栏脱离文档流导致下方页面内容向上跳动 -->
+    <div class="h-[53px] sm:h-[57px] shrink-0" aria-hidden="true"></div>
+
+    <!-- Top Header (fixed 吸附屏幕顶端，实现任意滚动位置均可平滑弹出与收回) -->
     <header
       :class="[
-        'sticky top-0 z-40 w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-3.5 sm:px-8 py-2.5 transition-all duration-300 ease-in-out',
+        'fixed top-0 inset-x-0 z-40 w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-3.5 sm:px-8 py-2.5 transition-all duration-300 ease-in-out',
         isVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0 pointer-events-none',
         isScrolled ? 'shadow-md dark:shadow-slate-950/40' : 'shadow-none'
       ]"
@@ -292,33 +295,51 @@ const emit = defineEmits<{
 const isVisible = ref(true)
 const isScrolled = ref(false)
 let lastScrollY = 0
-let ticking = false
+let accumulatedDelta = 0
+let lastDirection = 0
 
 function handleScroll() {
-  if (!ticking) {
-    window.requestAnimationFrame(() => {
-      const currentScrollY = window.scrollY || window.pageYOffset || 0
-      const deltaY = currentScrollY - lastScrollY
+  const currentScrollY = window.scrollY || window.pageYOffset || 0
+  const deltaY = currentScrollY - lastScrollY
 
-      isScrolled.value = currentScrollY > 10
+  // 靠近页面顶部（<=50px）：无论何时均稳妥保持显示
+  if (currentScrollY <= 50) {
+    isVisible.value = true
+    isScrolled.value = false
+    accumulatedDelta = 0
+    lastScrollY = Math.max(0, currentScrollY)
+    return
+  }
 
-      // 靠近页面顶部（<=60px）：无论何时均始终保留显示
-      if (currentScrollY <= 60) {
-        isVisible.value = true
-      }
-      // 页面向下滚动（浏览更多内容）：顶栏平滑向上收起收回
-      else if (deltaY > 6 && currentScrollY > 80) {
-        isVisible.value = false
-      }
-      // 页面向上回滚（手指向下滑动/回看）：顶栏立刻向下滑出弹出并保留
-      else if (deltaY < -6) {
-        isVisible.value = true
-      }
+  isScrolled.value = currentScrollY > 10
 
-      lastScrollY = Math.max(0, currentScrollY)
-      ticking = false
-    })
-    ticking = true
+  const direction = deltaY > 0 ? 1 : deltaY < 0 ? -1 : 0
+
+  if (direction !== 0) {
+    if (direction === lastDirection) {
+      accumulatedDelta += deltaY
+    } else {
+      lastDirection = direction
+      accumulatedDelta = deltaY
+    }
+  }
+
+  // 手指向下滑动/页面向上回滚（下滑回看/找导航）：微小回滚（累计达 -4px）立即敏锐弹出并保持显示
+  if (accumulatedDelta < -4) {
+    isVisible.value = true
+  }
+  // 页面持续向下滚动（浏览内容）：累计下滚达 12px 且滚过顶部区域时平滑收起
+  else if (accumulatedDelta > 12 && currentScrollY > 70) {
+    isVisible.value = false
+  }
+
+  lastScrollY = Math.max(0, currentScrollY)
+}
+
+function handleMouseMove(e: MouseEvent) {
+  // 鼠标移动到浏览器最顶端（<=12px）时贴心滑出顶栏
+  if (e.clientY <= 12) {
+    isVisible.value = true
   }
 }
 
@@ -336,9 +357,11 @@ onMounted(() => {
   lastScrollY = window.scrollY || 0
   isScrolled.value = lastScrollY > 10
   window.addEventListener('scroll', handleScroll, { passive: true })
+  window.addEventListener('mousemove', handleMouseMove, { passive: true })
 })
 
 onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll)
+  window.removeEventListener('mousemove', handleMouseMove)
 })
 </script>
