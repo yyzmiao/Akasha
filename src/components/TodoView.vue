@@ -293,7 +293,7 @@ import { ref, computed, watch } from 'vue'
 import { CheckSquare, Plus, PlusCircle, SlidersHorizontal, X, ArrowDownUp } from 'lucide-vue-next'
 import TodoTreeItem from '@/components/TodoTreeItem.vue'
 import type { TodoItem, Project } from '@/types'
-import { buildTodoTree } from '@/utils/tree'
+import { buildTodoTree, calculateLinkedTodoCompletion, getDescendantTodoIds } from '@/utils/tree'
 import { getPriorityStyle, normalizePriority } from '@/utils/priority'
 import confetti from 'canvas-confetti'
 
@@ -431,10 +431,10 @@ function handleToggleComplete(id: string) {
   if (!item) return
   const willBeCompleted = !item.completed
 
-  emit('save-todo', {
-    ...item,
-    completed: willBeCompleted,
-  })
+  const { changedTodos } = calculateLinkedTodoCompletion(props.todos, id, willBeCompleted)
+  if (changedTodos.length > 0) {
+    emit('batch-update', changedTodos)
+  }
 
   if (willBeCompleted) {
     confetti({ particleCount: 20, spread: 35, origin: { y: 0.8 } })
@@ -538,21 +538,14 @@ function handleDeleteFromModal() {
 }
 
 function handleDeleteItem(id: string) {
-  const idsToDelete: string[] = [id]
-  const findChildren = (pid: string) => {
-    props.todos
-      .filter((t) => t.parentId === pid)
-      .forEach((c) => {
-        idsToDelete.push(c.id)
-        findChildren(c.id)
-      })
-  }
-  findChildren(id)
+  const idsToDelete = getDescendantTodoIds(props.todos, id)
+  const childCount = idsToDelete.length - 1
+  const message = childCount > 0
+    ? `确定删除该待办项及其 ${childCount} 个子项吗？`
+    : '确定删除该待办项吗？'
 
-  if (confirm(`确定删除该项及其 ${idsToDelete.length - 1} 个子项吗？`)) {
-    idsToDelete.forEach((delId) => {
-      emit('delete-todo', delId)
-    })
+  if (confirm(message)) {
+    emit('delete-todo', id)
   }
 }
 

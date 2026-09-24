@@ -325,7 +325,7 @@
                     <Pencil class="w-3.5 h-3.5" />
                   </button>
                   <button
-                    @click.stop="$emit('delete-habit', h.id)"
+                    @click.stop="handleDeleteHabitItem(h.id)"
                     class="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 sm:p-1 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-all"
                     title="删除习惯"
                   >
@@ -442,7 +442,7 @@
                 </div>
 
                 <button
-                  @click="$emit('delete-schedule', s.id)"
+                  @click="handleDeleteScheduleItem(s.id)"
                   class="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 sm:p-1 text-slate-400 hover:text-rose-600 transition-opacity"
                 >
                   <Trash2 class="w-3.5 h-3.5" />
@@ -792,7 +792,7 @@
           </div>
 
           <div v-if="editingProjectHabit.frequency === 'daily'">
-            <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">时段归集</label>
+            <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">打卡时间段</label>
             <select
               v-model="editingProjectHabit.timeSlot"
               class="w-full px-2.5 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100"
@@ -1021,7 +1021,7 @@ import type {
   ScheduleRecurringType,
 } from '@/types'
 import { getPriorityStyle, normalizePriority } from '@/utils/priority'
-import { buildTodoTree } from '@/utils/tree'
+import { buildTodoTree, calculateLinkedTodoCompletion, getDescendantTodoIds } from '@/utils/tree'
 import { formatDate } from '@/utils/date'
 import {
   WEEKDAY_ORDER,
@@ -1054,6 +1054,7 @@ const emit = defineEmits<{
   (e: 'toggle-habit', payload: { habitId: string; date: string }): void
   (e: 'save-todo', item: Partial<TodoItem>): void
   (e: 'delete-todo', id: string): void
+  (e: 'batch-update', items: TodoItem[]): void
 }>()
 
 const todayStr = formatDate(new Date())
@@ -1355,8 +1356,12 @@ function handleAddTodoChild(parentId: string) {
 
 function handleToggleTodoComplete(id: string) {
   const item = props.todos.find((t) => t.id === id)
-  if (item) {
-    emit('save-todo', { ...item, completed: !item.completed })
+  if (!item) return
+  const willBeCompleted = !item.completed
+
+  const { changedTodos } = calculateLinkedTodoCompletion(props.todos, id, willBeCompleted)
+  if (changedTodos.length > 0) {
+    emit('batch-update', changedTodos)
   }
 }
 
@@ -1407,8 +1412,26 @@ function saveProjectTodoDetails() {
 }
 
 function handleDeleteTodoItem(id: string) {
-  if (confirm('确定删除该待办项？')) {
+  const idsToDelete = getDescendantTodoIds(props.todos, id)
+  const childCount = idsToDelete.length - 1
+  const message = childCount > 0
+    ? `确定删除该待办项及其 ${childCount} 个子项吗？`
+    : '确定删除该待办项吗？'
+
+  if (confirm(message)) {
     emit('delete-todo', id)
+  }
+}
+
+function handleDeleteHabitItem(id: string) {
+  if (confirm('确定删除该习惯吗？')) {
+    emit('delete-habit', id)
+  }
+}
+
+function handleDeleteScheduleItem(id: string) {
+  if (confirm('确定删除此日程吗？删除后日历中该事项也将同步移除。')) {
+    emit('delete-schedule', id)
   }
 }
 

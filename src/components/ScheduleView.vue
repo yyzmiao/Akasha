@@ -10,14 +10,14 @@
         <div>
           <div class="flex items-center gap-2">
             <h2 class="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">
-              固定日程与时间规约
+              固定日程安排
             </h2>
             <span class="text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono font-medium">
               共 {{ filteredSchedules.length }} 项
             </span>
           </div>
-          <p class="text-xs text-slate-400 mt-0.5">
-            结构化管理单次特定时点、每周固定例会与每月固定规约排期
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            管理单次特定预约、每周固定例会与每月定期事项
           </p>
         </div>
       </div>
@@ -161,31 +161,35 @@
           <div
             v-for="s in weeklySchedules"
             :key="s.id"
+            :id="'schedule-card-' + s.id"
             @click="openEditModal(s)"
-            class="group p-3.5 rounded-xl border border-indigo-100/90 dark:border-indigo-950/70 bg-gradient-to-br from-indigo-50/40 to-white dark:from-indigo-950/20 dark:to-slate-900 hover:border-indigo-300 dark:hover:border-indigo-800 transition-all shadow-2xs hover:shadow-xs flex flex-col justify-between cursor-pointer"
+            :class="[
+              'group p-3.5 rounded-xl border border-indigo-100/90 dark:border-indigo-950/70 bg-gradient-to-br from-indigo-50/40 to-white dark:from-indigo-950/20 dark:to-slate-900 hover:border-indigo-300 dark:hover:border-indigo-800 transition-all shadow-2xs hover:shadow-xs flex flex-col justify-between cursor-pointer',
+              highlightedScheduleId === s.id ? 'ring-2 ring-indigo-500 shadow-md scale-[1.01]' : ''
+            ]"
           >
             <div>
               <!-- Timing & Project Badges -->
               <div class="flex items-center justify-between gap-2 mb-2">
                 <div class="flex items-center gap-1.5 flex-wrap">
-                  <span class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 font-mono">
+                  <span class="text-xs font-bold px-2 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 font-mono">
                     {{ formatWeekday(s.recurringDayOfWeek) }}
                   </span>
-                  <span v-if="s.time" class="text-[11px] font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1 font-mono">
-                    <Clock class="w-3 h-3 text-slate-400" />
+                  <span v-if="s.time" class="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1 font-mono">
+                    <Clock class="w-3.5 h-3.5 text-slate-400" />
                     {{ s.time }}
                   </span>
-                  <span v-else class="text-[11px] text-slate-400">
+                  <span v-else class="text-xs text-slate-500 dark:text-slate-400">
                     全天时段
                   </span>
                 </div>
 
-                <div v-if="getProject(s.projectId)" class="flex items-center gap-1 text-[11px] text-slate-500 shrink-0">
+                <div v-if="getProject(s.projectId)" class="flex items-center gap-1.5 text-xs text-slate-500 shrink-0">
                   <span
                     class="w-2 h-2 rounded-full"
                     :style="{ backgroundColor: getProjectColor(s.projectId) }"
                   ></span>
-                  <span class="truncate max-w-[90px]">{{ getProjectName(s.projectId) }}</span>
+                  <span class="truncate max-w-[100px]">{{ getProjectName(s.projectId) }}</span>
                 </div>
               </div>
 
@@ -218,16 +222,9 @@
         <!-- Empty State -->
         <div
           v-else
-          class="text-center py-6 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl space-y-1.5"
+          class="text-center py-7 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl"
         >
-          <p class="text-xs text-slate-400">暂无每周规律日程，添加您的周期固定例会与事项</p>
-          <button
-            @click="openCreateModal('weekly')"
-            class="text-xs text-indigo-600 dark:text-indigo-400 font-medium hover:underline inline-flex items-center gap-1 cursor-pointer"
-          >
-            <Plus class="w-3.5 h-3.5" />
-            <span>添加每周规律日程</span>
-          </button>
+          <p class="text-sm text-slate-500 dark:text-slate-400">暂无每周规律日程，点击右上角添加周期例会与排期</p>
         </div>
       </section>
 
@@ -271,24 +268,28 @@
           <div
             v-for="s in onceSchedules"
             :key="s.id"
+            :id="'schedule-card-' + s.id"
             @click="openEditModal(s)"
-            class="group p-3.5 rounded-xl border border-teal-100/90 dark:border-teal-950/70 bg-gradient-to-br from-teal-50/40 to-white dark:from-teal-950/20 dark:to-slate-900 hover:border-teal-300 dark:hover:border-teal-800 transition-all shadow-2xs hover:shadow-xs flex flex-col justify-between cursor-pointer"
+            :class="[
+              'group p-3.5 rounded-xl border border-teal-100/90 dark:border-teal-950/70 bg-gradient-to-br from-teal-50/40 to-white dark:from-teal-950/20 dark:to-slate-900 hover:border-teal-300 dark:hover:border-teal-800 transition-all shadow-2xs hover:shadow-xs flex flex-col justify-between cursor-pointer',
+              highlightedScheduleId === s.id ? 'ring-2 ring-teal-500 shadow-md scale-[1.01]' : ''
+            ]"
           >
             <div>
               <!-- Timing & Project Badges -->
               <div class="flex items-center justify-between gap-2 mb-2">
                 <div class="flex items-center gap-1.5 flex-wrap">
-                  <span class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-teal-100 dark:bg-teal-900/60 text-teal-700 dark:text-teal-300 font-mono">
+                  <span class="text-xs font-bold px-2 py-0.5 rounded-md bg-teal-100 dark:bg-teal-900/60 text-teal-700 dark:text-teal-300 font-mono">
                     {{ formatDisplayDateOnly(s.date) }}
                   </span>
-                  <span v-if="s.time" class="text-[11px] font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1 font-mono">
-                    <Clock class="w-3 h-3 text-slate-400" />
+                  <span v-if="s.time" class="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1 font-mono">
+                    <Clock class="w-3.5 h-3.5 text-slate-400" />
                     {{ s.time }}
                   </span>
                   <span
                     v-if="s.date && formatDaysDiff(s.date)"
                     :class="[
-                      'text-[10px] px-1.5 py-0.2 rounded font-medium',
+                      'text-xs px-1.5 py-0.2 rounded font-medium',
                       formatDaysDiff(s.date)?.urgentClass
                     ]"
                   >
@@ -296,12 +297,12 @@
                   </span>
                 </div>
 
-                <div v-if="getProject(s.projectId)" class="flex items-center gap-1 text-[11px] text-slate-500 shrink-0">
+                <div v-if="getProject(s.projectId)" class="flex items-center gap-1.5 text-xs text-slate-500 shrink-0">
                   <span
                     class="w-2 h-2 rounded-full"
                     :style="{ backgroundColor: getProjectColor(s.projectId) }"
                   ></span>
-                  <span class="truncate max-w-[90px]">{{ getProjectName(s.projectId) }}</span>
+                  <span class="truncate max-w-[100px]">{{ getProjectName(s.projectId) }}</span>
                 </div>
               </div>
 
@@ -334,16 +335,9 @@
         <!-- Empty State -->
         <div
           v-else
-          class="text-center py-6 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl space-y-1.5"
+          class="text-center py-7 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl"
         >
-          <p class="text-xs text-slate-400">暂无特定日期的单次日程</p>
-          <button
-            @click="openCreateModal('none')"
-            class="text-xs text-teal-600 dark:text-teal-400 font-medium hover:underline inline-flex items-center gap-1 cursor-pointer"
-          >
-            <Plus class="w-3.5 h-3.5" />
-            <span>添加单次特定日程</span>
-          </button>
+          <p class="text-sm text-slate-500 dark:text-slate-400">暂无特定日期的单次日程，点击右上角添加重要预约或安排</p>
         </div>
       </section>
 
@@ -387,31 +381,35 @@
           <div
             v-for="s in monthlySchedules"
             :key="s.id"
+            :id="'schedule-card-' + s.id"
             @click="openEditModal(s)"
-            class="group p-3.5 rounded-xl border border-amber-100/90 dark:border-amber-950/70 bg-gradient-to-br from-amber-50/40 to-white dark:from-amber-950/20 dark:to-slate-900 hover:border-amber-300 dark:hover:border-amber-800 transition-all shadow-2xs hover:shadow-xs flex flex-col justify-between cursor-pointer"
+            :class="[
+              'group p-3.5 rounded-xl border border-amber-100/90 dark:border-amber-950/70 bg-gradient-to-br from-amber-50/40 to-white dark:from-amber-950/20 dark:to-slate-900 hover:border-amber-300 dark:hover:border-amber-800 transition-all shadow-2xs hover:shadow-xs flex flex-col justify-between cursor-pointer',
+              highlightedScheduleId === s.id ? 'ring-2 ring-amber-500 shadow-md scale-[1.01]' : ''
+            ]"
           >
             <div>
               <!-- Timing & Project Badges -->
               <div class="flex items-center justify-between gap-2 mb-2">
                 <div class="flex items-center gap-1.5 flex-wrap">
-                  <span class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 font-mono">
+                  <span class="text-xs font-bold px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 font-mono">
                     每月 {{ s.recurringDayOfMonth }} 号
                   </span>
-                  <span v-if="s.time" class="text-[11px] font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1 font-mono">
-                    <Clock class="w-3 h-3 text-slate-400" />
+                  <span v-if="s.time" class="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1 font-mono">
+                    <Clock class="w-3.5 h-3.5 text-slate-400" />
                     {{ s.time }}
                   </span>
-                  <span v-else class="text-[11px] text-slate-400">
+                  <span v-else class="text-xs text-slate-500 dark:text-slate-400">
                     全天时段
                   </span>
                 </div>
 
-                <div v-if="getProject(s.projectId)" class="flex items-center gap-1 text-[11px] text-slate-500 shrink-0">
+                <div v-if="getProject(s.projectId)" class="flex items-center gap-1.5 text-xs text-slate-500 shrink-0">
                   <span
                     class="w-2 h-2 rounded-full"
                     :style="{ backgroundColor: getProjectColor(s.projectId) }"
                   ></span>
-                  <span class="truncate max-w-[90px]">{{ getProjectName(s.projectId) }}</span>
+                  <span class="truncate max-w-[100px]">{{ getProjectName(s.projectId) }}</span>
                 </div>
               </div>
 
@@ -444,16 +442,9 @@
         <!-- Empty State -->
         <div
           v-else
-          class="text-center py-6 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl space-y-1.5"
+          class="text-center py-7 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl"
         >
-          <p class="text-xs text-slate-400">暂无每月规律日程</p>
-          <button
-            @click="openCreateModal('monthly')"
-            class="text-xs text-amber-600 dark:text-amber-400 font-medium hover:underline inline-flex items-center gap-1 cursor-pointer"
-          >
-            <Plus class="w-3.5 h-3.5" />
-            <span>添加每月规律日程</span>
-          </button>
+          <p class="text-sm text-slate-500 dark:text-slate-400">暂无每月规律日程，点击右上角添加按月固定循环事项</p>
         </div>
       </section>
     </div>
@@ -520,7 +511,7 @@
           <!-- Recurring Type -->
           <div class="space-y-1.5">
             <label class="text-xs font-semibold text-slate-700 dark:text-slate-300">
-              周期规约类型
+              重复方式
             </label>
             <div class="grid grid-cols-3 gap-2">
               <button
@@ -654,7 +645,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import {
   CalendarDays,
   Plus,
@@ -673,15 +664,56 @@ import { formatDate, parseDate } from '@/utils/date'
 const props = defineProps<{
   schedules: ScheduleItem[]
   projects: Project[]
+  targetScheduleId?: string | null
 }>()
 
 const emit = defineEmits<{
   (e: 'save-schedule', data: Partial<ScheduleItem>): void
   (e: 'delete-schedule', id: string): void
+  (e: 'clear-target-id'): void
 }>()
+
+const highlightedScheduleId = ref<string | null>(null)
 
 const selectedProjectId = ref<string>('all')
 const activeCategory = ref<'all' | 'weekly' | 'none' | 'monthly'>('all')
+
+watch(
+  () => props.targetScheduleId,
+  (id) => {
+    if (!id) return
+    const target = props.schedules.find((s) => s.id === id)
+    if (!target) return
+
+    if (activeCategory.value !== 'all') {
+      const type = target.recurringType || 'none'
+      if (activeCategory.value !== type) {
+        activeCategory.value = 'all'
+      }
+    }
+
+    if (target.projectId && selectedProjectId.value !== 'all' && selectedProjectId.value !== target.projectId) {
+      selectedProjectId.value = target.projectId
+    }
+
+    highlightedScheduleId.value = id
+    emit('clear-target-id')
+
+    nextTick(() => {
+      const el = document.getElementById(`schedule-card-${id}`)
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
+    })
+
+    setTimeout(() => {
+      if (highlightedScheduleId.value === id) {
+        highlightedScheduleId.value = null
+      }
+    }, 2500)
+  },
+  { immediate: true }
+)
 
 const filteredSchedules = computed(() => {
   if (selectedProjectId.value === 'all') {
@@ -814,13 +846,13 @@ const showModal = ref(false)
 const editingId = ref<string | null>(null)
 const formTitle = ref('')
 const formProjectId = ref<string | null>(null)
-const formRecurringType = ref<ScheduleRecurringType>('weekly')
+const formRecurringType = ref<ScheduleRecurringType>('none')
 const formDate = ref(formatDate(new Date()))
 const formDayOfWeek = ref<number>(1)
 const formDayOfMonth = ref<number>(1)
 const formTime = ref('')
 
-function openCreateModal(defaultType: ScheduleRecurringType = 'weekly') {
+function openCreateModal(defaultType: ScheduleRecurringType = 'none') {
   editingId.value = null
   formTitle.value = ''
   formProjectId.value = selectedProjectId.value === 'all' ? null : selectedProjectId.value

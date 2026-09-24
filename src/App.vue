@@ -48,14 +48,17 @@
         @toggle-habit="handleToggleHabitLog"
         @save-todo="handleSaveTodo"
         @delete-todo="handleDeleteTodo"
+        @batch-update="handleBatchUpdateTodos"
       />
 
       <ScheduleView
         v-else-if="activeTab === 'schedules'"
         :schedules="schedules"
         :projects="projects"
+        :target-schedule-id="targetScheduleId"
         @save-schedule="handleSaveSchedule"
         @delete-schedule="handleDeleteSchedule"
+        @clear-target-id="targetScheduleId = null"
       />
 
       <TodoView
@@ -74,10 +77,12 @@
         :habits="habits"
         :habit-logs="habitLogs"
         :projects="projects"
+        :target-habit-id="targetHabitId"
         @toggle-log="handleToggleHabitLog"
         @create-habit="handleSaveHabit"
         @save-habit="handleSaveHabit"
         @delete-habit="handleDeleteHabit"
+        @clear-target-id="targetHabitId = null"
       />
 
       <JournalView
@@ -155,7 +160,8 @@ import type {
   UiScale,
 } from '@/types'
 import { formatDate } from '@/utils/date'
-import { enqueueChange, onRemoteDataChange, syncAll } from '@/sync/syncEngine'
+import { getDescendantTodoIds } from '@/utils/tree'
+import { enqueueChange, onRemoteDataChange, syncAll, applyBackupToCloud, resetSyncOutbox } from '@/sync/syncEngine'
 import { isAuthenticated } from '@/sync/pocketbase'
 
 const THEME_KEY = 'flow_os_theme'
@@ -229,6 +235,8 @@ const activeTab = ref<ActiveTab>('calendar')
 const targetJournalDate = ref<string | null>(null)
 const targetProjectId = ref<string | null>(null)
 const targetTodoId = ref<string | null>(null)
+const targetScheduleId = ref<string | null>(null)
+const targetHabitId = ref<string | null>(null)
 const areas = ref<Area[]>([])
 const projects = ref<Project[]>([])
 const schedules = ref<ScheduleItem[]>([])
@@ -257,6 +265,8 @@ function handleTabChange(tab: ActiveTab) {
   targetTodoId.value = null
   targetProjectId.value = null
   targetJournalDate.value = null
+  targetScheduleId.value = null
+  targetHabitId.value = null
   activeTab.value = tab
   window.scrollTo({ top: 0, behavior: 'instant' })
 }
@@ -271,11 +281,13 @@ function handleSearchSelectTodo(todo: TodoItem) {
   activeTab.value = 'todos'
 }
 
-function handleSearchSelectSchedule(_schedule: ScheduleItem) {
+function handleSearchSelectSchedule(schedule: ScheduleItem) {
+  targetScheduleId.value = schedule.id
   activeTab.value = 'schedules'
 }
 
-function handleSearchSelectHabit(_habit: Habit) {
+function handleSearchSelectHabit(habit: Habit) {
+  targetHabitId.value = habit.id
   activeTab.value = 'habits'
 }
 
@@ -320,11 +332,6 @@ onMounted(async () => {
     applyFontSize(savedFontSize)
   } else {
     applyFontSize('standard')
-  }
-  const BLANK_KEY = 'flow_blank_state_clean_v1'
-  if (!localStorage.getItem(BLANK_KEY)) {
-    await clearAllDatabaseData()
-    localStorage.setItem(BLANK_KEY, 'true')
   }
   await loadAllData()
 
@@ -538,8 +545,11 @@ async function handleToggleTodoComplete(id: string) {
 }
 
 async function handleDeleteTodo(id: string) {
-  await db.todos.delete(id)
-  enqueueChange('todo', id, null, true)
+  const idsToDelete = getDescendantTodoIds(todos.value, id)
+  await db.todos.bulkDelete(idsToDelete)
+  for (const delId of idsToDelete) {
+    enqueueChange('todo', delId, null, true)
+  }
   todos.value = await db.todos.toArray()
 }
 
@@ -558,12 +568,20 @@ function handleOpenTodo(todo: TodoItem) {
   activeTab.value = 'todos'
 }
 
-function handleQuickCreateTodo(dateStr: string) {
-  activeTab.value = 'todos'
+function handleQuickCreateTodo(payload: string | { date: string; title?: string }) {
+  const dateStr = typeof payload === 'string' ? payload : payload.date
+  let title = typeof payload === 'object' && payload.title ? payload.title.trim() : ''
+  if (!title) {
+    const input = prompt(`添加 ${dateStr} 的待办事项：`)
+    if (!input || !input.trim()) return
+    title = input.trim()
+  }
+
   handleSaveTodo({
-    title: `新待办 (${dateStr})`,
+    title,
     dueDate: dateStr,
     startDate: dateStr,
+    importance: 5,
   })
 }
 
@@ -722,40 +740,73 @@ async function handleExportData() {
 
 async function handleImportData(jsonStr: string) {
   try {
-    const data = JSON.parse(jsonStr)
-    if (data.areas) {
-      await db.areas.clear()
-      await db.areas.bulkAdd(data.areas)
+    let data: any
+    try {
+      data = JSON.parse(jsonStr)
+    } catch (_e) {
+      throw new Error('无效的 JSON 格式文件')
     }
-    if (data.projects) {
-      await db.projects.clear()
-      await db.projects.bulkAdd(data.projects)
+
+    if (!data || typeof data !== 'object' || Array.isArray(data)) {
+      throw new Error('备份文件根节点必须为合法数据对象')
     }
-    if (data.schedules) {
-      await db.schedules.clear()
-      await db.schedules.bulkAdd(data.schedules)
+
+    const validCollections = ['areas', 'projects', 'schedules', 'todos', 'habits', 'habitLogs', 'journals']
+    const hasAnyCollection = validCollections.some((key) => key in data)
+    if (!hasAnyCollection) {
+      throw new Error('备份文件中未包含任何可识别的数据集（areas/projects/schedules/todos/habits/habitLogs/journals）')
     }
-    if (data.todos) {
-      await db.todos.clear()
-      await db.todos.bulkAdd(data.todos)
+
+    for (const key of validCollections) {
+      if (data[key] !== undefined && !Array.isArray(data[key])) {
+        throw new Error(`数据集 [${key}] 格式错误，必须为数组`)
+      }
     }
-    if (data.habits) {
-      await db.habits.clear()
-      await db.habits.bulkAdd(data.habits)
+
+    // Atomic transaction across all local tables
+    await db.transaction('rw', [db.areas, db.projects, db.schedules, db.todos, db.habits, db.habitLogs, db.journals], async () => {
+      if (data.areas) {
+        await db.areas.clear()
+        if (data.areas.length > 0) await db.areas.bulkAdd(data.areas)
+      }
+      if (data.projects) {
+        await db.projects.clear()
+        if (data.projects.length > 0) await db.projects.bulkAdd(data.projects)
+      }
+      if (data.schedules) {
+        await db.schedules.clear()
+        if (data.schedules.length > 0) await db.schedules.bulkAdd(data.schedules)
+      }
+      if (data.todos) {
+        await db.todos.clear()
+        if (data.todos.length > 0) await db.todos.bulkAdd(data.todos)
+      }
+      if (data.habits) {
+        await db.habits.clear()
+        if (data.habits.length > 0) await db.habits.bulkAdd(data.habits)
+      }
+      if (data.habitLogs) {
+        await db.habitLogs.clear()
+        if (data.habitLogs.length > 0) await db.habitLogs.bulkAdd(data.habitLogs)
+      }
+      if (data.journals) {
+        await db.journals.clear()
+        if (data.journals.length > 0) await db.journals.bulkAdd(data.journals)
+      }
+    })
+
+    // Cloud sync handling: apply to cloud or reset queue
+    if (isAuthenticated.value) {
+      await applyBackupToCloud(data)
+    } else {
+      resetSyncOutbox()
     }
-    if (data.habitLogs) {
-      await db.habitLogs.clear()
-      await db.habitLogs.bulkAdd(data.habitLogs)
-    }
-    if (data.journals) {
-      await db.journals.clear()
-      await db.journals.bulkAdd(data.journals)
-    }
+
     await loadAllData()
-    alert('数据导入成功！')
+    alert('数据导入成功！' + (isAuthenticated.value ? '已同步覆盖至云端。' : ''))
     isSettingsOpen.value = false
-  } catch (err) {
-    alert('导入失败，请检查文件格式：' + err)
+  } catch (err: any) {
+    alert('导入失败，已有数据未受任何修改：\n' + (err.message || err))
   }
 }
 

@@ -63,7 +63,7 @@
           </div>
 
           <div v-if="newFrequency === 'daily'">
-            <label class="block text-[11px] text-slate-500 mb-1">时段归集</label>
+            <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">打卡时间段</label>
             <select
               v-model="newSlot"
               class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 focus:outline-none focus:border-blue-500 text-slate-800 dark:text-slate-100"
@@ -265,12 +265,14 @@
             <div
               v-for="h in getSlotHabits(slot.key)"
               :key="h.id"
+              :id="'habit-card-' + h.id"
               @click="toggleHabitLog(h.id, todayStr)"
               :class="[
                 'group flex items-center justify-between p-2.5 rounded-lg border transition-all cursor-pointer select-none',
                 isDoneToday(h.id)
                   ? 'bg-emerald-50/60 border-emerald-200 dark:bg-emerald-950/20 dark:border-emerald-800'
-                  : 'border-slate-200 dark:border-slate-800 hover:border-slate-300'
+                  : 'border-slate-200 dark:border-slate-800 hover:border-slate-300',
+                highlightedHabitId === h.id ? 'ring-2 ring-emerald-500 shadow-md scale-[1.01]' : ''
               ]"
             >
               <div class="flex items-center gap-2.5">
@@ -352,12 +354,14 @@
               <div
                 v-for="h in weeklyHabits"
                 :key="h.id"
+                :id="'habit-card-' + h.id"
                 @click="toggleWeekly(h)"
                 :class="[
                   'group flex items-center justify-between p-2.5 rounded-lg border transition-all cursor-pointer select-none',
                   isWeeklyDone(h)
                     ? 'bg-emerald-50/60 border-emerald-200 dark:bg-emerald-950/20 dark:border-emerald-800'
-                    : 'border-slate-200 dark:border-slate-800 hover:border-slate-300'
+                    : 'border-slate-200 dark:border-slate-800 hover:border-slate-300',
+                  highlightedHabitId === h.id ? 'ring-2 ring-emerald-500 shadow-md scale-[1.01]' : ''
                 ]"
               >
                 <div class="flex items-center gap-2.5">
@@ -445,6 +449,7 @@
               <div
                 v-for="h in rotatingHabits"
                 :key="h.id"
+                :id="'habit-card-' + h.id"
                 @click="toggleRotating(h)"
                 :class="[
                   'group flex items-center justify-between p-2.5 rounded-lg border transition-all cursor-pointer select-none',
@@ -452,7 +457,8 @@
                     ? 'bg-emerald-50/60 border-emerald-200 dark:bg-emerald-950/20 dark:border-emerald-800'
                     : isHabitScheduledForDay(h, todayStr)
                     ? 'border-blue-200 dark:border-blue-800/80 bg-blue-50/20 dark:bg-blue-950/10 hover:border-blue-300'
-                    : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 hover:border-slate-300'
+                    : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 hover:border-slate-300',
+                  highlightedHabitId === h.id ? 'ring-2 ring-emerald-500 shadow-md scale-[1.01]' : ''
                 ]"
               >
                 <div class="flex items-center gap-2.5 min-w-0">
@@ -567,12 +573,14 @@
               <div
                 v-for="h in monthlyHabits"
                 :key="h.id"
+                :id="'habit-card-' + h.id"
                 @click="toggleMonthly(h.id)"
                 :class="[
                   'group flex items-center justify-between p-2.5 rounded-lg border transition-all cursor-pointer select-none',
                   isMonthlyDone(h.id)
                     ? 'bg-emerald-50/60 border-emerald-200 dark:bg-emerald-950/20 dark:border-emerald-800'
-                    : 'border-slate-200 dark:border-slate-800 hover:border-slate-300'
+                    : 'border-slate-200 dark:border-slate-800 hover:border-slate-300',
+                  highlightedHabitId === h.id ? 'ring-2 ring-emerald-500 shadow-md scale-[1.01]' : ''
                 ]"
               >
                 <div class="flex items-center gap-2.5">
@@ -706,7 +714,7 @@
           </div>
 
           <div v-if="editingHabit.frequency === 'daily'">
-            <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">时段归集</label>
+            <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">打卡时间段</label>
             <select
               v-model="editingHabit.timeSlot"
               class="w-full px-2.5 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100"
@@ -892,7 +900,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import { Sparkles, Plus, X, Check, Trash2, Pencil, Calendar, CalendarOff } from 'lucide-vue-next'
 import type { Habit, HabitLog, HabitFrequency, TimeSlot, TimingType, Project } from '@/types'
 import { formatDate, getWeekKey, getMonday } from '@/utils/date'
@@ -913,6 +921,7 @@ const props = defineProps<{
   habits: Habit[]
   habitLogs: HabitLog[]
   projects?: Project[]
+  targetHabitId?: string | null
 }>()
 
 const emit = defineEmits<{
@@ -920,7 +929,36 @@ const emit = defineEmits<{
   (e: 'create-habit', habit: Partial<Habit>): void
   (e: 'save-habit', habit: Partial<Habit>): void
   (e: 'delete-habit', id: string): void
+  (e: 'clear-target-id'): void
 }>()
+
+const highlightedHabitId = ref<string | null>(null)
+
+watch(
+  () => props.targetHabitId,
+  (id) => {
+    if (!id) return
+    const target = props.habits.find((h) => h.id === id)
+    if (!target) return
+
+    highlightedHabitId.value = id
+    emit('clear-target-id')
+
+    nextTick(() => {
+      const el = document.getElementById(`habit-card-${id}`)
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
+    })
+
+    setTimeout(() => {
+      if (highlightedHabitId.value === id) {
+        highlightedHabitId.value = null
+      }
+    }, 2500)
+  },
+  { immediate: true }
+)
 
 const todayStr = computed(() => formatDate(new Date()))
 const currentWeek = computed(() => getWeekKey(todayStr.value))

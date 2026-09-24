@@ -94,7 +94,7 @@ export async function loginUser(account: string, password: string): Promise<any>
   const normalizedEmail = normalizeAccount(account)
   const authData = await pb.collection('users').authWithPassword(normalizedEmail, password)
   authToken.value = authData.token
-  currentUser.value = authData.record || authData.model
+  currentUser.value = authData.record || (authData as any).model
   return authData
 }
 

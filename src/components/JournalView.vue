@@ -281,7 +281,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import {
   ChevronLeft,
   ChevronRight,
@@ -310,6 +310,17 @@ const showTemplateModal = ref(false)
 const autoSaveStatus = ref('')
 const filterMonth = ref<string | null>(null)
 
+interface PendingJournalSnapshot {
+  id?: string
+  date: string
+  content: string
+  mood: string
+}
+
+const isDirty = ref(false)
+let pendingSnapshot: PendingJournalSnapshot | null = null
+let saveTimer: any = null
+
 const TEMPLATE_KEY = 'flow_os_journal_template_v1'
 const customTemplate = ref(DEFAULT_JOURNAL_TEMPLATE)
 
@@ -319,6 +330,10 @@ onMounted(() => {
     customTemplate.value = saved
   }
   loadEntryForSelectedDate()
+})
+
+onBeforeUnmount(() => {
+  flushPendingSave()
 })
 
 const activeEntry = computed(() => {
@@ -332,6 +347,27 @@ function loadEntryForSelectedDate() {
   } else {
     journalContent.value = customTemplate.value
   }
+  isDirty.value = false
+  pendingSnapshot = null
+}
+
+function flushPendingSave() {
+  if (saveTimer) {
+    clearTimeout(saveTimer)
+    saveTimer = null
+  }
+  if (isDirty.value && pendingSnapshot) {
+    const toSave = { ...pendingSnapshot }
+    pendingSnapshot = null
+    isDirty.value = false
+    emit('save-journal', toSave)
+    autoSaveStatus.value = '已自动保存'
+    setTimeout(() => {
+      if (!isDirty.value) {
+        autoSaveStatus.value = ''
+      }
+    }, 2000)
+  }
 }
 
 watch(selectedDate, () => {
@@ -341,7 +377,8 @@ watch(selectedDate, () => {
 watch(
   () => props.initialDate,
   (newDate) => {
-    if (newDate) {
+    if (newDate && newDate !== selectedDate.value) {
+      flushPendingSave()
       selectedDate.value = newDate
       const d = parseDate(newDate)
       sidebarYear.value = d.getFullYear()
@@ -353,7 +390,10 @@ watch(
 watch(
   () => props.journals,
   () => {
-    loadEntryForSelectedDate()
+    // 保护正在输入的文字，避免外部 props 或自动保存返回数据刷新覆盖
+    if (!isDirty.value) {
+      loadEntryForSelectedDate()
+    }
   },
   { deep: true }
 )
@@ -408,6 +448,8 @@ function formatSidebarMonth(year: number, month: number) {
 }
 
 function selectDate(dateStr: string) {
+  if (selectedDate.value === dateStr) return
+  flushPendingSave()
   selectedDate.value = dateStr
 }
 
@@ -415,26 +457,26 @@ function hasEntryOnDate(dateStr: string): boolean {
   return props.journals.some((j) => j.date === dateStr && !!j.content)
 }
 
-let saveTimer: any = null
 function handleAutoSave() {
   autoSaveStatus.value = '正在输入...'
+  isDirty.value = true
+  pendingSnapshot = {
+    id: activeEntry.value?.id,
+    date: selectedDate.value,
+    content: journalContent.value,
+    mood: activeEntry.value?.mood || '😊',
+  }
   if (saveTimer) clearTimeout(saveTimer)
   saveTimer = setTimeout(() => {
-    emit('save-journal', {
-      id: activeEntry.value?.id,
-      date: selectedDate.value,
-      content: journalContent.value,
-      mood: activeEntry.value?.mood || '😊',
-    })
-    autoSaveStatus.value = '已自动保存'
-    setTimeout(() => {
-      autoSaveStatus.value = ''
-    }, 2000)
+    flushPendingSave()
   }, 400)
 }
 
 function setMood(m: string) {
   showMoodPicker.value = false
+  if (pendingSnapshot) {
+    pendingSnapshot.mood = m
+  }
   emit('save-journal', {
     id: activeEntry.value?.id,
     date: selectedDate.value,
@@ -453,8 +495,10 @@ function handleClearOrDelete() {
 }
 
 function handleNewToday() {
-  selectedDate.value = formatDate(new Date())
-  loadEntryForSelectedDate()
+  const today = formatDate(new Date())
+  if (selectedDate.value === today) return
+  flushPendingSave()
+  selectedDate.value = today
 }
 
 const totalEntries = computed(() => props.journals.filter((j) => !!j.content).length)

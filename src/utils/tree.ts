@@ -58,3 +58,102 @@ export function flattenTodoTree(tree: TodoItem[]): TodoItem[] {
 export function getAllDatedTodos(items: TodoItem[]): TodoItem[] {
   return items.filter((item) => !!item.dueDate || !!item.startDate)
 }
+
+/**
+ * Gather a todo ID and all of its recursive descendant child IDs
+ */
+export function getDescendantTodoIds(todos: TodoItem[], rootId: string): string[] {
+  const result: string[] = [rootId]
+  const childrenMap = new Map<string, string[]>()
+
+  for (const t of todos) {
+    if (t.parentId) {
+      if (!childrenMap.has(t.parentId)) {
+        childrenMap.set(t.parentId, [])
+      }
+      childrenMap.get(t.parentId)!.push(t.id)
+    }
+  }
+
+  function collect(id: string) {
+    const childIds = childrenMap.get(id)
+    if (childIds && childIds.length > 0) {
+      for (const cid of childIds) {
+        result.push(cid)
+        collect(cid)
+      }
+    }
+  }
+
+  collect(rootId)
+  return result
+}
+
+/**
+ * Calculate parent-child completion linkage:
+ * - When completing a parent: all descendants are marked completed
+ * - When uncompleting a parent: only the parent itself is uncompleted (subtask progress preserved)
+ * - When uncompleting a child: all ancestor parents are marked uncompleted
+ * - When completing a child: if all sibling children of a parent are now completed, parent is marked completed (cascades upwards)
+ */
+export function calculateLinkedTodoCompletion(
+  todos: TodoItem[],
+  targetId: string,
+  willBeCompleted: boolean
+): { updatedTodos: TodoItem[]; changedTodos: TodoItem[] } {
+  const itemMap = new Map<string, TodoItem>()
+  for (const t of todos) {
+    itemMap.set(t.id, { ...t })
+  }
+
+  const target = itemMap.get(targetId)
+  if (!target) {
+    return { updatedTodos: todos, changedTodos: [] }
+  }
+
+  target.completed = willBeCompleted
+
+  if (willBeCompleted) {
+    // 1. Downward cascade: Complete all descendants
+    const descendantIds = getDescendantTodoIds(todos, targetId).slice(1)
+    for (const dId of descendantIds) {
+      const d = itemMap.get(dId)
+      if (d) {
+        d.completed = true
+      }
+    }
+
+    // 2. Upward cascade: If all children of an ancestor are now completed, complete the ancestor
+    let currentParentId = target.parentId
+    while (currentParentId) {
+      const parent = itemMap.get(currentParentId)
+      if (!parent) break
+
+      const siblings = Array.from(itemMap.values()).filter((it) => it.parentId === currentParentId)
+      const allSiblingsCompleted = siblings.every((it) => it.completed)
+      if (allSiblingsCompleted) {
+        parent.completed = true
+        currentParentId = parent.parentId
+      } else {
+        break
+      }
+    }
+  } else {
+    // Uncompleting:
+    // 1. Downward: Only target itself is uncompleted, children remain as-is
+    // 2. Upward: Any ancestor parent CANNOT be completed if a child is incomplete
+    let currentParentId = target.parentId
+    while (currentParentId) {
+      const parent = itemMap.get(currentParentId)
+      if (!parent) break
+      parent.completed = false
+      currentParentId = parent.parentId
+    }
+  }
+
+  const updatedTodos = Array.from(itemMap.values())
+  const originalMap = new Map(todos.map((t) => [t.id, t.completed]))
+  const changedTodos = updatedTodos.filter((t) => t.completed !== originalMap.get(t.id))
+
+  return { updatedTodos, changedTodos }
+}

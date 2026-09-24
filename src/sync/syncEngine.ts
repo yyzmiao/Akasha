@@ -64,7 +64,7 @@ function notifyRemoteChange() {
   }
 }
 
-function getTable(type: EntityType) {
+function getTable(type: EntityType): any {
   switch (type) {
     case 'area':
       return db.areas
@@ -454,6 +454,121 @@ export async function downloadAllCloudToLocal(): Promise<{ count: number }> {
 
   return { count: records.length }
 }
+
+/**
+ * Reset local sync outbox queue and update lastSyncTime
+ */
+export function resetSyncOutbox(): void {
+  pendingChanges.clear()
+  savePendingQueue()
+  lastSyncTime.value = Date.now()
+  localStorage.setItem(LAST_SYNC_KEY, String(lastSyncTime.value))
+}
+
+/**
+ * Apply imported backup data to cloud:
+ * Overwrite cloud records with the backup, mark removed cloud records as deleted (tombstone),
+ * clear outbox queue, and update lastSyncTime.
+ */
+export async function applyBackupToCloud(backupData: any): Promise<void> {
+  if (!isAuthenticated.value) {
+    resetSyncOutbox()
+    return
+  }
+  syncStatus.value = 'syncing'
+
+  // 1. Clear local pending changes so old unsynced local mutations don't conflict
+  pendingChanges.clear()
+  savePendingQueue()
+
+  const user = currentUser.value
+  const now = Date.now()
+
+  // 2. Extract all entities from backupData
+  const backupBatch: Array<{ entityType: EntityType; entityId: string; payload: any }> = []
+  if (Array.isArray(backupData.areas)) {
+    backupData.areas.forEach((item: any) => item?.id && backupBatch.push({ entityType: 'area', entityId: item.id, payload: item }))
+  }
+  if (Array.isArray(backupData.projects)) {
+    backupData.projects.forEach((item: any) => item?.id && backupBatch.push({ entityType: 'project', entityId: item.id, payload: item }))
+  }
+  if (Array.isArray(backupData.schedules)) {
+    backupData.schedules.forEach((item: any) => item?.id && backupBatch.push({ entityType: 'schedule', entityId: item.id, payload: item }))
+  }
+  if (Array.isArray(backupData.habits)) {
+    backupData.habits.forEach((item: any) => item?.id && backupBatch.push({ entityType: 'habit', entityId: item.id, payload: item }))
+  }
+  if (Array.isArray(backupData.habitLogs)) {
+    backupData.habitLogs.forEach((item: any) => item?.id && backupBatch.push({ entityType: 'habitLog', entityId: item.id, payload: item }))
+  }
+  if (Array.isArray(backupData.todos)) {
+    backupData.todos.forEach((item: any) => item?.id && backupBatch.push({ entityType: 'todo', entityId: item.id, payload: item }))
+  }
+  if (Array.isArray(backupData.journals)) {
+    backupData.journals.forEach((item: any) => item?.id && backupBatch.push({ entityType: 'journal', entityId: item.id, payload: item }))
+  }
+
+  const backupKeySet = new Set(backupBatch.map((b) => `${b.entityType}:${b.entityId}`))
+
+  // 3. Fetch all existing cloud records for this user
+  try {
+    const existingCloudRecords = await pb.collection('sync_items').getFullList<SyncItemRecord>()
+
+    // Tombstone cloud records that do not exist in the backup
+    for (const record of existingCloudRecords) {
+      const key = `${record.entityType}:${record.entityId}`
+      if (!backupKeySet.has(key) && !record.isDeleted && record.id) {
+        try {
+          await pb.collection('sync_items').update(record.id, {
+            isDeleted: true,
+            clientUpdatedAt: now,
+          })
+        } catch (_e) {}
+      }
+    }
+
+    // Upsert backup items to cloud
+    for (const item of backupBatch) {
+      try {
+        let existingRecord: any = null
+        try {
+          existingRecord = await pb.collection('sync_items').getFirstListItem(
+            `entityType="${item.entityType}" && entityId="${item.entityId}"`
+          )
+        } catch (err: any) {
+          if (err.status !== 404) throw err
+        }
+
+        if (existingRecord) {
+          await pb.collection('sync_items').update(existingRecord.id, {
+            payload: item.payload,
+            clientUpdatedAt: now,
+            isDeleted: false,
+          })
+        } else {
+          await pb.collection('sync_items').create({
+            entityType: item.entityType,
+            entityId: item.entityId,
+            payload: item.payload,
+            clientUpdatedAt: now,
+            isDeleted: false,
+            user: user?.id,
+          })
+        }
+      } catch (err: any) {
+        console.warn(`[SyncEngine] Backup upload item failed for ${item.entityType}:${item.entityId}`, err)
+      }
+    }
+
+    lastSyncTime.value = now
+    localStorage.setItem(LAST_SYNC_KEY, String(now))
+    syncStatus.value = 'synced'
+  } catch (err) {
+    console.warn('[SyncEngine] applyBackupToCloud failed:', err)
+    syncStatus.value = 'error'
+  }
+}
+
 
 // Watch online/offline status
 if (typeof window !== 'undefined') {

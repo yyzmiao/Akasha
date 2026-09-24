@@ -1538,7 +1538,7 @@
           <!-- Recurring Type -->
           <div class="space-y-1.5">
             <label class="text-xs font-semibold text-slate-700 dark:text-slate-300">
-              周期规约类型
+              重复方式
             </label>
             <div class="grid grid-cols-3 gap-2">
               <button
@@ -1887,7 +1887,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'switch-tab', tab: string): void
   (e: 'open-todo', todo: TodoItem): void
-  (e: 'quick-create-todo', date: string): void
+  (e: 'quick-create-todo', payload: { date: string; title: string } | string): void
   (e: 'open-journal', date: string): void
   (e: 'toggle-todo', id: string): void
   (e: 'delete-schedule', id: string): void
@@ -2321,7 +2321,9 @@ function hasJournalOnDate(dateStr: string): boolean {
 }
 
 function quickAddTodo(dateStr: string) {
-  emit('quick-create-todo', dateStr)
+  const title = prompt(`添加 ${dateStr} 的待办事项：`)
+  if (!title || !title.trim()) return
+  emit('quick-create-todo', { date: dateStr, title: title.trim() })
 }
 
 // --- 单日视角时间轴辅助函数 ---
