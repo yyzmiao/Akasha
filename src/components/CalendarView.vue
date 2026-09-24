@@ -934,19 +934,19 @@
                       ]"
                       title="点击前往习惯页面管理此习惯"
                     >
-                      <div class="flex items-center gap-2.5 min-w-0">
+                      <div class="flex items-center gap-3 min-w-0">
                         <button
                           type="button"
                           @click.stop="$emit('toggle-habit', { habitId: item.data.id, date: displayDays[0].dateStr })"
-                          class="w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-all active:scale-90 cursor-pointer"
+                          class="w-5 h-5 sm:w-5.5 sm:h-5.5 rounded-md border-1.5 flex items-center justify-center shrink-0 transition-all active:scale-90 cursor-pointer shadow-2xs"
                           :class="[
                             item.completed
-                              ? 'bg-emerald-600 border-emerald-600 text-white'
-                              : 'border-amber-400 dark:border-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/40'
+                              ? 'bg-emerald-600 border-emerald-600 text-white shadow-xs'
+                              : 'border-amber-400 dark:border-amber-600 bg-white/70 dark:bg-slate-800/60 hover:bg-amber-100 dark:hover:bg-amber-900/40 hover:border-amber-500'
                           ]"
                           :title="item.completed ? '点击取消打卡' : '点击打卡'"
                         >
-                          <Check v-if="item.completed" class="w-3 h-3 stroke-[3]" />
+                          <Check v-if="item.completed" class="w-3.5 h-3.5 stroke-[3]" />
                         </button>
                         <div class="min-w-0">
                           <div class="flex items-center gap-1.5">
@@ -966,12 +966,8 @@
                               {{ item.timeSlotLabel }}
                             </span>
                           </div>
-                          <div class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1.5">
-                            <span v-if="item.projectName">{{ item.projectName }} · </span>
-                            <span class="text-[10px] text-amber-600 dark:text-amber-400 font-medium inline-flex items-center gap-0.5">
-                              前往习惯管理
-                              <ExternalLink class="w-2.5 h-2.5" />
-                            </span>
+                          <div v-if="item.projectName" class="text-[11px] text-slate-400 mt-0.5">
+                            {{ item.projectName }}
                           </div>
                         </div>
                       </div>
@@ -1005,10 +1001,10 @@
                         <button
                           type="button"
                           @click.stop="$emit('toggle-todo', item.data.id)"
-                          class="w-4 h-4 rounded border border-slate-400 dark:border-slate-600 flex items-center justify-center shrink-0 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                          class="w-5 h-5 rounded-md border border-slate-400 dark:border-slate-600 flex items-center justify-center shrink-0 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
                           :class="item.completed ? 'bg-emerald-600 border-emerald-600 text-white' : ''"
                         >
-                          <Check v-if="item.completed" class="w-3 h-3 stroke-[3]" />
+                          <Check v-if="item.completed" class="w-3.5 h-3.5 stroke-[3]" />
                         </button>
                         <div class="min-w-0">
                           <div class="flex items-center gap-1.5">
