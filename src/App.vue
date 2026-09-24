@@ -258,6 +258,7 @@ function handleTabChange(tab: ActiveTab) {
   targetProjectId.value = null
   targetJournalDate.value = null
   activeTab.value = tab
+  window.scrollTo({ top: 0, behavior: 'instant' })
 }
 
 function handleSearchSelectProject(projectId: string) {

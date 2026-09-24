@@ -1,7 +1,13 @@
 <template>
   <div>
-    <!-- Top Header -->
-    <header class="sticky top-0 z-40 w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-3.5 sm:px-8 py-2.5 transition-colors">
+    <!-- Top Header (智能伸缩顶栏：上滑自动收回，下滑又弹出保留) -->
+    <header
+      :class="[
+        'sticky top-0 z-40 w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-3.5 sm:px-8 py-2.5 transition-all duration-300 ease-in-out',
+        isVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0 pointer-events-none',
+        isScrolled ? 'shadow-md dark:shadow-slate-950/40' : 'shadow-none'
+      ]"
+    >
       <div class="max-w-7xl mx-auto flex items-center justify-between">
         <div class="flex items-center gap-1.5 sm:gap-3">
           <span class="font-bold text-base sm:text-base tracking-tight text-slate-900 dark:text-white font-mono select-none">
@@ -16,7 +22,7 @@
             <div class="h-4 w-px bg-slate-200 dark:bg-slate-800 mx-1"></div>
 
             <button
-              @click="$emit('open-search')"
+              @click="$emit('open-search'); isVisible = true"
               class="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               title="全局检索 (Ctrl+K)"
             >
@@ -24,7 +30,7 @@
             </button>
 
             <button
-              @click="$emit('open-settings')"
+              @click="$emit('open-settings'); isVisible = true"
               class="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               title="设置"
             >
@@ -36,7 +42,7 @@
         <!-- Desktop Center Navigation Tabs -->
         <nav class="hidden md:flex items-center p-1 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs sm:text-sm">
           <button
-            @click="$emit('update:activeTab', 'calendar')"
+            @click="handleTabClick('calendar')"
             :class="[
               'flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-all',
               activeTab === 'calendar'
@@ -49,7 +55,7 @@
           </button>
 
           <button
-            @click="$emit('update:activeTab', 'projects')"
+            @click="handleTabClick('projects')"
             :class="[
               'flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-all',
               activeTab === 'projects'
@@ -62,7 +68,7 @@
           </button>
 
           <button
-            @click="$emit('update:activeTab', 'schedules')"
+            @click="handleTabClick('schedules')"
             :class="[
               'flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-all',
               activeTab === 'schedules'
@@ -75,7 +81,7 @@
           </button>
 
           <button
-            @click="$emit('update:activeTab', 'todos')"
+            @click="handleTabClick('todos')"
             :class="[
               'flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-all',
               activeTab === 'todos'
@@ -88,7 +94,7 @@
           </button>
 
           <button
-            @click="$emit('update:activeTab', 'habits')"
+            @click="handleTabClick('habits')"
             :class="[
               'flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-all',
               activeTab === 'habits'
@@ -101,7 +107,7 @@
           </button>
 
           <button
-            @click="$emit('update:activeTab', 'journal')"
+            @click="handleTabClick('journal')"
             :class="[
               'flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-all',
               activeTab === 'journal'
@@ -121,7 +127,7 @@
 
           <!-- Mobile Only Search Button -->
           <button
-            @click="$emit('open-search')"
+            @click="$emit('open-search'); isVisible = true"
             class="md:hidden p-2 rounded-lg text-slate-500 hover:text-slate-800 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             title="全局检索"
             aria-label="全局检索"
@@ -142,7 +148,7 @@
 
           <!-- Mobile Only Settings Button -->
           <button
-            @click="$emit('open-settings')"
+            @click="$emit('open-settings'); isVisible = true"
             class="md:hidden p-2 rounded-lg text-slate-500 hover:text-slate-800 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             title="设置"
             aria-label="设置"
@@ -159,7 +165,7 @@
     >
       <div class="grid grid-cols-6 h-13 sm:h-14 items-center px-0.5">
         <button
-          @click="$emit('update:activeTab', 'calendar')"
+          @click="handleTabClick('calendar')"
           :class="[
             'flex flex-col items-center justify-center py-1 px-0.5 transition-all rounded-lg active:scale-95',
             activeTab === 'calendar'
@@ -174,7 +180,7 @@
         </button>
 
         <button
-          @click="$emit('update:activeTab', 'projects')"
+          @click="handleTabClick('projects')"
           :class="[
             'flex flex-col items-center justify-center py-1 px-0.5 transition-all rounded-lg active:scale-95',
             activeTab === 'projects'
@@ -189,7 +195,7 @@
         </button>
 
         <button
-          @click="$emit('update:activeTab', 'schedules')"
+          @click="handleTabClick('schedules')"
           :class="[
             'flex flex-col items-center justify-center py-1 px-0.5 transition-all rounded-lg active:scale-95',
             activeTab === 'schedules'
@@ -204,7 +210,7 @@
         </button>
 
         <button
-          @click="$emit('update:activeTab', 'todos')"
+          @click="handleTabClick('todos')"
           :class="[
             'flex flex-col items-center justify-center py-1 px-0.5 transition-all rounded-lg active:scale-95',
             activeTab === 'todos'
@@ -219,7 +225,7 @@
         </button>
 
         <button
-          @click="$emit('update:activeTab', 'habits')"
+          @click="handleTabClick('habits')"
           :class="[
             'flex flex-col items-center justify-center py-1 px-0.5 transition-all rounded-lg active:scale-95',
             activeTab === 'habits'
@@ -234,7 +240,7 @@
         </button>
 
         <button
-          @click="$emit('update:activeTab', 'journal')"
+          @click="handleTabClick('journal')"
           :class="[
             'flex flex-col items-center justify-center py-1 px-0.5 transition-all rounded-lg active:scale-95',
             activeTab === 'journal'
@@ -253,6 +259,7 @@
 </template>
 
 <script setup lang="ts">
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 import {
   Calendar,
   CalendarDays,
@@ -269,15 +276,69 @@ import WeatherWidget from './WeatherWidget.vue'
 import SyncStatusBadge from './SyncStatusBadge.vue'
 import type { ActiveTab } from '@/types'
 
-defineProps<{
+const props = defineProps<{
   activeTab: ActiveTab
   isDark: boolean
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   (e: 'update:activeTab', tab: ActiveTab): void
   (e: 'open-settings'): void
   (e: 'open-search'): void
   (e: 'toggle-theme'): void
 }>()
+
+// 智能顶栏交互状态：上滑自动收回，下滑又弹出保留
+const isVisible = ref(true)
+const isScrolled = ref(false)
+let lastScrollY = 0
+let ticking = false
+
+function handleScroll() {
+  if (!ticking) {
+    window.requestAnimationFrame(() => {
+      const currentScrollY = window.scrollY || window.pageYOffset || 0
+      const deltaY = currentScrollY - lastScrollY
+
+      isScrolled.value = currentScrollY > 10
+
+      // 靠近页面顶部（<=60px）：无论何时均始终保留显示
+      if (currentScrollY <= 60) {
+        isVisible.value = true
+      }
+      // 页面向下滚动（浏览更多内容）：顶栏平滑向上收起收回
+      else if (deltaY > 6 && currentScrollY > 80) {
+        isVisible.value = false
+      }
+      // 页面向上回滚（手指向下滑动/回看）：顶栏立刻向下滑出弹出并保留
+      else if (deltaY < -6) {
+        isVisible.value = true
+      }
+
+      lastScrollY = Math.max(0, currentScrollY)
+      ticking = false
+    })
+    ticking = true
+  }
+}
+
+function handleTabClick(tab: ActiveTab) {
+  emit('update:activeTab', tab)
+  isVisible.value = true
+}
+
+// 外部 tab 发生变化（如全局搜索跳转、日历跳转待办）时，确保顶栏可见
+watch(() => props.activeTab, () => {
+  isVisible.value = true
+})
+
+onMounted(() => {
+  lastScrollY = window.scrollY || 0
+  isScrolled.value = lastScrollY > 10
+  window.addEventListener('scroll', handleScroll, { passive: true })
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
+})
 </script>
