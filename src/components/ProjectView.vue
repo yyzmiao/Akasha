@@ -730,44 +730,82 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">开始日期</label>
-              <input
-                v-model="editingProjectTodo.startDate"
-                type="date"
-                class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 focus:outline-none focus:border-blue-500"
-              />
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <label class="text-xs font-medium text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <Clock class="w-3.5 h-3.5 text-blue-500" />
+                <span>时间安排</span>
+              </label>
+              <label class="inline-flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  v-model="isProjectTodoAllDay"
+                  @change="handleProjectTodoAllDayChange"
+                  class="rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500/20"
+                />
+                <span>全天任务</span>
+              </label>
             </div>
 
-            <div>
-              <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">截止日期</label>
-              <input
-                v-model="editingProjectTodo.dueDate"
-                type="date"
-                class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 focus:outline-none focus:border-blue-500"
-              />
-            </div>
-          </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <!-- Box 1: 开始时间 -->
+              <div>
+                <div class="flex items-center justify-between mb-1">
+                  <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">
+                    {{ isProjectTodoAllDay ? '开始日期' : '开始时间' }}
+                  </label>
+                  <button
+                    v-if="isProjectTodoAllDay ? projectTodoStartDateOnly : projectTodoStartDateTime"
+                    type="button"
+                    @click="clearProjectTodoStart"
+                    class="text-[10px] text-slate-400 hover:text-rose-500 cursor-pointer"
+                  >
+                    清除
+                  </button>
+                </div>
+                <input
+                  v-if="!isProjectTodoAllDay"
+                  v-model="projectTodoStartDateTime"
+                  type="datetime-local"
+                  class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500 font-mono"
+                />
+                <input
+                  v-else
+                  v-model="projectTodoStartDateOnly"
+                  type="date"
+                  class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500 font-mono"
+                />
+              </div>
 
-          <div>
-            <div class="flex items-center justify-between mb-1">
-              <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">具体时间点 (可选，几点几分)</label>
-              <button
-                v-if="editingProjectTodo.dueTime"
-                type="button"
-                @click="editingProjectTodo.dueTime = ''"
-                class="text-[10px] text-slate-400 hover:text-rose-500 cursor-pointer"
-              >
-                清除时间
-              </button>
+              <!-- Box 2: 结束时间 -->
+              <div>
+                <div class="flex items-center justify-between mb-1">
+                  <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">
+                    {{ isProjectTodoAllDay ? '截止日期' : '结束时间' }}
+                  </label>
+                  <button
+                    v-if="isProjectTodoAllDay ? projectTodoEndDateOnly : projectTodoEndDateTime"
+                    type="button"
+                    @click="clearProjectTodoEnd"
+                    class="text-[10px] text-slate-400 hover:text-rose-500 cursor-pointer"
+                  >
+                    清除
+                  </button>
+                </div>
+                <input
+                  v-if="!isProjectTodoAllDay"
+                  v-model="projectTodoEndDateTime"
+                  type="datetime-local"
+                  class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500 font-mono"
+                />
+                <input
+                  v-else
+                  v-model="projectTodoEndDateOnly"
+                  type="date"
+                  class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500 font-mono"
+                />
+              </div>
             </div>
-            <input
-              v-model="editingProjectTodo.dueTime"
-              type="time"
-              placeholder="留空代表全天"
-              class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500 font-mono"
-            />
           </div>
 
           <div>
@@ -1104,6 +1142,7 @@ import {
   GripVertical,
   ArrowUp,
   ArrowDown,
+  Clock,
 } from 'lucide-vue-next'
 import TodoTreeItem from '@/components/TodoTreeItem.vue'
 import type {
@@ -1573,6 +1612,78 @@ function handleEditTodoTitle(payload: { id: string; title: string }) {
 }
 
 const editingProjectTodo = ref<TodoItem | null>(null)
+const isProjectTodoAllDay = ref(false)
+const projectTodoStartDateTime = ref('')
+const projectTodoEndDateTime = ref('')
+const projectTodoStartDateOnly = ref('')
+const projectTodoEndDateOnly = ref('')
+
+function initProjectTodoDateTimeState(item: TodoItem | null) {
+  if (!item) {
+    isProjectTodoAllDay.value = false
+    projectTodoStartDateTime.value = ''
+    projectTodoEndDateTime.value = ''
+    projectTodoStartDateOnly.value = ''
+    projectTodoEndDateOnly.value = ''
+    return
+  }
+
+  if (item.startTime || item.dueTime) {
+    isProjectTodoAllDay.value = false
+  } else if (item.startDate || item.dueDate) {
+    isProjectTodoAllDay.value = true
+  } else {
+    isProjectTodoAllDay.value = false
+  }
+
+  if (item.startDate) {
+    projectTodoStartDateTime.value = item.startTime
+      ? `${item.startDate}T${item.startTime}`
+      : `${item.startDate}T09:00`
+    projectTodoStartDateOnly.value = item.startDate
+  } else {
+    projectTodoStartDateTime.value = ''
+    projectTodoStartDateOnly.value = ''
+  }
+
+  if (item.dueDate) {
+    projectTodoEndDateTime.value = item.dueTime
+      ? `${item.dueDate}T${item.dueTime}`
+      : `${item.dueDate}T18:00`
+    projectTodoEndDateOnly.value = item.dueDate
+  } else {
+    projectTodoEndDateTime.value = ''
+    projectTodoEndDateOnly.value = ''
+  }
+}
+
+function handleProjectTodoAllDayChange() {
+  if (isProjectTodoAllDay.value) {
+    if (projectTodoStartDateTime.value) {
+      projectTodoStartDateOnly.value = projectTodoStartDateTime.value.split('T')[0]
+    }
+    if (projectTodoEndDateTime.value) {
+      projectTodoEndDateOnly.value = projectTodoEndDateTime.value.split('T')[0]
+    }
+  } else {
+    if (projectTodoStartDateOnly.value) {
+      projectTodoStartDateTime.value = `${projectTodoStartDateOnly.value}T09:00`
+    }
+    if (projectTodoEndDateOnly.value) {
+      projectTodoEndDateTime.value = `${projectTodoEndDateOnly.value}T18:00`
+    }
+  }
+}
+
+function clearProjectTodoStart() {
+  projectTodoStartDateTime.value = ''
+  projectTodoStartDateOnly.value = ''
+}
+
+function clearProjectTodoEnd() {
+  projectTodoEndDateTime.value = ''
+  projectTodoEndDateOnly.value = ''
+}
 
 function handleQuickUpdateProjectTodoImportance(payload: { id: string; importance: number }) {
   const item = props.todos.find((t) => t.id === payload.id)
@@ -1591,14 +1702,41 @@ function handleOpenTodoDetails(item: TodoItem) {
     ...JSON.parse(JSON.stringify(cleanItem)),
     importance: normalizePriority(item.importance),
   }
+  initProjectTodoDateTimeState(item)
 }
 
 function saveProjectTodoDetails() {
   if (editingProjectTodo.value) {
     const { children, ...cleanItem } = editingProjectTodo.value
+    let startDate: string | undefined
+    let startTime: string | undefined
+    let dueDate: string | undefined
+    let dueTime: string | undefined
+
+    if (isProjectTodoAllDay.value) {
+      startDate = projectTodoStartDateOnly.value?.trim() || undefined
+      startTime = undefined
+      dueDate = projectTodoEndDateOnly.value?.trim() || undefined
+      dueTime = undefined
+    } else {
+      if (projectTodoStartDateTime.value) {
+        const [d, t] = projectTodoStartDateTime.value.split('T')
+        startDate = d?.trim() || undefined
+        startTime = t?.trim() || undefined
+      }
+      if (projectTodoEndDateTime.value) {
+        const [d, t] = projectTodoEndDateTime.value.split('T')
+        dueDate = d?.trim() || undefined
+        dueTime = t?.trim() || undefined
+      }
+    }
+
     emit('save-todo', {
       ...cleanItem,
-      dueTime: cleanItem.dueTime?.trim() || undefined,
+      startDate,
+      startTime,
+      dueDate,
+      dueTime,
       importance: normalizePriority(cleanItem.importance),
     })
     editingProjectTodo.value = null

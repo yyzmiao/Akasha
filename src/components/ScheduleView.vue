@@ -137,10 +137,13 @@
                 </span>
                 <span v-if="s.time" class="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1 font-mono">
                   <Clock class="w-3.5 h-3.5 text-slate-400" />
-                  {{ s.time }}
+                  {{ s.time }}{{ s.endTime ? ' ~ ' + s.endTime : '' }}
                 </span>
                 <span v-else class="text-xs text-slate-500 dark:text-slate-400">
                   全天
+                </span>
+                <span v-if="s.endDate && s.endDate !== s.date" class="text-xs font-mono text-slate-500 dark:text-slate-400">
+                  至 {{ formatDisplayDateOnly(s.endDate) }}
                 </span>
                 <span
                   v-if="s.date && formatDaysDiff(s.date)"
@@ -257,29 +260,74 @@
             </select>
           </div>
 
-          <!-- Specific Date Picker -->
-          <div class="space-y-1">
-            <label class="text-xs font-semibold text-slate-700 dark:text-slate-300">
-              日程日期 <span class="text-rose-500">*</span>
-            </label>
-            <input
-              v-model="formDate"
-              type="date"
-              class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-            />
-          </div>
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <label class="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <Clock class="w-3.5 h-3.5 text-blue-500" />
+                <span>时间安排 <span class="text-rose-500">*</span></span>
+              </label>
+              <label class="inline-flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  v-model="isScheduleAllDay"
+                  @change="handleScheduleAllDayChange"
+                  class="rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500/20"
+                />
+                <span>全天日程</span>
+              </label>
+            </div>
 
-          <!-- Time Picker -->
-          <div class="space-y-1">
-            <label class="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center justify-between">
-              <span>开始时间点 (可选)</span>
-              <span class="text-[10px] text-slate-400 font-normal">留空代表全天</span>
-            </label>
-            <input
-              v-model="formTime"
-              type="time"
-              class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-            />
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <!-- Box 1: 开始时间 -->
+              <div>
+                <div class="flex items-center justify-between mb-1">
+                  <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">
+                    {{ isScheduleAllDay ? '开始日期' : '开始时间' }}
+                  </label>
+                </div>
+                <input
+                  v-if="!isScheduleAllDay"
+                  v-model="scheduleStartDateTime"
+                  type="datetime-local"
+                  class="w-full px-2.5 py-1.5 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 font-mono"
+                />
+                <input
+                  v-else
+                  v-model="scheduleStartDateOnly"
+                  type="date"
+                  class="w-full px-2.5 py-1.5 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 font-mono"
+                />
+              </div>
+
+              <!-- Box 2: 结束时间 -->
+              <div>
+                <div class="flex items-center justify-between mb-1">
+                  <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">
+                    {{ isScheduleAllDay ? '结束日期 (可选)' : '结束时间 (可选)' }}
+                  </label>
+                  <button
+                    v-if="isScheduleAllDay ? scheduleEndDateOnly : scheduleEndDateTime"
+                    type="button"
+                    @click="clearScheduleEnd"
+                    class="text-[10px] text-slate-400 hover:text-rose-500 cursor-pointer"
+                  >
+                    清除
+                  </button>
+                </div>
+                <input
+                  v-if="!isScheduleAllDay"
+                  v-model="scheduleEndDateTime"
+                  type="datetime-local"
+                  class="w-full px-2.5 py-1.5 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 font-mono"
+                />
+                <input
+                  v-else
+                  v-model="scheduleEndDateOnly"
+                  type="date"
+                  class="w-full px-2.5 py-1.5 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 font-mono"
+                />
+              </div>
+            </div>
           </div>
         </div>
 
@@ -454,15 +502,45 @@ const showModal = ref(false)
 const editingId = ref<string | null>(null)
 const formTitle = ref('')
 const formProjectId = ref<string | null>(null)
-const formDate = ref(formatDate(new Date()))
-const formTime = ref('')
+const isScheduleAllDay = ref(false)
+const scheduleStartDateTime = ref('')
+const scheduleEndDateTime = ref('')
+const scheduleStartDateOnly = ref('')
+const scheduleEndDateOnly = ref('')
+
+function handleScheduleAllDayChange() {
+  if (isScheduleAllDay.value) {
+    if (scheduleStartDateTime.value) {
+      scheduleStartDateOnly.value = scheduleStartDateTime.value.split('T')[0]
+    }
+    if (scheduleEndDateTime.value) {
+      scheduleEndDateOnly.value = scheduleEndDateTime.value.split('T')[0]
+    }
+  } else {
+    if (scheduleStartDateOnly.value) {
+      scheduleStartDateTime.value = `${scheduleStartDateOnly.value}T09:00`
+    }
+    if (scheduleEndDateOnly.value) {
+      scheduleEndDateTime.value = `${scheduleEndDateOnly.value}T18:00`
+    }
+  }
+}
+
+function clearScheduleEnd() {
+  scheduleEndDateTime.value = ''
+  scheduleEndDateOnly.value = ''
+}
 
 function openCreateModal() {
   editingId.value = null
   formTitle.value = ''
   formProjectId.value = selectedProjectId.value === 'all' ? null : selectedProjectId.value
-  formDate.value = formatDate(new Date())
-  formTime.value = ''
+  const today = formatDate(new Date())
+  isScheduleAllDay.value = false
+  scheduleStartDateTime.value = `${today}T09:00`
+  scheduleEndDateTime.value = `${today}T10:00`
+  scheduleStartDateOnly.value = today
+  scheduleEndDateOnly.value = today
   showModal.value = true
 }
 
@@ -470,8 +548,34 @@ function openEditModal(s: ScheduleItem) {
   editingId.value = s.id
   formTitle.value = s.title
   formProjectId.value = s.projectId || null
-  formDate.value = s.date || formatDate(new Date())
-  formTime.value = s.time || ''
+
+  if (s.time || s.endTime) {
+    isScheduleAllDay.value = false
+  } else if (s.date) {
+    isScheduleAllDay.value = true
+  } else {
+    isScheduleAllDay.value = false
+  }
+
+  if (s.date) {
+    scheduleStartDateTime.value = s.time ? `${s.date}T${s.time}` : `${s.date}T09:00`
+    scheduleStartDateOnly.value = s.date
+  } else {
+    scheduleStartDateTime.value = ''
+    scheduleStartDateOnly.value = ''
+  }
+
+  if (s.endDate) {
+    scheduleEndDateTime.value = s.endTime ? `${s.endDate}T${s.endTime}` : `${s.endDate}T18:00`
+    scheduleEndDateOnly.value = s.endDate
+  } else if (s.endTime && s.date) {
+    scheduleEndDateTime.value = `${s.date}T${s.endTime}`
+    scheduleEndDateOnly.value = s.date
+  } else {
+    scheduleEndDateTime.value = ''
+    scheduleEndDateOnly.value = ''
+  }
+
   showModal.value = true
 }
 
@@ -484,17 +588,40 @@ function handleSubmit() {
     alert('请输入日程名称')
     return
   }
-  if (!formDate.value) {
-    alert('请选择日程日期')
-    return
+
+  let date: string | undefined
+  let time: string | undefined
+  let endDate: string | undefined
+  let endTime: string | undefined
+
+  if (isScheduleAllDay.value) {
+    date = scheduleStartDateOnly.value?.trim() || formatDate(new Date())
+    time = undefined
+    endDate = scheduleEndDateOnly.value?.trim() || undefined
+    endTime = undefined
+  } else {
+    if (scheduleStartDateTime.value) {
+      const [d, t] = scheduleStartDateTime.value.split('T')
+      date = d?.trim() || formatDate(new Date())
+      time = t?.trim() || undefined
+    } else {
+      date = formatDate(new Date())
+    }
+    if (scheduleEndDateTime.value) {
+      const [d, t] = scheduleEndDateTime.value.split('T')
+      endDate = d?.trim() || undefined
+      endTime = t?.trim() || undefined
+    }
   }
 
   const payload: Partial<ScheduleItem> = {
     title: formTitle.value.trim(),
     projectId: formProjectId.value,
     recurringType: 'none',
-    date: formDate.value,
-    time: formTime.value.trim() || undefined,
+    date,
+    time,
+    endDate,
+    endTime,
   }
 
   if (editingId.value) {

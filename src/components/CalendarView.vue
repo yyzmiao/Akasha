@@ -1649,39 +1649,82 @@
             />
           </div>
 
-          <!-- Date -->
-          <div class="space-y-1">
-            <label class="text-xs font-semibold text-slate-700 dark:text-slate-300">
-              截止日期 <span class="text-rose-500">*</span>
-            </label>
-            <input
-              v-model="quickTodoDate"
-              type="date"
-              class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-            />
-          </div>
-
-          <!-- Time Picker (几点几分) -->
-          <div class="space-y-1">
+          <div class="space-y-2">
             <div class="flex items-center justify-between">
-              <label class="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                具体时间点 (几点几分，可选)
+              <label class="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <Clock class="w-3.5 h-3.5 text-blue-500" />
+                <span>时间安排</span>
               </label>
-              <button
-                v-if="quickTodoTime"
-                type="button"
-                @click="quickTodoTime = ''"
-                class="text-[10px] text-slate-400 hover:text-rose-500 cursor-pointer"
-              >
-                清除时间 (设为全天)
-              </button>
+              <label class="inline-flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  v-model="quickTodoIsAllDay"
+                  @change="handleQuickTodoAllDayChange"
+                  class="rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500/20"
+                />
+                <span>全天任务</span>
+              </label>
             </div>
-            <input
-              v-model="quickTodoTime"
-              type="time"
-              placeholder="留空代表全天"
-              class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 font-mono"
-            />
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <!-- Box 1: 开始时间 -->
+              <div>
+                <div class="flex items-center justify-between mb-1">
+                  <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">
+                    {{ quickTodoIsAllDay ? '开始日期' : '开始时间' }}
+                  </label>
+                  <button
+                    v-if="quickTodoIsAllDay ? quickTodoStartDateOnly : quickTodoStartDateTime"
+                    type="button"
+                    @click="clearQuickTodoStart"
+                    class="text-[10px] text-slate-400 hover:text-rose-500 cursor-pointer"
+                  >
+                    清除
+                  </button>
+                </div>
+                <input
+                  v-if="!quickTodoIsAllDay"
+                  v-model="quickTodoStartDateTime"
+                  type="datetime-local"
+                  class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 font-mono"
+                />
+                <input
+                  v-else
+                  v-model="quickTodoStartDateOnly"
+                  type="date"
+                  class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 font-mono"
+                />
+              </div>
+
+              <!-- Box 2: 结束时间 -->
+              <div>
+                <div class="flex items-center justify-between mb-1">
+                  <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">
+                    {{ quickTodoIsAllDay ? '截止日期' : '结束时间' }}
+                  </label>
+                  <button
+                    v-if="quickTodoIsAllDay ? quickTodoEndDateOnly : quickTodoEndDateTime"
+                    type="button"
+                    @click="clearQuickTodoEnd"
+                    class="text-[10px] text-slate-400 hover:text-rose-500 cursor-pointer"
+                  >
+                    清除
+                  </button>
+                </div>
+                <input
+                  v-if="!quickTodoIsAllDay"
+                  v-model="quickTodoEndDateTime"
+                  type="datetime-local"
+                  class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 font-mono"
+                />
+                <input
+                  v-else
+                  v-model="quickTodoEndDateOnly"
+                  type="date"
+                  class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 font-mono"
+                />
+              </div>
+            </div>
           </div>
 
           <!-- Project Select -->
@@ -1985,9 +2028,17 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'switch-tab', tab: string): void
   (e: 'open-todo', todo: TodoItem): void
-  (e: 'open-schedule', schedule: ScheduleItem): void
-  (e: 'quick-create-todo', payload: { date: string; title: string; time?: string; projectId?: string | null; importance?: number } | string): void
-  (e: 'open-journal', date: string): void
+  (e: 'quick-create-todo', payload: {
+    date?: string
+    startDate?: string
+    startTime?: string
+    dueDate?: string
+    dueTime?: string
+    time?: string
+    title: string
+    projectId?: string | null
+    importance?: number
+  } | string): void
   (e: 'toggle-todo', id: string): void
   (e: 'delete-schedule', id: string): void
   (e: 'save-schedule', payload: Partial<ScheduleItem>): void
@@ -2405,16 +2456,22 @@ function hasJournalOnDate(dateStr: string): boolean {
 }
 
 const showQuickTodoModal = ref(false)
-const quickTodoDate = ref('')
+const quickTodoIsAllDay = ref(false)
+const quickTodoStartDateTime = ref('')
+const quickTodoEndDateTime = ref('')
+const quickTodoStartDateOnly = ref('')
+const quickTodoEndDateOnly = ref('')
 const quickTodoTitle = ref('')
-const quickTodoTime = ref('')
 const quickTodoProjectId = ref<string | null>(null)
 const quickTodoImportance = ref(5)
 
 function quickAddTodo(dateStr: string) {
-  quickTodoDate.value = dateStr
   quickTodoTitle.value = ''
-  quickTodoTime.value = ''
+  quickTodoIsAllDay.value = false
+  quickTodoStartDateTime.value = `${dateStr}T09:00`
+  quickTodoEndDateTime.value = `${dateStr}T18:00`
+  quickTodoStartDateOnly.value = dateStr
+  quickTodoEndDateOnly.value = dateStr
   quickTodoProjectId.value = null
   quickTodoImportance.value = 5
   showQuickTodoModal.value = true
@@ -2424,15 +2481,67 @@ function closeQuickTodoModal() {
   showQuickTodoModal.value = false
 }
 
+function handleQuickTodoAllDayChange() {
+  if (quickTodoIsAllDay.value) {
+    if (quickTodoStartDateTime.value) {
+      quickTodoStartDateOnly.value = quickTodoStartDateTime.value.split('T')[0]
+    }
+    if (quickTodoEndDateTime.value) {
+      quickTodoEndDateOnly.value = quickTodoEndDateTime.value.split('T')[0]
+    }
+  } else {
+    if (quickTodoStartDateOnly.value) {
+      quickTodoStartDateTime.value = `${quickTodoStartDateOnly.value}T09:00`
+    }
+    if (quickTodoEndDateOnly.value) {
+      quickTodoEndDateTime.value = `${quickTodoEndDateOnly.value}T18:00`
+    }
+  }
+}
+
+function clearQuickTodoStart() {
+  quickTodoStartDateTime.value = ''
+  quickTodoStartDateOnly.value = ''
+}
+
+function clearQuickTodoEnd() {
+  quickTodoEndDateTime.value = ''
+  quickTodoEndDateOnly.value = ''
+}
+
 function handleSaveQuickTodoSubmit() {
   if (!quickTodoTitle.value.trim()) {
     alert('请输入待办事项名称')
     return
   }
+
+  let startDate: string | undefined
+  let startTime: string | undefined
+  let dueDate: string | undefined
+  let dueTime: string | undefined
+
+  if (quickTodoIsAllDay.value) {
+    startDate = quickTodoStartDateOnly.value?.trim() || undefined
+    dueDate = quickTodoEndDateOnly.value?.trim() || undefined
+  } else {
+    if (quickTodoStartDateTime.value) {
+      const [d, t] = quickTodoStartDateTime.value.split('T')
+      startDate = d?.trim() || undefined
+      startTime = t?.trim() || undefined
+    }
+    if (quickTodoEndDateTime.value) {
+      const [d, t] = quickTodoEndDateTime.value.split('T')
+      dueDate = d?.trim() || undefined
+      dueTime = t?.trim() || undefined
+    }
+  }
+
   emit('quick-create-todo', {
-    date: quickTodoDate.value,
     title: quickTodoTitle.value.trim(),
-    time: quickTodoTime.value ? quickTodoTime.value.trim() : undefined,
+    startDate,
+    startTime,
+    dueDate: dueDate || startDate,
+    dueTime,
     projectId: quickTodoProjectId.value || null,
     importance: quickTodoImportance.value,
   })
@@ -2537,20 +2646,37 @@ function getDayTimelineItems(dateStr: string, isToday: boolean): TimelineItem[] 
   if (typeFilters.value.todos) {
     const dayTodos = getTodosForDay(dateStr)
 
-    // 3.1 设定了具体时间点 (HH:mm) 的所有待办
-    const timedTodos = dayTodos.filter((t) => !!t.dueTime)
+    // 3.1 设定了具体时间点 (HH:mm) 的所有待办 (支持开始时间、截止时间或时间区间)
+    const timedTodos = dayTodos.filter((t) => (t.startDate === dateStr && !!t.startTime) || (t.dueDate === dateStr && !!t.dueTime))
     for (const t of timedTodos) {
+      const isStartDay = t.startDate === dateStr && !!t.startTime
+      const isDueDay = t.dueDate === dateStr && !!t.dueTime
+      let timeStr = '12:00'
+      let slotLabel = '定时待办'
+
+      if (isStartDay && isDueDay && t.startDate === t.dueDate) {
+        timeStr = `${t.startTime} ~ ${t.dueTime}`
+        slotLabel = '待办时段'
+      } else if (isStartDay) {
+        timeStr = t.startTime!
+        slotLabel = '开始待办'
+      } else if (isDueDay) {
+        timeStr = t.dueTime!
+        slotLabel = '截止待办'
+      }
+
+      const sortTimeBase = isStartDay ? t.startTime! : (isDueDay ? t.dueTime! : '12:00')
       let sortMinutes = 12 * 60
-      const parts = t.dueTime!.split(':').map(Number)
+      const parts = sortTimeBase.split(':').map(Number)
       if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
         sortMinutes = parts[0] * 60 + parts[1]
       }
       items.push({
         id: `todo-${t.id}`,
         type: 'todo',
-        time: t.dueTime!,
-        timeLabel: t.dueTime!,
-        timeSlotLabel: '定时待办',
+        time: timeStr,
+        timeLabel: timeStr,
+        timeSlotLabel: slotLabel,
         sortMinutes,
         title: t.title,
         completed: t.completed,

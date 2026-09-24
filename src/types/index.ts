@@ -29,6 +29,8 @@ export interface ScheduleItem {
   title: string
   date?: string
   time?: string
+  endDate?: string
+  endTime?: string
   recurringType: ScheduleRecurringType
   recurringDayOfWeek?: number
   recurringDayOfMonth?: number
@@ -75,6 +77,7 @@ export interface TodoItem {
   completed: boolean
   importance?: number
   startDate?: string
+  startTime?: string
   dueDate?: string
   dueTime?: string
   notes?: string

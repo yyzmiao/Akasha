@@ -519,6 +519,9 @@ async function handleSaveTodo(itemData: Partial<TodoItem>) {
       ...(existing || {}),
       ...cleanData,
       importance: importanceVal,
+      startDate: itemData.startDate !== undefined ? (itemData.startDate?.trim() || undefined) : existing?.startDate,
+      startTime: itemData.startTime !== undefined ? (itemData.startTime?.trim() || undefined) : existing?.startTime,
+      dueDate: itemData.dueDate !== undefined ? (itemData.dueDate?.trim() || undefined) : existing?.dueDate,
       dueTime: itemData.dueTime !== undefined ? (itemData.dueTime?.trim() || undefined) : existing?.dueTime,
       updatedAt: now,
     }
@@ -533,8 +536,9 @@ async function handleSaveTodo(itemData: Partial<TodoItem>) {
       title: itemData.title || '新待办',
       completed: itemData.completed || false,
       importance: itemData.importance !== undefined ? Number(itemData.importance) : 5,
-      startDate: itemData.startDate,
-      dueDate: itemData.dueDate,
+      startDate: itemData.startDate?.trim() || undefined,
+      startTime: itemData.startTime?.trim() || undefined,
+      dueDate: itemData.dueDate?.trim() || undefined,
       dueTime: itemData.dueTime?.trim() || undefined,
       notes: itemData.notes || '',
       order: itemData.order || 0,
@@ -587,22 +591,44 @@ function handleOpenSchedule(schedule: ScheduleItem) {
   activeTab.value = 'schedules'
 }
 
-function handleQuickCreateTodo(payload: string | { date: string; time?: string; title?: string; projectId?: string | null; importance?: number }) {
-  const dateStr = typeof payload === 'string' ? payload : payload.date
-  let title = typeof payload === 'object' && payload.title ? payload.title.trim() : ''
-  if (!title) {
-    const input = prompt(`添加 ${dateStr} 的待办事项：`)
+function handleQuickCreateTodo(payload: string | {
+  date?: string
+  startDate?: string
+  startTime?: string
+  dueDate?: string
+  dueTime?: string
+  time?: string
+  title?: string
+  projectId?: string | null
+  importance?: number
+}) {
+  if (typeof payload === 'string') {
+    const input = prompt(`添加 ${payload} 的待办事项：`)
     if (!input || !input.trim()) return
-    title = input.trim()
+    handleSaveTodo({
+      title: input.trim(),
+      dueDate: payload,
+      startDate: payload,
+      importance: 5,
+    })
+    return
   }
+
+  const dateStr = payload.date || payload.dueDate || payload.startDate || new Date().toISOString().slice(0, 10)
+  const title = payload.title?.trim() || '新待办'
+  const startDate = payload.startDate || dateStr
+  const dueDate = payload.dueDate || dateStr
+  const startTime = payload.startTime?.trim() || undefined
+  const dueTime = (payload.dueTime || payload.time)?.trim() || undefined
 
   handleSaveTodo({
     title,
-    dueDate: dateStr,
-    startDate: dateStr,
-    dueTime: typeof payload === 'object' && payload.time ? payload.time.trim() : undefined,
-    projectId: typeof payload === 'object' ? payload.projectId : undefined,
-    importance: typeof payload === 'object' && payload.importance !== undefined ? payload.importance : 5,
+    startDate,
+    startTime,
+    dueDate,
+    dueTime,
+    projectId: payload.projectId,
+    importance: payload.importance !== undefined ? payload.importance : 5,
   })
 }
 

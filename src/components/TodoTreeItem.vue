@@ -118,19 +118,11 @@
             </div>
 
             <span
-              v-if="item.dueDate"
+              v-if="timeBadge"
               class="px-1.5 py-0.2 rounded text-[10px] font-mono bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 shrink-0 flex items-center gap-1"
-              :title="`截止日期: ${item.dueDate}${item.dueTime ? ' ' + item.dueTime : ''}`"
+              :title="timeBadge.tooltip"
             >
-              <span>📅 {{ item.dueDate.slice(5) }}</span>
-              <span v-if="item.dueTime" class="font-bold text-indigo-600 dark:text-indigo-400">{{ item.dueTime }}</span>
-            </span>
-            <span
-              v-else-if="item.dueTime"
-              class="px-1.5 py-0.2 rounded text-[10px] font-mono bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300 shrink-0"
-              :title="`时间点: ${item.dueTime}`"
-            >
-              🕒 {{ item.dueTime }}
+              {{ timeBadge.label }}
             </span>
           </div>
         </div>
@@ -208,6 +200,48 @@ const popoverContainerRef = ref<HTMLElement | null>(null)
 
 const currentImportance = computed(() => normalizePriority(props.item.importance))
 const priorityMeta = computed(() => getPriorityStyle(currentImportance.value))
+
+const timeBadge = computed(() => {
+  const { startDate, startTime, dueDate, dueTime } = props.item
+  if (!startDate && !dueDate && !startTime && !dueTime) return null
+
+  let label = ''
+  let tooltip = ''
+
+  if (startDate && dueDate) {
+    if (startDate === dueDate) {
+      label = `📅 ${startDate.slice(5)}`
+      if (startTime && dueTime) {
+        label += ` ${startTime}~${dueTime}`
+      } else if (dueTime) {
+        label += ` ${dueTime}`
+      } else if (startTime) {
+        label += ` ${startTime}`
+      }
+      tooltip = `时间: ${startDate} ${startTime || ''} ~ ${dueTime || ''}`
+    } else {
+      label = `📅 ${startDate.slice(5)} ~ ${dueDate.slice(5)}`
+      if (dueTime) label += ` ${dueTime}`
+      tooltip = `时间范围: ${startDate} ${startTime || ''} 至 ${dueDate} ${dueTime || ''}`
+    }
+  } else if (dueDate) {
+    label = `📅 ${dueDate.slice(5)}`
+    if (dueTime) label += ` ${dueTime}`
+    tooltip = `截止时间: ${dueDate} ${dueTime || ''}`
+  } else if (startDate) {
+    label = `起 ${startDate.slice(5)}`
+    if (startTime) label += ` ${startTime}`
+    tooltip = `开始时间: ${startDate} ${startTime || ''}`
+  } else if (dueTime) {
+    label = `🕒 ${dueTime}`
+    tooltip = `时间: ${dueTime}`
+  } else if (startTime) {
+    label = `🕒 ${startTime}`
+    tooltip = `开始时间: ${startTime}`
+  }
+
+  return { label: label.trim(), tooltip: tooltip.trim() }
+})
 
 function selectPriority(level: number) {
   isPopoverOpen.value = false

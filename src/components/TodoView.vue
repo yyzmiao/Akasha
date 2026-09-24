@@ -217,44 +217,82 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">开始日期</label>
-              <input
-                v-model="editingItem.startDate"
-                type="date"
-                class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 focus:outline-none focus:border-blue-500"
-              />
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <label class="text-xs font-medium text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <Clock class="w-3.5 h-3.5 text-blue-500" />
+                <span>时间安排</span>
+              </label>
+              <label class="inline-flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  v-model="isAllDay"
+                  @change="handleAllDayChange"
+                  class="rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500/20"
+                />
+                <span>全天任务</span>
+              </label>
             </div>
 
-            <div>
-              <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">截止日期 (日历显示)</label>
-              <input
-                v-model="editingItem.dueDate"
-                type="date"
-                class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 focus:outline-none focus:border-blue-500"
-              />
-            </div>
-          </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <!-- Box 1: 开始时间 -->
+              <div>
+                <div class="flex items-center justify-between mb-1">
+                  <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">
+                    {{ isAllDay ? '开始日期' : '开始时间' }}
+                  </label>
+                  <button
+                    v-if="isAllDay ? formStartDateOnly : formStartDateTime"
+                    type="button"
+                    @click="clearStart"
+                    class="text-[10px] text-slate-400 hover:text-rose-500 cursor-pointer"
+                  >
+                    清除
+                  </button>
+                </div>
+                <input
+                  v-if="!isAllDay"
+                  v-model="formStartDateTime"
+                  type="datetime-local"
+                  class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500 font-mono"
+                />
+                <input
+                  v-else
+                  v-model="formStartDateOnly"
+                  type="date"
+                  class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500 font-mono"
+                />
+              </div>
 
-          <div>
-            <div class="flex items-center justify-between mb-1">
-              <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">具体时间点 (可选，几点几分)</label>
-              <button
-                v-if="editingItem.dueTime"
-                type="button"
-                @click="editingItem.dueTime = ''"
-                class="text-[10px] text-slate-400 hover:text-rose-500 cursor-pointer"
-              >
-                清除时间
-              </button>
+              <!-- Box 2: 结束时间 -->
+              <div>
+                <div class="flex items-center justify-between mb-1">
+                  <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">
+                    {{ isAllDay ? '截止日期' : '结束时间' }}
+                  </label>
+                  <button
+                    v-if="isAllDay ? formEndDateOnly : formEndDateTime"
+                    type="button"
+                    @click="clearEnd"
+                    class="text-[10px] text-slate-400 hover:text-rose-500 cursor-pointer"
+                  >
+                    清除
+                  </button>
+                </div>
+                <input
+                  v-if="!isAllDay"
+                  v-model="formEndDateTime"
+                  type="datetime-local"
+                  class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500 font-mono"
+                />
+                <input
+                  v-else
+                  v-model="formEndDateOnly"
+                  type="date"
+                  class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500 font-mono"
+                />
+              </div>
             </div>
-            <input
-              v-model="editingItem.dueTime"
-              type="time"
-              placeholder="留空代表全天"
-              class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500 font-mono"
-            />
           </div>
 
           <div>
@@ -310,7 +348,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { CheckSquare, Plus, PlusCircle, SlidersHorizontal, X, ArrowDownUp } from 'lucide-vue-next'
+import { CheckSquare, Plus, PlusCircle, SlidersHorizontal, X, ArrowDownUp, Clock } from 'lucide-vue-next'
 import TodoTreeItem from '@/components/TodoTreeItem.vue'
 import type { TodoItem, Project } from '@/types'
 import { buildTodoTree, calculateLinkedTodoCompletion, getDescendantTodoIds } from '@/utils/tree'
@@ -337,6 +375,79 @@ const sortBy = ref<'default' | 'importance-desc' | 'importance-asc' | 'dueDate'>
 const editingItem = ref<TodoItem | null>(null)
 const isCreatingNew = ref(false)
 
+const isAllDay = ref(false)
+const formStartDateTime = ref('')
+const formEndDateTime = ref('')
+const formStartDateOnly = ref('')
+const formEndDateOnly = ref('')
+
+function initDateTimeState(item: TodoItem | null) {
+  if (!item) {
+    isAllDay.value = false
+    formStartDateTime.value = ''
+    formEndDateTime.value = ''
+    formStartDateOnly.value = ''
+    formEndDateOnly.value = ''
+    return
+  }
+
+  if (item.startTime || item.dueTime) {
+    isAllDay.value = false
+  } else if (item.startDate || item.dueDate) {
+    isAllDay.value = true
+  } else {
+    isAllDay.value = false
+  }
+
+  if (item.startDate) {
+    formStartDateTime.value = item.startTime
+      ? `${item.startDate}T${item.startTime}`
+      : `${item.startDate}T09:00`
+    formStartDateOnly.value = item.startDate
+  } else {
+    formStartDateTime.value = ''
+    formStartDateOnly.value = ''
+  }
+
+  if (item.dueDate) {
+    formEndDateTime.value = item.dueTime
+      ? `${item.dueDate}T${item.dueTime}`
+      : `${item.dueDate}T18:00`
+    formEndDateOnly.value = item.dueDate
+  } else {
+    formEndDateTime.value = ''
+    formEndDateOnly.value = ''
+  }
+}
+
+function handleAllDayChange() {
+  if (isAllDay.value) {
+    if (formStartDateTime.value) {
+      formStartDateOnly.value = formStartDateTime.value.split('T')[0]
+    }
+    if (formEndDateTime.value) {
+      formEndDateOnly.value = formEndDateTime.value.split('T')[0]
+    }
+  } else {
+    if (formStartDateOnly.value) {
+      formStartDateTime.value = `${formStartDateOnly.value}T09:00`
+    }
+    if (formEndDateOnly.value) {
+      formEndDateTime.value = `${formEndDateOnly.value}T18:00`
+    }
+  }
+}
+
+function clearStart() {
+  formStartDateTime.value = ''
+  formStartDateOnly.value = ''
+}
+
+function clearEnd() {
+  formEndDateTime.value = ''
+  formEndDateOnly.value = ''
+}
+
 watch(
   () => props.targetTodoId,
   (newId) => {
@@ -351,6 +462,7 @@ watch(
           ...JSON.parse(JSON.stringify(cleanTarget)),
           importance: normalizePriority(target.importance),
         }
+        initDateTimeState(target)
         isCreatingNew.value = false
         emit('clear-target-id')
       }
@@ -505,11 +617,13 @@ function handleOpenCreateModal() {
     order: props.todos.filter((t) => t.parentId === null).length,
     importance: 5,
     startDate: '',
+    startTime: '',
     dueDate: '',
     dueTime: '',
     notes: '',
     createdAt: new Date().toISOString(),
   }
+  initDateTimeState(null)
 }
 
 function handleOpenDetails(item: TodoItem) {
@@ -517,9 +631,9 @@ function handleOpenDetails(item: TodoItem) {
   const { children, ...cleanItem } = item
   editingItem.value = {
     ...JSON.parse(JSON.stringify(cleanItem)),
-    dueTime: cleanItem.dueTime || '',
     importance: normalizePriority(item.importance),
   }
+  initDateTimeState(item)
 }
 
 function closeModal() {
@@ -536,12 +650,38 @@ function saveDetails() {
   }
 
   const { children, ...cleanItem } = editingItem.value
-  const cleanDueTime = cleanItem.dueTime?.trim() || undefined
+
+  let startDate: string | undefined
+  let startTime: string | undefined
+  let dueDate: string | undefined
+  let dueTime: string | undefined
+
+  if (isAllDay.value) {
+    startDate = formStartDateOnly.value?.trim() || undefined
+    startTime = undefined
+    dueDate = formEndDateOnly.value?.trim() || undefined
+    dueTime = undefined
+  } else {
+    if (formStartDateTime.value) {
+      const [d, t] = formStartDateTime.value.split('T')
+      startDate = d?.trim() || undefined
+      startTime = t?.trim() || undefined
+    }
+    if (formEndDateTime.value) {
+      const [d, t] = formEndDateTime.value.split('T')
+      dueDate = d?.trim() || undefined
+      dueTime = t?.trim() || undefined
+    }
+  }
+
   if (isCreatingNew.value) {
     emit('save-todo', {
       ...cleanItem,
       title: cleanItem.title.trim(),
-      dueTime: cleanDueTime,
+      startDate,
+      startTime,
+      dueDate,
+      dueTime,
       parentId: cleanItem.parentId || null,
       completed: false,
       order: props.todos.filter((t) => t.parentId === (cleanItem.parentId || null)).length,
@@ -551,7 +691,10 @@ function saveDetails() {
     emit('save-todo', {
       ...cleanItem,
       title: cleanItem.title.trim(),
-      dueTime: cleanDueTime,
+      startDate,
+      startTime,
+      dueDate,
+      dueTime,
       importance: normalizePriority(cleanItem.importance),
     })
   }

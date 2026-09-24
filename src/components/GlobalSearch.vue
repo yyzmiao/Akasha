@@ -231,7 +231,9 @@ const allIndexItems = computed<SearchResultItem[]>(() => {
       type: 'todo',
       categoryLabel: '待办',
       title: t.title,
-      subtitle: t.notes || (t.dueDate ? `截止: ${t.dueDate}${t.dueTime ? ' ' + t.dueTime : ''}` : (t.dueTime ? `时间: ${t.dueTime}` : undefined)),
+      subtitle: t.notes || (t.startDate && t.dueDate
+        ? `${t.startDate}${t.startTime ? ' ' + t.startTime : ''} ~ ${t.dueDate}${t.dueTime ? ' ' + t.dueTime : ''}`
+        : (t.dueDate ? `截止: ${t.dueDate}${t.dueTime ? ' ' + t.dueTime : ''}` : (t.startDate ? `开始: ${t.startDate}${t.startTime ? ' ' + t.startTime : ''}` : undefined))),
       tag: t.completed ? '已完成' : (t.projectId ? projectMap.get(t.projectId) : undefined),
       icon: CheckSquare,
       badgeBg: t.completed
@@ -242,7 +244,9 @@ const allIndexItems = computed<SearchResultItem[]>(() => {
   })
 
   props.schedules.forEach((s) => {
-    const timeInfo = [s.date, s.time].filter(Boolean).join(' ')
+    const startInfo = [s.date, s.time].filter(Boolean).join(' ')
+    const endInfo = [s.endDate && s.endDate !== s.date ? s.endDate : '', s.endTime].filter(Boolean).join(' ')
+    const timeInfo = endInfo ? `${startInfo} ~ ${endInfo}` : startInfo
     list.push({
       id: `s-${s.id}`,
       type: 'schedule',
