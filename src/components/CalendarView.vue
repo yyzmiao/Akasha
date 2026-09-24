@@ -708,6 +708,9 @@
                 <span class="text-xs font-bold text-slate-800 dark:text-slate-200">
                   全天待办事项 ({{ getTodosForDay(displayDays[0].dateStr).length }})
                 </span>
+                <span class="text-[10px] text-slate-400 font-normal">
+                  (按重要程度 P9-P1 排列)
+                </span>
               </div>
               <button
                 @click="quickAddTodo(displayDays[0].dateStr)"
@@ -2313,8 +2316,11 @@ function getTodosForDay(dateStr: string, limit?: number): TodoItem[] {
   })
 
   list.sort((a, b) => {
+    const impA = a.importance !== undefined ? Number(a.importance) : 5
+    const impB = b.importance !== undefined ? Number(b.importance) : 5
+    if (impB !== impA) return impB - impA
     if (a.completed !== b.completed) return a.completed ? 1 : -1
-    return (b.importance || 5) - (a.importance || 5)
+    return 0
   })
 
   return typeof limit === 'number' ? list.slice(0, limit) : list
