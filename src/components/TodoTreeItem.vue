@@ -220,8 +220,9 @@ const timeBadge = computed(() => {
       }
       tooltip = `时间: ${startDate} ${startTime || ''} ~ ${dueTime || ''}`
     } else {
-      label = `📅 ${startDate.slice(5)} ~ ${dueDate.slice(5)}`
-      if (dueTime) label += ` ${dueTime}`
+      const startPart = startTime ? `${startDate.slice(5)} ${startTime}` : startDate.slice(5)
+      const endPart = dueTime ? `${dueDate.slice(5)} ${dueTime}` : dueDate.slice(5)
+      label = `📅 ${startPart} ~ ${endPart}`
       tooltip = `时间范围: ${startDate} ${startTime || ''} 至 ${dueDate} ${dueTime || ''}`
     }
   } else if (dueDate) {

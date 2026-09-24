@@ -323,10 +323,10 @@
                   <span class="truncate font-medium">{{ item.title }}</span>
                 </div>
                 <span
-                  v-if="item.data.dueDate === day.dateStr"
+                  v-if="getTodoDayDateBadge(item.data, day.dateStr)"
                   class="text-[9px] px-1 rounded bg-white/80 dark:bg-slate-700 font-bold shrink-0 text-blue-600"
                 >
-                  {{ item.data.dueTime || '截止' }}
+                  {{ getTodoDayDateBadge(item.data, day.dateStr) }}
                 </span>
               </div>
             </template>
@@ -519,10 +519,10 @@
                   <span class="truncate font-medium">{{ todo.title }}</span>
                 </div>
                 <span
-                  v-if="todo.dueDate === day.dateStr"
+                  v-if="getTodoDayDateBadge(todo, day.dateStr)"
                   class="text-[9px] px-1 rounded bg-white/80 dark:bg-slate-700 font-bold shrink-0 text-blue-600"
                 >
-                  {{ todo.dueTime || '截止' }}
+                  {{ getTodoDayDateBadge(todo, day.dateStr) }}
                 </span>
               </div>
             </div>
@@ -642,11 +642,11 @@
             >
               <div class="space-y-0.5 min-w-0">
                 <div class="text-[11px] text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 font-medium flex items-center gap-1 transition-colors">
-                  <span>固定日程排期</span>
+                  <span>日程排期安排</span>
                   <ExternalLink class="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
                 <div class="text-sm font-bold text-slate-800 dark:text-slate-100">
-                  {{ getSchedulesForDay(displayDays[0].dateStr).length }} 个事项
+                  {{ getDayTotalScheduleCount(displayDays[0].dateStr) }} 个事项
                 </div>
               </div>
               <div class="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
@@ -711,7 +711,7 @@
             <div class="flex items-center gap-1.5">
               <CheckSquare class="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               <span class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">
-                全天待办事项 ({{ getTodosForDay(displayDays[0].dateStr).length }})
+                当日待办清单 ({{ getTodosForDay(displayDays[0].dateStr).length }})
               </span>
               <span class="text-[10px] text-slate-400 font-normal">
                 (按重要程度 P9-P1 排列)
@@ -750,10 +750,10 @@
                   <Check v-if="todo.completed" class="w-3 h-3 stroke-[3]" />
                 </button>
                 <span
-                  v-if="todo.dueTime"
+                  v-if="getTodoTimeDisplay(todo)"
                   class="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 shrink-0"
                 >
-                  🕒 {{ todo.dueTime }}
+                  🕒 {{ getTodoTimeDisplay(todo) }}
                 </span>
                 <span :class="['font-medium truncate', todo.completed ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100']">
                   {{ todo.title }}
@@ -771,10 +771,10 @@
                   {{ getProjectName(todo.projectId) }}
                 </span>
                 <span
-                  v-if="todo.dueDate === displayDays[0].dateStr"
+                  v-if="getTodoDayDateBadge(todo, displayDays[0].dateStr)"
                   class="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400 font-bold"
                 >
-                  {{ todo.dueTime ? `今日 ${todo.dueTime}` : '今日截止' }}
+                  {{ getTodoDayDateBadge(todo, displayDays[0].dateStr) }}
                 </span>
               </div>
             </div>
@@ -851,7 +851,7 @@
                     <div
                       v-else
                       class="w-3.5 h-3.5 rounded-full ring-4 ring-white dark:ring-slate-900 shadow-2xs"
-                      :class="item.completed ? 'bg-emerald-500' : 'bg-rose-500'"
+                      :class="item.completed ? 'bg-emerald-500' : item.isScheduled ? 'bg-blue-500' : 'bg-rose-500'"
                     ></div>
                   </div>
 
@@ -978,6 +978,8 @@
                         'p-3 sm:p-3.5 rounded-xl border transition-all cursor-pointer shadow-2xs hover:shadow-xs flex items-center justify-between gap-3 group/todo',
                         item.completed
                           ? 'opacity-60 bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800'
+                          : item.isScheduled
+                          ? 'bg-blue-50/50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900/60 hover:border-blue-300'
                           : 'bg-rose-50/40 dark:bg-rose-950/20 border-rose-200 dark:border-rose-900/60 hover:border-rose-300'
                       ]"
                     >
@@ -992,11 +994,18 @@
                         </button>
                         <div class="min-w-0">
                           <div class="flex items-center gap-1.5">
-                            <span :class="['font-semibold text-xs sm:text-sm truncate transition-colors', item.completed ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100 group-hover/todo:text-rose-700 dark:group-hover/todo:text-rose-300']">
+                            <span :class="['font-semibold text-xs sm:text-sm truncate transition-colors', item.completed ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100 group-hover/todo:text-blue-700 dark:group-hover/todo:text-blue-300']">
                               {{ item.title }}
                             </span>
                             <span
-                              v-if="item.data.importance"
+                              v-if="item.timeSlotLabel"
+                              class="text-[10px] px-1.5 py-0.2 rounded shrink-0 font-medium"
+                              :class="item.isScheduled ? 'bg-blue-100/80 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300' : 'bg-rose-100/80 dark:bg-rose-900/60 text-rose-700 dark:text-rose-300'"
+                            >
+                              {{ item.timeSlotLabel }}
+                            </span>
+                            <span
+                              v-if="item.data?.importance"
                               :class="['text-[10px] font-mono font-bold px-1.5 py-0.2 rounded border shrink-0', getPriorityStyle(item.data.importance).badgeClass]"
                             >
                               P{{ item.data.importance }}
@@ -1017,9 +1026,11 @@
                         class="text-[10px] px-2.5 py-1 rounded-full font-semibold shrink-0 select-none border"
                         :class="item.completed
                           ? 'border-slate-200 dark:border-slate-700 text-slate-400 bg-slate-100 dark:bg-slate-800'
+                          : item.isScheduled
+                          ? 'border-blue-200 dark:border-blue-800 bg-blue-100/70 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'
                           : 'border-rose-200 dark:border-rose-800 bg-rose-100/70 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300'"
                       >
-                        {{ item.completed ? '已截止' : '重要待办' }}
+                        {{ item.completed ? '已完成' : (item.isScheduled ? '日程排期' : '重要里程碑') }}
                       </span>
                     </div>
                   </div>
@@ -1029,7 +1040,7 @@
 
             <!-- Empty State when no timeline events -->
             <div
-              v-if="!hasTimelineEvents(displayDays[0].dateStr)"
+              v-if="!hasTimelineEvents(displayDays[0].dateStr, displayDays[0].isToday)"
               class="py-8 text-center space-y-3"
             >
               <div class="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto text-slate-400">
@@ -1258,10 +1269,10 @@
                   </span>
                 </div>
                 <span
-                  v-if="todo.dueDate === day.dateStr"
+                  v-if="getTodoDayDateBadge(todo, day.dateStr)"
                   class="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 font-bold shrink-0"
                 >
-                  截止
+                  {{ getTodoDayDateBadge(todo, day.dateStr) }}
                 </span>
               </div>
             </div>
@@ -1337,7 +1348,7 @@
 
       <!-- Todos List -->
       <div v-if="getTodosForDay(selectedMobileDate).length > 0" class="space-y-1.5">
-        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">截止待办</div>
+        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">当日待办</div>
         <div
           v-for="todo in getTodosForDay(selectedMobileDate)"
           :key="todo.id"
@@ -1373,10 +1384,10 @@
             </span>
           </div>
           <span
-            v-if="todo.dueDate === selectedMobileDate"
+            v-if="getTodoDayDateBadge(todo, selectedMobileDate)"
             class="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 font-bold shrink-0"
           >
-            {{ todo.dueTime || '截止' }}
+            {{ getTodoDayDateBadge(todo, selectedMobileDate) }}
           </span>
         </div>
       </div>
@@ -1874,8 +1885,8 @@
                   P{{ todo.importance }}
                 </span>
               </div>
-              <span v-if="todo.dueDate === selectedDayOverview" class="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 font-bold shrink-0">
-                {{ todo.dueTime || '截止' }}
+              <span v-if="getTodoDayDateBadge(todo, selectedDayOverview)" class="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 font-bold shrink-0">
+                {{ getTodoDayDateBadge(todo, selectedDayOverview) }}
               </span>
             </div>
           </div>
@@ -2414,7 +2425,64 @@ function getProjectColor(projectId?: string | null): string {
 }
 
 function getSchedulesForDay(dateStr: string): ScheduleItem[] {
-  return props.schedules.filter((s) => s.date === dateStr)
+  return props.schedules.filter((s) => {
+    if (s.endDate) {
+      return isDateInRange(dateStr, s.date, s.endDate)
+    }
+    return s.date === dateStr
+  })
+}
+
+function getDayScheduledTodos(dateStr: string): TodoItem[] {
+  return getTodosForDay(dateStr).filter((t) => {
+    return !!(t.startTime || t.dueTime || (t.startDate && t.dueDate && t.startDate !== t.dueDate))
+  })
+}
+
+function getDayTotalScheduleCount(dateStr: string): number {
+  return getSchedulesForDay(dateStr).length + getDayScheduledTodos(dateStr).length
+}
+
+function getTodoTimeDisplay(todo: TodoItem): string {
+  if (todo.startTime && todo.dueTime && todo.startDate === todo.dueDate) {
+    return `${todo.startTime} ~ ${todo.dueTime}`
+  }
+  if (todo.startTime && todo.dueTime) {
+    return `${todo.startTime}`
+  }
+  if (todo.startTime) {
+    return `${todo.startTime} 开始`
+  }
+  if (todo.dueTime) {
+    return `${todo.dueTime}`
+  }
+  return ''
+}
+
+function getTodoDayDateBadge(todo: TodoItem, dateStr: string): string {
+  const isStart = todo.startDate === dateStr
+  const isDue = todo.dueDate === dateStr
+  const isMulti = !!(todo.startDate && todo.dueDate && todo.startDate !== todo.dueDate)
+
+  if (isMulti) {
+    if (isStart) {
+      return todo.startTime ? `今日开始 ${todo.startTime}` : '今日开始'
+    }
+    if (isDue) {
+      return todo.dueTime ? `今日截止 ${todo.dueTime}` : '今日截止'
+    }
+    if (isDateInRange(dateStr, todo.startDate!, todo.dueDate!)) {
+      return `跨日进行中 (至 ${todo.dueDate})`
+    }
+  }
+
+  if (isDue) {
+    return todo.dueTime ? `今日 ${todo.dueTime}` : '今日截止'
+  }
+  if (isStart) {
+    return todo.startTime ? `今日 ${todo.startTime}` : '今日开始'
+  }
+  return ''
 }
 
 const datedTodos = computed(() => {
@@ -2560,6 +2628,7 @@ interface TimelineItem {
   completed?: boolean
   projectColor?: string
   projectName?: string
+  isScheduled?: boolean
   data?: any
 }
 
@@ -2570,20 +2639,54 @@ function getDayTimelineItems(dateStr: string, isToday: boolean): TimelineItem[] 
   if (typeFilters.value.schedules) {
     const schedulesList = getSchedulesForDay(dateStr)
     for (const s of schedulesList) {
+      const isStartDay = s.date === dateStr
+      const isEndDay = s.endDate ? s.endDate === dateStr : true
+      const isMultiDay = !!(s.endDate && s.endDate !== s.date)
+
       let sortMinutes = 9 * 60
       let timeStr = s.time || '09:00'
-      if (s.time) {
-        const parts = s.time.split(':').map(Number)
-        if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
-          sortMinutes = parts[0] * 60 + parts[1]
+      let slotLabel = '日程'
+
+      if (isMultiDay) {
+        if (isStartDay) {
+          timeStr = s.time || '09:00'
+          slotLabel = s.time ? `${s.time} 日程开始` : '跨日日程开始'
+        } else if (isEndDay) {
+          timeStr = s.endTime || s.time || '18:00'
+          slotLabel = (s.endTime || s.time) ? `${s.endTime || s.time} 日程截止` : '跨日日程截止'
+        } else {
+          timeStr = '全天'
+          slotLabel = '跨日日程进行中'
+          sortMinutes = 0
+        }
+      } else {
+        if (s.time && s.endTime) {
+          timeStr = `${s.time} ~ ${s.endTime}`
+          slotLabel = '日程时段'
+        } else if (s.time) {
           timeStr = s.time
+          slotLabel = '日程'
+        } else {
+          timeStr = '全天'
+          slotLabel = '全天日程'
+          sortMinutes = 0
         }
       }
+
+      if (timeStr !== '全天' && timeStr.includes(':')) {
+        const firstTime = timeStr.includes('~') ? timeStr.split('~')[0].trim() : timeStr
+        const parts = firstTime.split(':').map(Number)
+        if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+          sortMinutes = parts[0] * 60 + parts[1]
+        }
+      }
+
       items.push({
-        id: `schedule-${s.id}`,
+        id: `schedule-${s.id}-${dateStr}`,
         type: 'schedule',
         time: timeStr,
         timeLabel: timeStr,
+        timeSlotLabel: slotLabel,
         sortMinutes,
         title: s.title,
         projectColor: getProjectColor(s.projectId),
@@ -2642,66 +2745,94 @@ function getDayTimelineItems(dateStr: string, isToday: boolean): TimelineItem[] 
     }
   }
 
-  // 3. 待办事项 (包含设定了具体时间的定时待办，以及未设置时间的高优截止里程碑)
+  // 3. 待办事项 (包含设定了具体时间的定时待办、跨日日程排期待办，以及未设置时间的高优截止里程碑)
   if (typeFilters.value.todos) {
     const dayTodos = getTodosForDay(dateStr)
 
-    // 3.1 设定了具体时间点 (HH:mm) 的所有待办 (支持开始时间、截止时间或时间区间)
-    const timedTodos = dayTodos.filter((t) => (t.startDate === dateStr && !!t.startTime) || (t.dueDate === dateStr && !!t.dueTime))
-    for (const t of timedTodos) {
-      const isStartDay = t.startDate === dateStr && !!t.startTime
-      const isDueDay = t.dueDate === dateStr && !!t.dueTime
-      let timeStr = '12:00'
-      let slotLabel = '定时待办'
+    // 3.1 设定了具体时间点或跨日覆盖期内的所有日程化待办
+    for (const t of dayTodos) {
+      const isStartDay = t.startDate === dateStr
+      const isDueDay = t.dueDate === dateStr
+      const isMultiDay = !!(t.startDate && t.dueDate && t.startDate !== t.dueDate)
+      const isIntermediate = isMultiDay && !isStartDay && !isDueDay && isDateInRange(dateStr, t.startDate!, t.dueDate!)
 
-      if (isStartDay && isDueDay && t.startDate === t.dueDate) {
-        timeStr = `${t.startTime} ~ ${t.dueTime}`
-        slotLabel = '待办时段'
-      } else if (isStartDay) {
-        timeStr = t.startTime!
-        slotLabel = '开始待办'
-      } else if (isDueDay) {
-        timeStr = t.dueTime!
-        slotLabel = '截止待办'
-      }
+      // 判断是否具备时间/日程属性
+      const hasTime = !!(t.startTime || t.dueTime)
+      const isScheduledTodo = hasTime || isMultiDay
 
-      const sortTimeBase = isStartDay ? t.startTime! : (isDueDay ? t.dueTime! : '12:00')
-      let sortMinutes = 12 * 60
-      const parts = sortTimeBase.split(':').map(Number)
-      if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
-        sortMinutes = parts[0] * 60 + parts[1]
+      if (isScheduledTodo) {
+        let timeStr = '09:00'
+        let slotLabel = '日程排期'
+        let sortMinutes = 9 * 60
+
+        if (isMultiDay) {
+          if (isStartDay) {
+            timeStr = t.startTime || '09:00'
+            slotLabel = t.startTime ? `${t.startTime} 日程开始` : '跨日日程开始'
+          } else if (isDueDay) {
+            timeStr = t.dueTime || '18:00'
+            slotLabel = t.dueTime ? `${t.dueTime} 日程截止` : '跨日日程截止'
+          } else if (isIntermediate) {
+            timeStr = '全天'
+            slotLabel = '跨日日程进行中'
+            sortMinutes = 0
+          }
+        } else {
+          // 单日日程待办
+          if (t.startTime && t.dueTime) {
+            timeStr = `${t.startTime} ~ ${t.dueTime}`
+            slotLabel = '日程时段'
+          } else if (t.startTime) {
+            timeStr = t.startTime
+            slotLabel = '日程开始'
+          } else if (t.dueTime) {
+            timeStr = t.dueTime
+            slotLabel = '截止待办'
+          }
+        }
+
+        if (timeStr !== '全天' && timeStr.includes(':')) {
+          const firstTime = timeStr.includes('~') ? timeStr.split('~')[0].trim() : timeStr
+          const parts = firstTime.split(':').map(Number)
+          if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+            sortMinutes = parts[0] * 60 + parts[1]
+          }
+        }
+
+        items.push({
+          id: `todo-sched-${t.id}-${dateStr}`,
+          type: 'todo',
+          time: timeStr,
+          timeLabel: timeStr,
+          timeSlotLabel: slotLabel,
+          sortMinutes,
+          title: t.title,
+          completed: t.completed,
+          projectColor: getProjectColor(t.projectId),
+          projectName: getProjectName(t.projectId),
+          isScheduled: true,
+          data: t,
+        })
       }
-      items.push({
-        id: `todo-${t.id}`,
-        type: 'todo',
-        time: timeStr,
-        timeLabel: timeStr,
-        timeSlotLabel: slotLabel,
-        sortMinutes,
-        title: t.title,
-        completed: t.completed,
-        projectColor: getProjectColor(t.projectId),
-        projectName: getProjectName(t.projectId),
-        data: t,
-      })
     }
 
     // 3.2 未设定具体时间的紧急高优待办 (P9/P8) 默认作为 18:00 里程碑
     const untimedHighPriority = dayTodos
-      .filter((t) => !t.dueTime && !t.completed && t.importance && t.importance >= 8)
+      .filter((t) => !t.startTime && !t.dueTime && !(t.startDate && t.dueDate && t.startDate !== t.dueDate) && !t.completed && t.importance && t.importance >= 8)
       .slice(0, 2)
     for (const t of untimedHighPriority) {
       items.push({
-        id: `todo-${t.id}`,
+        id: `todo-milestone-${t.id}`,
         type: 'todo',
         time: '18:00',
         timeLabel: '18:00',
-        timeSlotLabel: '重点待办',
+        timeSlotLabel: '重点里程碑',
         sortMinutes: 18 * 60,
         title: t.title,
         completed: t.completed,
         projectColor: getProjectColor(t.projectId),
         projectName: getProjectName(t.projectId),
+        isScheduled: false,
         data: t,
       })
     }
@@ -2735,11 +2866,9 @@ function getDayTimelineItems(dateStr: string, isToday: boolean): TimelineItem[] 
   return items
 }
 
-function hasTimelineEvents(dateStr: string): boolean {
-  const hasSched = typeFilters.value.schedules && getSchedulesForDay(dateStr).length > 0
-  const hasHabit = typeFilters.value.habits && getHabitsForDay(dateStr).length > 0
-  const hasDueTodo = typeFilters.value.todos && getTodosForDay(dateStr).some((t) => !t.completed && t.importance && t.importance >= 8)
-  return hasSched || hasHabit || hasDueTodo
+function hasTimelineEvents(dateStr: string, isToday = false): boolean {
+  const timelineItems = getDayTimelineItems(dateStr, isToday)
+  return timelineItems.some((it) => it.type !== 'now')
 }
 
 function shouldShowGap(current: TimelineItem, next?: TimelineItem): boolean {

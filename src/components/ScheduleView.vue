@@ -146,13 +146,13 @@
                   至 {{ formatDisplayDateOnly(s.endDate) }}
                 </span>
                 <span
-                  v-if="s.date && formatDaysDiff(s.date)"
+                  v-if="s.date && formatDaysDiff(s)"
                   :class="[
                     'text-xs px-1.5 py-0.2 rounded font-medium',
-                    formatDaysDiff(s.date)?.urgentClass
+                    formatDaysDiff(s)?.urgentClass
                   ]"
                 >
-                  {{ formatDaysDiff(s.date)?.text }}
+                  {{ formatDaysDiff(s)?.text }}
                 </span>
               </div>
 
@@ -365,7 +365,7 @@ import {
   X,
 } from 'lucide-vue-next'
 import type { ScheduleItem, Project } from '@/types'
-import { formatDate, parseDate } from '@/utils/date'
+import { formatDate, parseDate, isDateInRange } from '@/utils/date'
 
 const props = defineProps<{
   schedules: ScheduleItem[]
@@ -430,12 +430,18 @@ const sortedSchedules = computed(() => {
 
 const upcomingSchedules = computed(() => {
   const todayStr = formatDate(new Date())
-  return sortedSchedules.value.filter((s) => (s.date || '') >= todayStr)
+  return sortedSchedules.value.filter((s) => {
+    const lastDate = s.endDate || s.date || ''
+    return lastDate >= todayStr
+  })
 })
 
 const pastSchedules = computed(() => {
   const todayStr = formatDate(new Date())
-  return sortedSchedules.value.filter((s) => !!s.date && s.date < todayStr)
+  return sortedSchedules.value.filter((s) => {
+    const lastDate = s.endDate || s.date
+    return !!lastDate && lastDate < todayStr
+  })
 })
 
 const displaySchedules = computed(() => {
@@ -468,12 +474,26 @@ function formatDisplayDateOnly(dateStr?: string): string {
   }
 }
 
-function formatDaysDiff(dateStr?: string): { text: string; urgentClass: string } | null {
-  if (!dateStr) return null
+function formatDaysDiff(s: ScheduleItem): { text: string; urgentClass: string } | null {
+  if (!s.date) return null
   try {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
-    const target = parseDate(dateStr)
+    const todayStr = formatDate(today)
+
+    if (s.endDate && s.endDate !== s.date) {
+      if (isDateInRange(todayStr, s.date, s.endDate)) {
+        return { text: '进行中', urgentClass: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300 font-bold' }
+      }
+      if (s.endDate < todayStr) {
+        const end = parseDate(s.endDate)
+        end.setHours(0, 0, 0, 0)
+        const diff = Math.round((today.getTime() - end.getTime()) / (1000 * 60 * 60 * 24))
+        return { text: `已结束 ${diff} 天`, urgentClass: 'bg-slate-100 text-slate-500 dark:bg-slate-800' }
+      }
+    }
+
+    const target = parseDate(s.date)
     target.setHours(0, 0, 0, 0)
     const diff = Math.round((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
     if (diff === 0) {
