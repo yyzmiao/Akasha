@@ -585,36 +585,27 @@
               </div>
             </div>
 
-            <div class="flex items-center gap-2">
-              <button
-                @click="quickAddTodo(displayDays[0].dateStr)"
-                class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 text-xs font-semibold hover:bg-blue-100 dark:hover:bg-blue-900/40 active:scale-95 transition-all shadow-2xs cursor-pointer"
-              >
-                <Plus class="w-3.5 h-3.5" />
-                <span>新建待办</span>
-              </button>
-              <button
-                @click="$emit('open-journal', displayDays[0].dateStr)"
-                class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 text-xs font-semibold hover:bg-amber-100 dark:hover:bg-amber-900/40 active:scale-95 transition-all shadow-2xs cursor-pointer"
-              >
-                <BookOpen class="w-3.5 h-3.5" />
-                <span>{{ hasJournalOnDate(displayDays[0].dateStr) ? '随笔' : '记随笔' }}</span>
-              </button>
-            </div>
           </div>
 
           <!-- Metrics Overview Bar -->
           <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
             <!-- 待办完成率 -->
-            <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <div
+              @click="$emit('switch-tab', 'todos')"
+              class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700/60 hover:bg-emerald-50/40 dark:hover:bg-emerald-950/20 flex items-center justify-between cursor-pointer transition-all group"
+              title="点击前往待办管理"
+            >
               <div class="space-y-0.5 min-w-0">
-                <div class="text-[11px] text-slate-400 font-medium">当日待办事项</div>
+                <div class="text-[11px] text-slate-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 font-medium flex items-center gap-1 transition-colors">
+                  <span>当日待办事项</span>
+                  <ExternalLink class="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
                 <div class="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
                   <span>{{ getDayTodosCompleted(displayDays[0].dateStr) }}/{{ getTodosForDay(displayDays[0].dateStr).length }}</span>
                   <span class="text-[11px] text-slate-400 font-normal">({{ getDayTodosRate(displayDays[0].dateStr) }}%)</span>
                 </div>
               </div>
-              <div class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+              <div class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                 <CheckSquare class="w-4 h-4" />
               </div>
             </div>
@@ -641,14 +632,21 @@
             </div>
 
             <!-- 固定日程 -->
-            <div class="col-span-2 sm:col-span-1 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <div
+              @click="$emit('switch-tab', 'schedules')"
+              class="col-span-2 sm:col-span-1 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-700/60 hover:bg-indigo-50/40 dark:hover:bg-indigo-950/20 flex items-center justify-between cursor-pointer transition-all group"
+              title="点击前往日程管理"
+            >
               <div class="space-y-0.5 min-w-0">
-                <div class="text-[11px] text-slate-400 font-medium">固定日程排期</div>
+                <div class="text-[11px] text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 font-medium flex items-center gap-1 transition-colors">
+                  <span>固定日程排期</span>
+                  <ExternalLink class="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
                 <div class="text-sm font-bold text-slate-800 dark:text-slate-100">
                   {{ getSchedulesForDay(displayDays[0].dateStr).length }} 个事项
                 </div>
               </div>
-              <div class="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+              <div class="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                 <CalendarDays class="w-4 h-4" />
               </div>
             </div>
@@ -713,11 +711,11 @@
                 </span>
               </div>
               <button
-                @click="quickAddTodo(displayDays[0].dateStr)"
-                class="text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 flex items-center gap-0.5 cursor-pointer"
+                @click="$emit('switch-tab', 'todos')"
+                class="text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-0.5 cursor-pointer"
               >
-                <Plus class="w-3.5 h-3.5" />
-                <span>快速添加</span>
+                <span>前往待办</span>
+                <ChevronRight class="w-3.5 h-3.5" />
               </button>
             </div>
 
@@ -770,9 +768,10 @@
             </div>
             <div
               v-else
-              class="text-xs text-slate-400 py-3 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-xl"
+              @click="$emit('switch-tab', 'todos')"
+              class="text-xs text-slate-400 py-3 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-xl hover:border-emerald-300 dark:hover:border-emerald-700/60 hover:text-emerald-600 dark:hover:text-emerald-400 cursor-pointer transition-all"
             >
-              本日暂无待办事项，点击右上角快速添加
+              本日暂无待办事项，点击前往待办管理
             </div>
           </div>
         </div>
@@ -876,7 +875,7 @@
                             <span
                               class="text-[10px] px-1.5 py-0.2 rounded font-medium shrink-0 bg-indigo-100/80 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300"
                             >
-                              {{ item.data.recurringType === 'weekly' ? '每周' : item.data.recurringType === 'monthly' ? '每月' : '固定日程' }}
+                              日程
                             </span>
                           </div>
                           <div v-if="item.projectName" class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1.5">
@@ -1032,20 +1031,20 @@
                   没有固定日程或打卡习惯，享受自由专注的一天。
                 </div>
               </div>
-              <div class="flex items-center justify-center gap-2 pt-1">
+              <div class="flex items-center justify-center gap-2.5 pt-1">
                 <button
-                  @click="quickAddTodo(displayDays[0].dateStr)"
-                  class="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 text-xs font-medium hover:bg-blue-100 transition-colors cursor-pointer"
+                  @click="$emit('switch-tab', 'schedules')"
+                  class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 text-xs font-semibold hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors cursor-pointer shadow-2xs"
                 >
-                  <Plus class="w-3.5 h-3.5" />
-                  <span>新建待办事项</span>
+                  <CalendarDays class="w-3.5 h-3.5" />
+                  <span>查看全部日程</span>
                 </button>
                 <button
-                  @click="$emit('open-journal', displayDays[0].dateStr)"
-                  class="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 text-xs font-medium hover:bg-amber-100 transition-colors cursor-pointer"
+                  @click="$emit('switch-tab', 'habits')"
+                  class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 text-xs font-semibold hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors cursor-pointer shadow-2xs"
                 >
-                  <BookOpen class="w-3.5 h-3.5" />
-                  <span>记录心得随笔</span>
+                  <Sparkles class="w-3.5 h-3.5" />
+                  <span>习惯打卡管理</span>
                 </button>
               </div>
             </div>
@@ -1887,6 +1886,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'switch-tab', tab: string): void
   (e: 'open-todo', todo: TodoItem): void
+  (e: 'open-schedule', schedule: ScheduleItem): void
   (e: 'quick-create-todo', payload: { date: string; title: string } | string): void
   (e: 'open-journal', date: string): void
   (e: 'toggle-todo', id: string): void
@@ -2156,7 +2156,7 @@ function hasIncompleteTodos(dateStr: string): boolean {
 }
 
 function handleOpenSchedule(s: ScheduleItem) {
-  selectedSchedule.value = s
+  emit('open-schedule', s)
 }
 
 function handleDeleteScheduleItem(id: string) {
@@ -2264,22 +2264,7 @@ function getProjectColor(projectId?: string | null): string {
 }
 
 function getSchedulesForDay(dateStr: string): ScheduleItem[] {
-  const d = parseDate(dateStr)
-  const dayOfWeek = d.getDay()
-  const dayOfMonth = d.getDate()
-
-  return props.schedules.filter((s) => {
-    if (s.recurringType === 'none' && s.date) {
-      return s.date === dateStr
-    }
-    if (s.recurringType === 'weekly' && s.recurringDayOfWeek !== undefined) {
-      return s.recurringDayOfWeek === dayOfWeek
-    }
-    if (s.recurringType === 'monthly' && s.recurringDayOfMonth !== undefined) {
-      return s.recurringDayOfMonth === dayOfMonth
-    }
-    return false
-  })
+  return props.schedules.filter((s) => s.date === dateStr)
 }
 
 const datedTodos = computed(() => {

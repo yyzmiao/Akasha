@@ -20,6 +20,7 @@
         :habit-logs="habitLogs"
         @switch-tab="handleTabChange($event as any)"
         @open-todo="handleOpenTodo"
+        @open-schedule="handleOpenSchedule"
         @delete-schedule="handleDeleteSchedule"
         @quick-create-todo="handleQuickCreateTodo"
         @open-journal="handleOpenJournalDate"
@@ -566,6 +567,11 @@ async function handleBatchUpdateTodos(items: TodoItem[]) {
 function handleOpenTodo(todo: TodoItem) {
   targetTodoId.value = todo.id
   activeTab.value = 'todos'
+}
+
+function handleOpenSchedule(schedule: ScheduleItem) {
+  targetScheduleId.value = schedule.id
+  activeTab.value = 'schedules'
 }
 
 function handleQuickCreateTodo(payload: string | { date: string; title?: string }) {

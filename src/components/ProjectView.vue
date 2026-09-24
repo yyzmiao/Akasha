@@ -363,48 +363,12 @@
                 @keyup.enter="handleCreateProjectSchedule"
               />
 
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                <select
-                  v-model="newScheduleRecurringType"
-                  class="px-2 py-1 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs"
-                >
-                  <option value="none">特定日期</option>
-                  <option value="weekly">每周重复</option>
-                  <option value="monthly">每月重复</option>
-                </select>
-
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <input
-                  v-if="newScheduleRecurringType === 'none'"
                   v-model="newScheduleDate"
                   type="date"
                   class="px-2 py-1 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs"
                 />
-
-                <select
-                  v-if="newScheduleRecurringType === 'weekly'"
-                  v-model.number="newScheduleDayOfWeek"
-                  class="px-2 py-1 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs"
-                >
-                  <option :value="1">周一</option>
-                  <option :value="2">周二</option>
-                  <option :value="3">周三</option>
-                  <option :value="4">周四</option>
-                  <option :value="5">周五</option>
-                  <option :value="6">周六</option>
-                  <option :value="0">周日</option>
-                </select>
-
-                <div v-if="newScheduleRecurringType === 'monthly'" class="flex items-center gap-1">
-                  <span class="text-slate-400">每月</span>
-                  <input
-                    v-model.number="newScheduleDayOfMonth"
-                    type="number"
-                    min="1"
-                    max="31"
-                    class="w-14 px-2 py-1 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-center"
-                  />
-                  <span class="text-slate-400">日</span>
-                </div>
 
                 <input
                   v-model="newScheduleTime"
@@ -1299,24 +1263,21 @@ function saveProjectHabitEdit() {
 
 const showAddScheduleInline = ref(false)
 const newScheduleTitle = ref('')
-const newScheduleRecurringType = ref<ScheduleRecurringType>('none')
-const newScheduleDate = ref('')
+const newScheduleDate = ref(formatDate(new Date()))
 const newScheduleTime = ref('')
-const newScheduleDayOfWeek = ref(3)
-const newScheduleDayOfMonth = ref(10)
 
 function handleCreateProjectSchedule() {
   if (!activeProject.value || !newScheduleTitle.value.trim()) return
   emit('save-schedule', {
     projectId: activeProject.value.id,
     title: newScheduleTitle.value.trim(),
-    recurringType: newScheduleRecurringType.value,
-    date: newScheduleRecurringType.value === 'none' ? newScheduleDate.value : undefined,
+    recurringType: 'none',
+    date: newScheduleDate.value || formatDate(new Date()),
     time: newScheduleTime.value || undefined,
-    recurringDayOfWeek: newScheduleRecurringType.value === 'weekly' ? newScheduleDayOfWeek.value : undefined,
-    recurringDayOfMonth: newScheduleRecurringType.value === 'monthly' ? newScheduleDayOfMonth.value : undefined,
   })
   newScheduleTitle.value = ''
+  newScheduleDate.value = formatDate(new Date())
+  newScheduleTime.value = ''
   showAddScheduleInline.value = false
 }
 
