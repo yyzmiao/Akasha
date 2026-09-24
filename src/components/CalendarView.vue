@@ -2242,7 +2242,7 @@ function formatScheduleDetailTiming(s: ScheduleItem): string {
   let timing = ''
   if (s.recurringType === 'weekly' && s.recurringDayOfWeek !== undefined) {
     timing = `每周${weekdays[s.recurringDayOfWeek]}`
-  } else if (s.recurringType === 'monthly' && s.recurringDayOfWeek !== undefined) {
+  } else if (s.recurringType === 'monthly' && s.recurringDayOfMonth !== undefined) {
     timing = `每月${s.recurringDayOfMonth}号`
   } else if (s.date) {
     timing = s.date

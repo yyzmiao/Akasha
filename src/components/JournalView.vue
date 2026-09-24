@@ -505,7 +505,34 @@ const totalEntries = computed(() => props.journals.filter((j) => !!j.content).le
 const totalMemories = computed(() => props.journals.reduce((acc, j) => acc + (j.content ? j.content.trim().length : 0), 0))
 const currentStreak = computed(() => {
   if (totalEntries.value === 0) return 0
-  return 1
+  const journalDates = new Set(
+    props.journals.filter((j) => !!j.content && !!j.content.trim()).map((j) => j.date)
+  )
+  if (journalDates.size === 0) return 0
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const todayStr = formatDate(today)
+
+  let checkDate = new Date(today)
+  if (!journalDates.has(todayStr)) {
+    checkDate.setDate(checkDate.getDate() - 1)
+    if (!journalDates.has(formatDate(checkDate))) {
+      return 0
+    }
+  }
+
+  let streak = 0
+  while (true) {
+    const s = formatDate(checkDate)
+    if (journalDates.has(s)) {
+      streak++
+      checkDate.setDate(checkDate.getDate() - 1)
+    } else {
+      break
+    }
+  }
+  return streak
 })
 const monthsJournaling = computed(() => {
   const months = new Set(props.journals.map((j) => j.date.slice(0, 7)))
@@ -523,7 +550,7 @@ const monthGroups = computed(() => {
 
   const thisMonthKey = formatDate(new Date()).slice(0, 7)
   if (!groups.has(thisMonthKey)) {
-    groups.set(thisMonthKey, totalEntries.value || 0)
+    groups.set(thisMonthKey, 0)
   }
 
   const result: { monthKey: string; label: string; count: number }[] = []

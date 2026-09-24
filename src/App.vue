@@ -161,7 +161,7 @@ import type {
   UiScale,
 } from '@/types'
 import { formatDate } from '@/utils/date'
-import { getDescendantTodoIds } from '@/utils/tree'
+import { getDescendantTodoIds, calculateLinkedTodoCompletion } from '@/utils/tree'
 import { enqueueChange, onRemoteDataChange, syncAll, applyBackupToCloud, resetSyncOutbox } from '@/sync/syncEngine'
 import { isAuthenticated } from '@/sync/pocketbase'
 
@@ -438,7 +438,7 @@ async function handleDeleteProject(id: string) {
     await db.habitLogs.where('habitId').equals(h.id).delete()
     enqueueChange('habit', h.id, null, true)
   }
-  await db.habits.where('projectId').equals(p.id).delete()
+  await db.habits.where('projectId').equals(id).delete()
 
   const tds = await db.todos.where('projectId').equals(id).toArray()
   for (const t of tds) enqueueChange('todo', t.id, null, true)
@@ -535,13 +535,11 @@ async function handleSaveTodo(itemData: Partial<TodoItem>) {
 
 async function handleToggleTodoComplete(id: string) {
   const item = todos.value.find((t) => t.id === id)
-  if (item) {
-    const now = Date.now()
-    const newCompleted = !item.completed
-    await db.todos.update(id, { completed: newCompleted, updatedAt: now })
-    const saved = await db.todos.get(id)
-    if (saved) enqueueChange('todo', saved.id, saved)
-    todos.value = await db.todos.toArray()
+  if (!item) return
+  const willBeCompleted = !item.completed
+  const { changedTodos } = calculateLinkedTodoCompletion(todos.value, id, willBeCompleted)
+  if (changedTodos.length > 0) {
+    await handleBatchUpdateTodos(changedTodos)
   }
 }
 
@@ -819,8 +817,21 @@ async function handleImportData(jsonStr: string) {
 async function handleClearAll() {
   if (confirm('确认清空所有数据（项目、日程、待办、习惯、日记）吗？操作不可恢复。')) {
     await clearAllDatabaseData()
+    if (isAuthenticated.value) {
+      await applyBackupToCloud({
+        areas: [],
+        projects: [],
+        schedules: [],
+        todos: [],
+        habits: [],
+        habitLogs: [],
+        journals: [],
+      })
+    } else {
+      resetSyncOutbox()
+    }
     await loadAllData()
-    alert('所有数据已成功清空！')
+    alert('所有数据已成功清空！' + (isAuthenticated.value ? '云端数据已同步清空。' : ''))
     isSettingsOpen.value = false
   }
 }

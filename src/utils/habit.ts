@@ -187,28 +187,7 @@ export function calculateHabitStreak(
 
   const totalCompleted = logsSet.size
 
-  if (habit.frequency !== 'rotating' && habit.frequency !== 'biweekly') {
-    let streak = 0
-    const checkDate = parseDate(todayStr)
-
-    // 若今天未打卡，由于今天还没过完，先从昨天开始判断
-    if (!logsSet.has(todayStr)) {
-      checkDate.setDate(checkDate.getDate() - 1)
-    }
-
-    while (true) {
-      const s = formatDate(checkDate)
-      if (logsSet.has(s)) {
-        streak++
-        checkDate.setDate(checkDate.getDate() - 1)
-      } else {
-        break
-      }
-    }
-    return { currentStreak: streak, totalCompleted }
-  }
-
-  // 多周轮换习惯：只统计排期日，非排期日跳过
+  // 通用连胜算法：依据 isHabitScheduledForDay 只对排期日计入连胜，非排期日（休息日）绝对不中断连胜
   let streak = 0
   const checkDate = parseDate(todayStr)
   let foundFirstScheduled = false
@@ -219,7 +198,7 @@ export function calculateHabitStreak(
 
     if (isScheduled) {
       if (s === todayStr && !logsSet.has(s)) {
-        // 如果今天是排期日但还未打卡，不打断连胜，等待打卡
+        // 如果今天是排期日但还未打卡，不打断以往连胜，等待今天打卡
       } else if (logsSet.has(s)) {
         streak++
         foundFirstScheduled = true

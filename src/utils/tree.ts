@@ -75,12 +75,16 @@ export function getDescendantTodoIds(todos: TodoItem[], rootId: string): string[
     }
   }
 
+  const visited = new Set<string>([rootId])
   function collect(id: string) {
     const childIds = childrenMap.get(id)
     if (childIds && childIds.length > 0) {
       for (const cid of childIds) {
-        result.push(cid)
-        collect(cid)
+        if (!visited.has(cid)) {
+          visited.add(cid)
+          result.push(cid)
+          collect(cid)
+        }
       }
     }
   }
@@ -124,8 +128,10 @@ export function calculateLinkedTodoCompletion(
     }
 
     // 2. Upward cascade: If all children of an ancestor are now completed, complete the ancestor
+    const visitedAncestors = new Set<string>()
     let currentParentId = target.parentId
-    while (currentParentId) {
+    while (currentParentId && !visitedAncestors.has(currentParentId)) {
+      visitedAncestors.add(currentParentId)
       const parent = itemMap.get(currentParentId)
       if (!parent) break
 
@@ -142,8 +148,10 @@ export function calculateLinkedTodoCompletion(
     // Uncompleting:
     // 1. Downward: Only target itself is uncompleted, children remain as-is
     // 2. Upward: Any ancestor parent CANNOT be completed if a child is incomplete
+    const visitedAncestors = new Set<string>()
     let currentParentId = target.parentId
-    while (currentParentId) {
+    while (currentParentId && !visitedAncestors.has(currentParentId)) {
+      visitedAncestors.add(currentParentId)
       const parent = itemMap.get(currentParentId)
       if (!parent) break
       parent.completed = false

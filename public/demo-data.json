@@ -1,0 +1,308 @@
+{
+  "version": "3.0",
+  "exportTime": "2026-09-24T00:30:00.000Z",
+  "areas": [
+    {
+      "id": "area-1",
+      "title": "🚀 事业与工程",
+      "order": 0,
+      "createdAt": "2026-09-01T08:00:00.000Z"
+    },
+    {
+      "id": "area-2",
+      "title": "📚 研精与成长",
+      "order": 1,
+      "createdAt": "2026-09-01T08:00:00.000Z"
+    },
+    {
+      "id": "area-3",
+      "title": "🏃 身心与健康",
+      "order": 2,
+      "createdAt": "2026-09-01T08:00:00.000Z"
+    },
+    {
+      "id": "area-4",
+      "title": "🪴 生活与美学",
+      "order": 3,
+      "createdAt": "2026-09-01T08:00:00.000Z"
+    }
+  ],
+  "projects": [
+    {
+      "id": "proj-1",
+      "areaId": "area-1",
+      "title": "Akasha 2.0 架构升级",
+      "description": "本地优先、多端同步与响应式全景日历引擎升级",
+      "color": "#3b82f6",
+      "order": 0,
+      "createdAt": "2026-09-05T09:00:00.000Z"
+    },
+    {
+      "id": "proj-2",
+      "areaId": "area-2",
+      "title": "分布式系统与高并发研读",
+      "description": "深入攻读经典论文与现代存储引擎源码",
+      "color": "#8b5cf6",
+      "order": 1,
+      "createdAt": "2026-09-08T10:00:00.000Z"
+    },
+    {
+      "id": "proj-3",
+      "areaId": "area-3",
+      "title": "马拉松备赛体能计划",
+      "description": "配速与有氧心率进阶训练",
+      "color": "#10b981",
+      "order": 2,
+      "createdAt": "2026-09-10T14:00:00.000Z"
+    },
+    {
+      "id": "proj-4",
+      "areaId": "area-4",
+      "title": "工作室设备与桌面升级",
+      "description": "打造无干扰的心流沉浸式工作区",
+      "color": "#f59e0b",
+      "order": 3,
+      "createdAt": "2026-09-12T16:00:00.000Z"
+    }
+  ],
+  "schedules": [
+    {
+      "id": "sch-1",
+      "projectId": "proj-1",
+      "title": "周度产品与架构同步例会",
+      "recurringType": "weekly",
+      "recurringDayOfWeek": 1,
+      "time": "10:00",
+      "createdAt": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": "sch-2",
+      "projectId": "proj-1",
+      "title": "v2.0 生产环境灰度演练",
+      "recurringType": "none",
+      "date": "2026-09-24",
+      "time": "14:30",
+      "createdAt": "2026-09-20T00:00:00.000Z"
+    },
+    {
+      "id": "sch-3",
+      "projectId": "proj-3",
+      "title": "周末 15KM 渐速长距离跑",
+      "recurringType": "weekly",
+      "recurringDayOfWeek": 6,
+      "time": "07:00",
+      "createdAt": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": "sch-4",
+      "projectId": "proj-2",
+      "title": "技术俱乐部季度闭门分享",
+      "recurringType": "none",
+      "date": "2026-09-27",
+      "time": "19:30",
+      "createdAt": "2026-09-15T00:00:00.000Z"
+    },
+    {
+      "id": "sch-5",
+      "projectId": "proj-4",
+      "title": "月度资产结算与收支盘点",
+      "recurringType": "monthly",
+      "recurringDayOfMonth": 28,
+      "time": "20:00",
+      "createdAt": "2026-09-01T00:00:00.000Z"
+    }
+  ],
+  "todos": [
+    {
+      "id": "todo-1",
+      "projectId": "proj-1",
+      "parentId": null,
+      "title": "完成日历全屏视口弹性撑满改造",
+      "completed": true,
+      "importance": 9,
+      "startDate": "2026-09-22",
+      "dueDate": "2026-09-24",
+      "notes": "支持 100vh 弹性缩放，消除底部空白",
+      "order": 0,
+      "collapsed": false,
+      "createdAt": "2026-09-22T08:00:00.000Z"
+    },
+    {
+      "id": "todo-1-1",
+      "projectId": "proj-1",
+      "parentId": "todo-1",
+      "title": "重构 CalendarView GridRows 自适应分配",
+      "completed": true,
+      "importance": 8,
+      "startDate": "2026-09-22",
+      "dueDate": "2026-09-23",
+      "order": 0,
+      "collapsed": false,
+      "createdAt": "2026-09-22T09:00:00.000Z"
+    },
+    {
+      "id": "todo-1-2",
+      "projectId": "proj-1",
+      "parentId": "todo-1",
+      "title": "测试两周与月视图纵向平滑滚动表现",
+      "completed": true,
+      "importance": 6,
+      "startDate": "2026-09-23",
+      "dueDate": "2026-09-24",
+      "order": 1,
+      "collapsed": false,
+      "createdAt": "2026-09-23T10:00:00.000Z"
+    },
+    {
+      "id": "todo-2",
+      "projectId": "proj-1",
+      "parentId": null,
+      "title": "接入 Open-Meteo 全球免 Key 城市搜索",
+      "completed": false,
+      "importance": 8,
+      "startDate": "2026-09-24",
+      "dueDate": "2026-09-25",
+      "notes": "解决代理 IP 导致的漂移，支持手动常驻锁定",
+      "order": 1,
+      "collapsed": false,
+      "createdAt": "2026-09-24T09:00:00.000Z"
+    },
+    {
+      "id": "todo-3",
+      "projectId": "proj-2",
+      "parentId": null,
+      "title": "精读《Designing Data-Intensive Applications》Ch.9 一致性与共识",
+      "completed": false,
+      "importance": 7,
+      "startDate": "2026-09-21",
+      "dueDate": "2026-09-26",
+      "notes": "重点整理 2PC 与 Raft 日志复制的差异对比",
+      "order": 2,
+      "collapsed": false,
+      "createdAt": "2026-09-21T10:00:00.000Z"
+    },
+    {
+      "id": "todo-4",
+      "projectId": "proj-3",
+      "parentId": null,
+      "title": "深蹲与核心力量强化训练 (4组 × 12次)",
+      "completed": true,
+      "importance": 5,
+      "startDate": "2026-09-24",
+      "dueDate": "2026-09-24",
+      "order": 3,
+      "collapsed": false,
+      "createdAt": "2026-09-24T07:00:00.000Z"
+    },
+    {
+      "id": "todo-5",
+      "projectId": "proj-4",
+      "parentId": null,
+      "title": "选购 4K 120Hz Type-C 直连显示器与人体工学校准",
+      "completed": false,
+      "importance": 4,
+      "startDate": "2026-09-25",
+      "dueDate": "2026-09-28",
+      "notes": "重点对比 Dell UltraSharp 与明基专微系列",
+      "order": 4,
+      "collapsed": false,
+      "createdAt": "2026-09-24T11:00:00.000Z"
+    },
+    {
+      "id": "todo-6",
+      "projectId": "proj-1",
+      "parentId": null,
+      "title": "GitHub Release 发布与全景宣传材料输出",
+      "completed": false,
+      "importance": 10,
+      "startDate": "2026-09-28",
+      "dueDate": "2026-09-30",
+      "notes": "带上高分辨率演示动图与架构设计说明",
+      "order": 5,
+      "collapsed": false,
+      "createdAt": "2026-09-24T12:00:00.000Z"
+    }
+  ],
+  "habits": [
+    {
+      "id": "habit-1",
+      "projectId": "proj-2",
+      "title": "晨起英文技术原著精读 20 分钟",
+      "frequency": "daily",
+      "timeSlot": "morning",
+      "showOnCalendar": true,
+      "createdAt": "2026-09-01T07:00:00.000Z"
+    },
+    {
+      "id": "habit-2",
+      "projectId": "proj-3",
+      "title": "午后有氧拉伸与眼部热敷",
+      "frequency": "daily",
+      "timeSlot": "afternoon",
+      "showOnCalendar": false,
+      "createdAt": "2026-09-01T12:00:00.000Z"
+    },
+    {
+      "id": "habit-3",
+      "projectId": "proj-3",
+      "title": "AB 轮换专项体能跑 (2周一循环)",
+      "frequency": "rotating",
+      "timeSlot": "evening",
+      "cycleWeeks": 2,
+      "anchorDate": "2026-09-21",
+      "weekPatterns": {
+        "1": [2, 4],
+        "2": [3, 5]
+      },
+      "showOnCalendar": true,
+      "createdAt": "2026-09-21T00:00:00.000Z"
+    },
+    {
+      "id": "habit-4",
+      "projectId": "proj-4",
+      "title": "每周沉浸式深度复盘与规划",
+      "frequency": "weekly",
+      "targetCount": 1,
+      "showOnCalendar": true,
+      "createdAt": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": "habit-5",
+      "projectId": "proj-4",
+      "title": "每月精读一本非虚构人文出版物",
+      "frequency": "monthly",
+      "targetCount": 1,
+      "showOnCalendar": false,
+      "createdAt": "2026-09-01T00:00:00.000Z"
+    }
+  ],
+  "habitLogs": [
+    { "id": "log-1-18", "habitId": "habit-1", "date": "2026-09-18", "completed": true, "completedAt": "2026-09-18T07:30:00.000Z" },
+    { "id": "log-1-19", "habitId": "habit-1", "date": "2026-09-19", "completed": true, "completedAt": "2026-09-19T07:45:00.000Z" },
+    { "id": "log-1-20", "habitId": "habit-1", "date": "2026-09-20", "completed": true, "completedAt": "2026-09-20T08:00:00.000Z" },
+    { "id": "log-1-21", "habitId": "habit-1", "date": "2026-09-21", "completed": true, "completedAt": "2026-09-21T07:15:00.000Z" },
+    { "id": "log-1-22", "habitId": "habit-1", "date": "2026-09-22", "completed": true, "completedAt": "2026-09-22T07:20:00.000Z" },
+    { "id": "log-1-23", "habitId": "habit-1", "date": "2026-09-23", "completed": true, "completedAt": "2026-09-23T07:10:00.000Z" },
+    { "id": "log-1-24", "habitId": "habit-1", "date": "2026-09-24", "completed": true, "completedAt": "2026-09-24T07:35:00.000Z" },
+    { "id": "log-3-22", "habitId": "habit-3", "date": "2026-09-22", "completed": true, "completedAt": "2026-09-22T19:30:00.000Z" },
+    { "id": "log-3-24", "habitId": "habit-3", "date": "2026-09-24", "completed": true, "completedAt": "2026-09-24T20:00:00.000Z" }
+  ],
+  "journals": [
+    {
+      "id": "j-2026-09-23",
+      "date": "2026-09-23",
+      "createdAt": "2026-09-23T22:30:00.000Z",
+      "updatedAt": "2026-09-23T23:00:00.000Z",
+      "mood": "✨ 充实专注",
+      "content": "· 今日速记与心境：\n完成了日历全屏弹性布局与多视角看板的调优，整体交互非常流畅。心流状态保持得极好。\n\n· 发生的人和事：\n与几位老友交流了开源自托管工具的架构演进，大家对 Local-First 搭配轻量 SQLite 同步的思路非常认可。\n\n· 推进与收获：\n技术债务清理完毕，日历在 2K 屏幕下的饱满度大幅提升。"
+    },
+    {
+      "id": "j-2026-09-24",
+      "date": "2026-09-24",
+      "createdAt": "2026-09-24T21:40:00.000Z",
+      "updatedAt": "2026-09-24T21:40:00.000Z",
+      "mood": "🚀 满载前行",
+      "content": "· 今日速记与心境：\n天气晴好，22°C 适度宜人。上午搞定架构灰度演练，下午把多周轮换的排期边界理清，思路极为透彻。\n\n· 发生的人和事：\n完成 4 组深蹲力量训练，体能明显恢复。\n\n· 推进与收获：\n准备筹备 GitHub Release 演示图，专注每一处像素级的打磨。"
+    }
+  ]
+}

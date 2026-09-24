@@ -1255,7 +1255,6 @@ function handleCreate() {
     weekPatterns: newFrequency.value === 'rotating' ? newWeekPatterns.value : undefined,
   }
   emit('save-habit', payload)
-  emit('create-habit', payload)
   newTitle.value = ''
   newProjectId.value = null
   showAddForm.value = false

@@ -514,6 +514,11 @@ export async function applyBackupToCloud(backupData: any): Promise<void> {
   try {
     const existingCloudRecords = await pb.collection('sync_items').getFullList<SyncItemRecord>()
 
+    const existingCloudMap = new Map<string, SyncItemRecord>()
+    for (const record of existingCloudRecords) {
+      existingCloudMap.set(`${record.entityType}:${record.entityId}`, record)
+    }
+
     // Tombstone cloud records that do not exist in the backup
     for (const record of existingCloudRecords) {
       const key = `${record.entityType}:${record.entityId}`
@@ -527,19 +532,13 @@ export async function applyBackupToCloud(backupData: any): Promise<void> {
       }
     }
 
-    // Upsert backup items to cloud
+    // Upsert backup items to cloud (using in-memory map to avoid N+1 network requests)
     for (const item of backupBatch) {
       try {
-        let existingRecord: any = null
-        try {
-          existingRecord = await pb.collection('sync_items').getFirstListItem(
-            `entityType="${item.entityType}" && entityId="${item.entityId}"`
-          )
-        } catch (err: any) {
-          if (err.status !== 404) throw err
-        }
+        const key = `${item.entityType}:${item.entityId}`
+        const existingRecord = existingCloudMap.get(key)
 
-        if (existingRecord) {
+        if (existingRecord && existingRecord.id) {
           await pb.collection('sync_items').update(existingRecord.id, {
             payload: item.payload,
             clientUpdatedAt: now,

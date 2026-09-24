@@ -66,17 +66,26 @@ export function isDateInRange(dateStr: string, startDateStr: string, endDateStr:
   return dateStr >= startDateStr && dateStr <= endDateStr
 }
 
-export function getDaysRemaining(dueDateStr: string): number {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const due = parseDate(dueDateStr)
-  due.setHours(0, 0, 0, 0)
-  const diffTime = due.getTime() - today.getTime()
-  return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+export function getDaysRemaining(dueDateStr?: string | null): number {
+  if (!dueDateStr || !dueDateStr.trim()) return NaN
+  try {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const due = parseDate(dueDateStr)
+    due.setHours(0, 0, 0, 0)
+    if (isNaN(due.getTime())) return NaN
+    const diffTime = due.getTime() - today.getTime()
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+  } catch {
+    return NaN
+  }
 }
 
-export function formatDaysRemaining(dueDateStr: string): { text: string; urgentLevel: 'normal' | 'warning' | 'danger' | 'overdue' } {
+export function formatDaysRemaining(dueDateStr?: string | null): { text: string; urgentLevel: 'normal' | 'warning' | 'danger' | 'overdue' } {
   const days = getDaysRemaining(dueDateStr)
+  if (isNaN(days)) {
+    return { text: '无截止日期', urgentLevel: 'normal' }
+  }
   if (days < 0) {
     return { text: `逾期 ${Math.abs(days)} 天`, urgentLevel: 'overdue' }
   } else if (days === 0) {
