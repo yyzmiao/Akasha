@@ -788,14 +788,6 @@
                 (固定日程、习惯打卡与重要里程碑)
               </span>
             </div>
-
-            <div
-              v-if="displayDays[0].isToday"
-              class="flex items-center gap-1.5 text-xs text-rose-600 dark:text-rose-400 font-semibold"
-            >
-              <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
-              <span>实时时间线</span>
-            </div>
           </div>
 
           <!-- Timeline Flow Container -->
