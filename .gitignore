@@ -34,3 +34,4 @@ dist-ssr
 !.env.example
 # PocketBase Data
 pb_data/
+docker-compose.override.yml
