@@ -183,7 +183,17 @@
                   </h3>
                 </div>
 
-                <ChevronRight class="w-4 h-4 text-slate-300 group-hover:text-blue-600 transition-colors shrink-0" />
+                <div class="flex items-center gap-1 shrink-0">
+                  <button
+                    type="button"
+                    @click.stop="openEditProjectModal(proj)"
+                    class="p-1 rounded text-slate-400 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                    title="修改项目"
+                  >
+                    <Edit2 class="w-3.5 h-3.5" />
+                  </button>
+                  <ChevronRight class="w-4 h-4 text-slate-300 group-hover:text-blue-600 transition-colors shrink-0" />
+                </div>
               </div>
 
               <div class="flex flex-wrap items-center gap-1.5 text-[11px] text-slate-500 my-3">
@@ -256,6 +266,13 @@
 
           <div class="flex items-center gap-1 sm:gap-2">
             <button
+              @click="openEditProjectModal(activeProject)"
+              class="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+              title="修改项目"
+            >
+              <Edit2 class="w-4 h-4" />
+            </button>
+            <button
               @click="handleDeleteProject(activeProject.id)"
               class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30"
               title="删除项目"
@@ -279,59 +296,12 @@
                 <span>习惯打卡 ({{ activeProjectHabits.length }})</span>
               </h4>
               <button
-                @click="showAddHabitInline = !showAddHabitInline"
-                class="text-xs text-blue-600 hover:underline flex items-center gap-1"
+                @click="openCreateProjectHabit()"
+                class="text-xs text-blue-600 hover:underline flex items-center gap-1 font-medium cursor-pointer"
               >
                 <Plus class="w-3.5 h-3.5" />
-                <span>添加习惯</span>
+                <span>新建习惯</span>
               </button>
-            </div>
-
-            <div
-              v-if="showAddHabitInline"
-              class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2 text-xs"
-            >
-              <input
-                v-model="newHabitTitle"
-                type="text"
-                placeholder="习惯名称..."
-                class="w-full px-2.5 py-1.5 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none"
-                @keyup.enter="handleCreateProjectHabit"
-              />
-              <div class="flex flex-wrap items-center gap-2">
-                <select
-                  v-model="newHabitFrequency"
-                  class="px-2 py-1 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs"
-                >
-                  <option value="daily">每日习惯</option>
-                  <option value="weekly">每周习惯</option>
-                  <option value="rotating">多周轮换循环</option>
-                  <option value="monthly">每月习惯</option>
-                </select>
-                <select
-                  v-if="newHabitFrequency === 'daily'"
-                  v-model="newHabitSlot"
-                  class="px-2 py-1 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs"
-                >
-                  <option value="morning">早晨</option>
-                  <option value="afternoon">下午</option>
-                  <option value="evening">晚上</option>
-                  <option value="anytime">全天</option>
-                </select>
-                <input
-                  v-model="newHabitTime"
-                  type="time"
-                  placeholder="留空按时段"
-                  class="px-2 py-1 text-xs rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 font-mono"
-                  title="具体打卡时间点 (几点几分，可选)"
-                />
-                <button
-                  @click="handleCreateProjectHabit"
-                  class="ml-auto px-3 py-1 bg-blue-600 text-white rounded font-medium"
-                >
-                  保存
-                </button>
-              </div>
             </div>
 
             <div v-if="activeProjectHabits.length === 0" class="text-center py-3 text-xs text-slate-400">
@@ -434,49 +404,12 @@
                 <span>固定日程 ({{ activeProjectSchedules.length }})</span>
               </h4>
               <button
-                @click="showAddScheduleInline = !showAddScheduleInline"
-                class="text-xs text-blue-600 hover:underline flex items-center gap-1"
+                @click="openCreateProjectSchedule()"
+                class="text-xs text-blue-600 hover:underline flex items-center gap-1 font-medium cursor-pointer"
               >
                 <Plus class="w-3.5 h-3.5" />
-                <span>添加日程</span>
+                <span>新建日程</span>
               </button>
-            </div>
-
-            <div
-              v-if="showAddScheduleInline"
-              class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2 text-xs"
-            >
-              <input
-                v-model="newScheduleTitle"
-                type="text"
-                placeholder="日程标题..."
-                class="w-full px-2.5 py-1.5 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none"
-                @keyup.enter="handleCreateProjectSchedule"
-              />
-
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <input
-                  v-model="newScheduleDate"
-                  type="date"
-                  class="px-2 py-1 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs"
-                />
-
-                <input
-                  v-model="newScheduleTime"
-                  type="time"
-                  placeholder="时间（可选）"
-                  class="px-2 py-1 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs"
-                />
-              </div>
-
-              <div class="flex justify-end pt-1">
-                <button
-                  @click="handleCreateProjectSchedule"
-                  class="px-3 py-1 bg-blue-600 text-white rounded font-medium"
-                >
-                  保存
-                </button>
-              </div>
             </div>
 
             <div v-if="activeProjectSchedules.length === 0" class="text-center py-3 text-xs text-slate-400">
@@ -488,20 +421,30 @@
                 :key="s.id"
                 class="group flex items-center justify-between p-2 rounded-lg border border-slate-200 dark:border-slate-800 text-xs"
               >
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 min-w-0">
                   <Calendar class="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                  <span class="font-medium text-slate-800 dark:text-slate-100">{{ s.title }}</span>
-                  <span class="text-[11px] px-1.5 py-0.2 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-600 font-mono">
+                  <span class="font-medium text-slate-800 dark:text-slate-100 truncate">{{ s.title }}</span>
+                  <span class="text-[11px] px-1.5 py-0.2 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-600 font-mono shrink-0">
                     {{ formatScheduleTiming(s) }}
                   </span>
                 </div>
 
-                <button
-                  @click="handleDeleteScheduleItem(s.id)"
-                  class="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 sm:p-1 text-slate-400 hover:text-rose-600 transition-opacity"
-                >
-                  <Trash2 class="w-3.5 h-3.5" />
-                </button>
+                <div class="flex items-center gap-1 shrink-0 ml-2">
+                  <button
+                    @click.stop="openEditProjectSchedule(s)"
+                    class="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 sm:p-1 rounded-md text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-all cursor-pointer"
+                    title="修改日程"
+                  >
+                    <Pencil class="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    @click.stop="handleDeleteScheduleItem(s.id)"
+                    class="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 sm:p-1 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-all cursor-pointer"
+                    title="删除日程"
+                  >
+                    <Trash2 class="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -512,21 +455,12 @@
                 <CheckSquare class="w-3.5 h-3.5 text-blue-600" />
                 <span>待办清单 ({{ activeProjectTodos.length }})</span>
               </h4>
-            </div>
-
-            <div class="flex items-center gap-2">
-              <input
-                v-model="newProjectTodoTitle"
-                type="text"
-                placeholder="新建项目待办..."
-                class="flex-1 px-3 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500"
-                @keyup.enter="handleCreateProjectRootTodo"
-              />
               <button
-                @click="handleCreateProjectRootTodo"
-                class="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium"
+                @click="openCreateProjectTodo()"
+                class="text-xs text-blue-600 hover:underline flex items-center gap-1 font-medium cursor-pointer"
               >
-                添加
+                <Plus class="w-3.5 h-3.5" />
+                <span>新建待办</span>
               </button>
             </div>
 
@@ -555,16 +489,16 @@
 
     <!-- New Project Modal -->
     <div
-      v-if="showNewProjectModal"
-      class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-sm"
-      @click.self="showNewProjectModal = false"
+      v-if="showProjectModal"
+      class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-sm"
+      @click.self="showProjectModal = false"
     >
       <div class="w-full sm:max-w-md bg-white dark:bg-slate-900 border-t sm:border border-slate-200 dark:border-slate-800 rounded-t-2xl sm:rounded-xl p-5 space-y-4 shadow-xl pb-safe animate-in slide-in-from-bottom-6 sm:slide-in-from-bottom-2 duration-200">
         <div class="sm:hidden w-10 h-1 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto -mt-2 mb-2"></div>
 
         <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
-          <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">新建项目</h3>
-          <button @click="showNewProjectModal = false" class="p-1 rounded-md text-slate-400 hover:text-slate-600">
+          <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ editingProjectId ? '修改项目' : '新建项目' }}</h3>
+          <button @click="showProjectModal = false" class="p-1 rounded-md text-slate-400 hover:text-slate-600">
             <X class="w-4 h-4" />
           </button>
         </div>
@@ -587,7 +521,7 @@
               type="text"
               placeholder="项目名称..."
               class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950"
-              @keyup.enter="handleSaveNewProject"
+              @keyup.enter="handleSaveProject"
             />
           </div>
 
@@ -609,13 +543,13 @@
 
         <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
           <button
-            @click="showNewProjectModal = false"
+            @click="showProjectModal = false"
             class="flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
           >
             取消
           </button>
           <button
-            @click="handleSaveNewProject"
+            @click="handleSaveProject"
             class="flex-1 sm:flex-none px-5 py-2 rounded-lg text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
           >
             保存
@@ -668,14 +602,14 @@
     <!-- Edit Project Todo Modal -->
     <div
       v-if="editingProjectTodo"
-      class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-sm"
+      class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-sm"
       @click.self="editingProjectTodo = null"
     >
       <div class="w-full sm:max-w-md bg-white dark:bg-slate-900 border-t sm:border border-slate-200 dark:border-slate-800 rounded-t-2xl sm:rounded-xl p-5 space-y-4 shadow-xl max-h-[88vh] overflow-y-auto pb-safe animate-in slide-in-from-bottom-6 sm:slide-in-from-bottom-2 duration-200">
         <div class="sm:hidden w-10 h-1 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto -mt-2 mb-2"></div>
 
         <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
-          <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">设置待办属性</h3>
+          <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ editingProjectTodo.id ? '设置待办属性' : '新建项目待办' }}</h3>
           <button @click="editingProjectTodo = null" class="p-1 rounded-md text-slate-400 hover:text-slate-600">
             <X class="w-4 h-4" />
           </button>
@@ -839,7 +773,7 @@
     <!-- 习惯修改弹窗 (Edit Habit Modal) -->
     <div
       v-if="editingProjectHabit"
-      class="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
+      class="fixed inset-0 z-[60] bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
       @click.self="editingProjectHabit = null"
       @keydown.esc="editingProjectHabit = null"
     >
@@ -854,8 +788,8 @@
               <Pencil class="w-4 h-4" />
             </div>
             <div>
-              <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-200">修改习惯</h3>
-              <p class="text-[11px] text-slate-400">调整习惯属性与循环规则</p>
+              <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-200">{{ editingProjectHabit.id ? '修改习惯' : '新建习惯' }}</h3>
+              <p class="text-[11px] text-slate-400">{{ editingProjectHabit.id ? '调整习惯属性与循环规则' : '创建新习惯并设定执行周期与排期' }}</p>
             </div>
           </div>
           <button
@@ -1115,6 +1049,167 @@
             class="px-5 py-2 rounded-lg text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-colors"
           >
             保存修改
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- Create / Edit Project Schedule Modal -->
+    <div
+      v-if="showProjectScheduleModal"
+      class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-sm"
+      @click.self="showProjectScheduleModal = false"
+    >
+      <div class="w-full sm:max-w-md bg-white dark:bg-slate-900 border-t sm:border border-slate-200 dark:border-slate-800 rounded-t-2xl sm:rounded-xl p-5 sm:p-6 space-y-4 shadow-xl max-h-[88vh] overflow-y-auto pb-safe animate-in slide-in-from-bottom-6 sm:slide-in-from-bottom-2 duration-200">
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+          <div class="flex items-center gap-2">
+            <CalendarDays class="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            <h3 class="text-base font-bold text-slate-900 dark:text-slate-100">
+              {{ editingScheduleId ? '修改日程' : '新建日程' }}
+            </h3>
+          </div>
+          <button
+            @click="showProjectScheduleModal = false"
+            class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+          >
+            <X class="w-4 h-4" />
+          </button>
+        </div>
+
+        <!-- Form Content -->
+        <div class="space-y-3.5 text-xs sm:text-sm">
+          <!-- Title -->
+          <div class="space-y-1">
+            <label class="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              日程名称 <span class="text-rose-500">*</span>
+            </label>
+            <input
+              v-model="scheduleModalTitle"
+              type="text"
+              placeholder="例如：下午2点项目评审、周四体检、客户面谈..."
+              class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              @keydown.enter="handleSaveProjectSchedule"
+            />
+          </div>
+
+          <!-- Project Select -->
+          <div class="space-y-1">
+            <label class="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              所属项目
+            </label>
+            <select
+              v-model="scheduleModalProjectId"
+              class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
+            >
+              <option :value="null">无归属项目 (公共日常)</option>
+              <option
+                v-for="p in projects"
+                :key="p.id"
+                :value="p.id"
+              >
+                {{ p.title }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Time Arrangement -->
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <label class="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <Clock class="w-3.5 h-3.5 text-blue-500" />
+                <span>时间安排 <span class="text-rose-500">*</span></span>
+              </label>
+              <label class="inline-flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  v-model="scheduleModalIsAllDay"
+                  @change="handleScheduleModalAllDayChange"
+                  class="rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500/20"
+                />
+                <span>全天日程</span>
+              </label>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <!-- Box 1: 开始时间 -->
+              <div>
+                <div class="flex items-center justify-between mb-1">
+                  <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">
+                    {{ scheduleModalIsAllDay ? '开始日期' : '开始时间' }}
+                  </label>
+                </div>
+                <input
+                  v-if="!scheduleModalIsAllDay"
+                  v-model="scheduleModalStartDateTime"
+                  type="datetime-local"
+                  class="w-full px-2.5 py-1.5 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 font-mono"
+                />
+                <input
+                  v-else
+                  v-model="scheduleModalStartDateOnly"
+                  type="date"
+                  class="w-full px-2.5 py-1.5 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 font-mono"
+                />
+              </div>
+
+              <!-- Box 2: 结束时间 -->
+              <div>
+                <div class="flex items-center justify-between mb-1">
+                  <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">
+                    {{ scheduleModalIsAllDay ? '结束日期' : '结束时间' }}
+                  </label>
+                  <button
+                    v-if="scheduleModalIsAllDay ? scheduleModalEndDateOnly : scheduleModalEndDateTime"
+                    type="button"
+                    @click="clearScheduleModalEnd"
+                    class="text-[10px] text-slate-400 hover:text-rose-500 cursor-pointer"
+                  >
+                    清除
+                  </button>
+                </div>
+                <input
+                  v-if="!scheduleModalIsAllDay"
+                  v-model="scheduleModalEndDateTime"
+                  type="datetime-local"
+                  class="w-full px-2.5 py-1.5 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 font-mono"
+                />
+                <input
+                  v-else
+                  v-model="scheduleModalEndDateOnly"
+                  type="date"
+                  class="w-full px-2.5 py-1.5 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 font-mono"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Notes -->
+          <div class="space-y-1">
+            <label class="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              备注说明 (可选)
+            </label>
+            <textarea
+              v-model="scheduleModalNotes"
+              rows="3"
+              placeholder="添加地点、说明或准备事项..."
+              class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            ></textarea>
+          </div>
+        </div>
+
+        <!-- Modal Actions -->
+        <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+          <button
+            @click="showProjectScheduleModal = false"
+            class="px-4 py-2 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+          >
+            取消
+          </button>
+          <button
+            @click="handleSaveProjectSchedule"
+            class="px-5 py-2 rounded-xl text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white shadow-xs transition-colors cursor-pointer"
+          >
+            保存
           </button>
         </div>
       </div>
@@ -1391,29 +1486,24 @@ function formatScheduleTiming(s: ScheduleItem): string {
   return timing
 }
 
-const showAddHabitInline = ref(false)
-const newHabitTitle = ref('')
-const newHabitFrequency = ref<HabitFrequency>('daily')
-const newHabitSlot = ref<TimeSlot>('anytime')
-const newHabitTime = ref('')
-
-function handleCreateProjectHabit() {
-  if (!activeProject.value || !newHabitTitle.value.trim()) return
-  emit('save-habit', {
-    projectId: activeProject.value.id,
-    title: newHabitTitle.value.trim(),
-    frequency: newHabitFrequency.value,
-    timeSlot: newHabitSlot.value,
-    time: newHabitTime.value ? newHabitTime.value.trim() : undefined,
+// --- 习惯弹窗状态：新建习惯 ---
+function openCreateProjectHabit() {
+  editingProjectHabit.value = {
+    id: '',
+    title: '',
+    projectId: activeProject.value?.id || null,
+    frequency: 'daily',
+    timeSlot: 'anytime',
+    time: '',
     timingType: 'anytime',
-    cycleWeeks: newHabitFrequency.value === 'rotating' ? 2 : undefined,
-    anchorDate: newHabitFrequency.value === 'rotating' ? todayStr : undefined,
-    weekPatterns: newHabitFrequency.value === 'rotating' ? { 1: [1, 2, 3, 4, 5], 2: [1, 2, 3, 4, 5] } : undefined,
-  })
-  newHabitTitle.value = ''
-  newHabitTime.value = ''
-  showAddHabitInline.value = false
+    targetCount: 1,
+    anchorDate: todayStr,
+    cycleWeeks: 2,
+    weekPatterns: { 1: [1, 2, 3, 4, 5], 2: [1, 2, 3, 4, 5] },
+    showOnCalendar: true,
+  }
 }
+
 
 const editingProjectHabit = ref<{
   id: string
@@ -1515,10 +1605,9 @@ const editProjectRotatingPreview = computed(() => {
 
 function saveProjectHabitEdit() {
   if (!editingProjectHabit.value || !editingProjectHabit.value.title.trim()) return
-  emit('save-habit', {
-    id: editingProjectHabit.value.id,
+  const payload: Partial<Habit> = {
     title: editingProjectHabit.value.title.trim(),
-    projectId: editingProjectHabit.value.projectId || null,
+    projectId: editingProjectHabit.value.projectId || activeProject.value?.id || null,
     frequency: editingProjectHabit.value.frequency,
     timeSlot: editingProjectHabit.value.timeSlot,
     time: editingProjectHabit.value.time ? editingProjectHabit.value.time.trim() : undefined,
@@ -1528,63 +1617,169 @@ function saveProjectHabitEdit() {
     cycleWeeks: editingProjectHabit.value.frequency === 'rotating' ? (editingProjectHabit.value.cycleWeeks || 2) : undefined,
     weekPatterns: editingProjectHabit.value.frequency === 'rotating' ? editingProjectHabit.value.weekPatterns : undefined,
     showOnCalendar: editingProjectHabit.value.showOnCalendar,
-  })
+  }
+
+  if (editingProjectHabit.value.id) {
+    payload.id = editingProjectHabit.value.id
+  }
+
+  emit('save-habit', payload)
   editingProjectHabit.value = null
 }
 
-const showAddScheduleInline = ref(false)
-const newScheduleTitle = ref('')
-const newScheduleDate = ref(formatDate(new Date()))
-const newScheduleTime = ref('')
+// --- 项目日程弹窗状态 ---
+const showProjectScheduleModal = ref(false)
+const editingScheduleId = ref<string | null>(null)
+const scheduleModalTitle = ref('')
+const scheduleModalProjectId = ref<string | null>(null)
+const scheduleModalIsAllDay = ref(false)
+const scheduleModalStartDateTime = ref('')
+const scheduleModalEndDateTime = ref('')
+const scheduleModalStartDateOnly = ref('')
+const scheduleModalEndDateOnly = ref('')
+const scheduleModalNotes = ref('')
 
-function handleCreateProjectSchedule() {
-  if (!activeProject.value || !newScheduleTitle.value.trim()) return
-  emit('save-schedule', {
-    projectId: activeProject.value.id,
-    title: newScheduleTitle.value.trim(),
-    recurringType: 'none',
-    date: newScheduleDate.value || formatDate(new Date()),
-    time: newScheduleTime.value || undefined,
-  })
-  newScheduleTitle.value = ''
-  newScheduleDate.value = formatDate(new Date())
-  newScheduleTime.value = ''
-  showAddScheduleInline.value = false
+function openCreateProjectSchedule() {
+  editingScheduleId.value = null
+  scheduleModalTitle.value = ''
+  scheduleModalProjectId.value = activeProject.value?.id || null
+  scheduleModalIsAllDay.value = false
+  scheduleModalStartDateTime.value = `${todayStr}T09:00`
+  scheduleModalEndDateTime.value = `${todayStr}T18:00`
+  scheduleModalStartDateOnly.value = todayStr
+  scheduleModalEndDateOnly.value = todayStr
+  scheduleModalNotes.value = ''
+  showProjectScheduleModal.value = true
 }
 
-const newProjectTodoTitle = ref('')
-function handleCreateProjectRootTodo() {
-  if (!activeProject.value || !newProjectTodoTitle.value.trim()) return
-  emit('save-todo', {
-    projectId: activeProject.value.id,
-    parentId: null,
-    title: newProjectTodoTitle.value.trim(),
+function openEditProjectSchedule(s: ScheduleItem) {
+  editingScheduleId.value = s.id
+  scheduleModalTitle.value = s.title
+  scheduleModalProjectId.value = s.projectId || activeProject.value?.id || null
+  scheduleModalNotes.value = s.notes || ''
+
+  const isAllDay = !s.time && !s.endTime
+  scheduleModalIsAllDay.value = isAllDay
+
+  if (isAllDay) {
+    scheduleModalStartDateOnly.value = s.date || todayStr
+    scheduleModalEndDateOnly.value = s.endDate || s.date || todayStr
+    scheduleModalStartDateTime.value = `${scheduleModalStartDateOnly.value}T09:00`
+    scheduleModalEndDateTime.value = `${scheduleModalEndDateOnly.value}T18:00`
+  } else {
+    const sDate = s.date || todayStr
+    const eDate = s.endDate || sDate
+    const sTime = s.time || '09:00'
+    const eTime = s.endTime || '18:00'
+    scheduleModalStartDateTime.value = `${sDate}T${sTime}`
+    scheduleModalEndDateTime.value = `${eDate}T${eTime}`
+    scheduleModalStartDateOnly.value = sDate
+    scheduleModalEndDateOnly.value = eDate
+  }
+
+  showProjectScheduleModal.value = true
+}
+
+function handleScheduleModalAllDayChange() {
+  if (scheduleModalIsAllDay.value) {
+    if (scheduleModalStartDateTime.value) {
+      scheduleModalStartDateOnly.value = scheduleModalStartDateTime.value.split('T')[0]
+    }
+    if (scheduleModalEndDateTime.value) {
+      scheduleModalEndDateOnly.value = scheduleModalEndDateTime.value.split('T')[0]
+    }
+  } else {
+    if (scheduleModalStartDateOnly.value) {
+      scheduleModalStartDateTime.value = `${scheduleModalStartDateOnly.value}T09:00`
+    }
+    if (scheduleModalEndDateOnly.value) {
+      scheduleModalEndDateTime.value = `${scheduleModalEndDateOnly.value}T18:00`
+    }
+  }
+}
+
+function clearScheduleModalEnd() {
+  scheduleModalEndDateTime.value = ''
+  scheduleModalEndDateOnly.value = ''
+}
+
+function handleSaveProjectSchedule() {
+  if (!scheduleModalTitle.value.trim()) return
+
+  let date: string
+  let time: string | undefined
+  let endDate: string | undefined
+  let endTime: string | undefined
+
+  if (scheduleModalIsAllDay.value) {
+    date = scheduleModalStartDateOnly.value || todayStr
+    endDate = scheduleModalEndDateOnly.value || date
+    time = undefined
+    endTime = undefined
+  } else {
+    if (scheduleModalStartDateTime.value) {
+      const [d, t] = scheduleModalStartDateTime.value.split('T')
+      date = d
+      time = t
+    } else {
+      date = todayStr
+      time = '09:00'
+    }
+
+    if (scheduleModalEndDateTime.value) {
+      const [d, t] = scheduleModalEndDateTime.value.split('T')
+      endDate = d
+      endTime = t
+    }
+  }
+
+  const payload: Partial<ScheduleItem> = {
+    title: scheduleModalTitle.value.trim(),
+    projectId: scheduleModalProjectId.value || activeProject.value?.id || null,
+    date,
+    time,
+    endDate: endDate !== date ? endDate : undefined,
+    endTime,
+    notes: scheduleModalNotes.value.trim() || undefined,
+  }
+
+  if (editingScheduleId.value) {
+    payload.id = editingScheduleId.value
+  }
+
+  emit('save-schedule', payload)
+  showProjectScheduleModal.value = false
+}
+
+// --- 待办弹窗状态：新建待办 ---
+function openCreateProjectTodo(parentId?: string) {
+  editingProjectTodo.value = {
+    id: '',
+    title: '',
     completed: false,
-    order: activeProjectTodos.value.filter((t) => t.parentId === null).length,
     importance: 5,
-  })
-  newProjectTodoTitle.value = ''
+    projectId: activeProject.value?.id || null,
+    parentId: parentId || null,
+    order: activeProjectTodos.value.length,
+    notes: '',
+  }
+
+  isProjectTodoAllDay.value = false
+  projectTodoStartDateTime.value = `${todayStr}T09:00`
+  projectTodoEndDateTime.value = `${todayStr}T18:00`
+  projectTodoStartDateOnly.value = todayStr
+  projectTodoEndDateOnly.value = todayStr
 }
 
 function handleAddTodoChild(parentId: string) {
   if (!activeProject.value) return
-  const childTitle = prompt('子代办名称：')
-  if (!childTitle || !childTitle.trim()) return
-
   const parent = props.todos.find((t) => t.id === parentId)
   if (parent && parent.collapsed) {
     emit('save-todo', { ...parent, collapsed: false })
   }
-
-  emit('save-todo', {
-    projectId: activeProject.value.id,
-    parentId,
-    title: childTitle.trim(),
-    completed: false,
-    order: props.todos.filter((t) => t.parentId === parentId).length,
-    importance: parent?.importance || 5,
-  })
+  openCreateProjectTodo(parentId)
 }
+
 
 function handleToggleTodoComplete(id: string) {
   const item = props.todos.find((t) => t.id === id)
@@ -1707,6 +1902,7 @@ function handleOpenTodoDetails(item: TodoItem) {
 
 function saveProjectTodoDetails() {
   if (editingProjectTodo.value) {
+    if (!editingProjectTodo.value.title.trim()) return
     const { children, ...cleanItem } = editingProjectTodo.value
     let startDate: string | undefined
     let startTime: string | undefined
@@ -1731,14 +1927,22 @@ function saveProjectTodoDetails() {
       }
     }
 
-    emit('save-todo', {
+    const payload: Partial<TodoItem> = {
       ...cleanItem,
+      title: cleanItem.title.trim(),
+      projectId: cleanItem.projectId || activeProject.value?.id || null,
       startDate,
       startTime,
       dueDate,
       dueTime,
       importance: normalizePriority(cleanItem.importance),
-    })
+    }
+
+    if (!payload.id) {
+      delete payload.id
+    }
+
+    emit('save-todo', payload)
     editingProjectTodo.value = null
   }
 }
@@ -1774,7 +1978,8 @@ function handleDeleteProject(id: string) {
   }
 }
 
-const showNewProjectModal = ref(false)
+const showProjectModal = ref(false)
+const editingProjectId = ref<string | null>(null)
 const modalAreaId = ref('')
 const modalProjectTitle = ref('')
 const modalProjectColor = ref('#3b82f6')
@@ -1785,21 +1990,51 @@ function openNewProjectModal(defaultAreaId?: string) {
     showAddAreaModal.value = true
     return
   }
+  editingProjectId.value = null
   modalAreaId.value = defaultAreaId || props.areas[0]?.id || ''
   modalProjectTitle.value = ''
   modalProjectColor.value = '#3b82f6'
-  showNewProjectModal.value = true
+  showProjectModal.value = true
 }
 
-function handleSaveNewProject() {
+function openEditProjectModal(proj: Project) {
+  editingProjectId.value = proj.id
+  modalAreaId.value = proj.areaId
+  modalProjectTitle.value = proj.title
+  modalProjectColor.value = proj.color || '#3b82f6'
+  showProjectModal.value = true
+}
+
+function handleSaveProject() {
   if (!modalProjectTitle.value.trim() || !modalAreaId.value) return
-  emit('save-project', {
-    areaId: modalAreaId.value,
-    title: modalProjectTitle.value.trim(),
-    color: modalProjectColor.value,
-    order: getProjectsByArea(modalAreaId.value).length,
-  })
-  showNewProjectModal.value = false
+  const title = modalProjectTitle.value.trim()
+  const color = modalProjectColor.value
+  const areaId = modalAreaId.value
+
+  if (editingProjectId.value) {
+    emit('save-project', {
+      id: editingProjectId.value,
+      areaId,
+      title,
+      color,
+    })
+    if (activeProject.value && activeProject.value.id === editingProjectId.value) {
+      activeProject.value = {
+        ...activeProject.value,
+        areaId,
+        title,
+        color,
+      }
+    }
+  } else {
+    emit('save-project', {
+      areaId,
+      title,
+      color,
+      order: getProjectsByArea(areaId).length,
+    })
+  }
+  showProjectModal.value = false
 }
 
 const showAddAreaModal = ref(false)
